@@ -17,7 +17,7 @@
     "test:watch": "vitest",
     "check": "ultracite check",
     "fix": "ultracite fix",
-    "publish": "git-publish"
+    "git-publish": "git-publish"
   },
   "devDependencies": {
     "@biomejs/biome": "2.4.6",
