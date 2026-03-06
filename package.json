@@ -1,5 +1,5 @@
 {
-  "name": "schwifty",
+  "name": "schwifty-ts",
   "version": "0.1.0",
   "type": "module",
   "main": "./dist/index.mjs",
@@ -34,13 +34,13 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/mdomke/schwifty.git"
+    "url": "git+https://github.com/madebyjulz/schwifty-ts.git"
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "bugs": {
-    "url": "https://github.com/mdomke/schwifty/issues"
+    "url": "https://github.com/madebyjulz/schwifty-ts/issues"
   },
-  "homepage": "https://github.com/mdomke/schwifty#readme"
+  "homepage": "https://github.com/madebyjulz/schwifty-ts#readme"
 }
