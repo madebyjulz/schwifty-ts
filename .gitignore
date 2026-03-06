@@ -11,3 +11,6 @@ dist/
 private/
 htmlcov/
 test-results.xml
+
+node_modules/
+ts/src/data/
