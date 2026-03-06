@@ -17,7 +17,8 @@
     "test:watch": "vitest",
     "check": "ultracite check",
     "fix": "ultracite fix",
-    "git-publish": "git-publish"
+    "git-publish": "git-publish",
+    "prepack": "pnpm run build"
   },
   "devDependencies": {
     "@biomejs/biome": "2.4.6",
