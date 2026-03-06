@@ -3,8 +3,8 @@
  * Consolidates registry JSON files into single importable JSON files.
  * Run before build: node scripts/consolidate-registry.mjs
  */
-import { readFileSync, readdirSync, writeFileSync, mkdirSync } from "node:fs";
-import { join, dirname } from "node:path";
+import { mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -33,30 +33,38 @@ function mergeDicts(left, right) {
     }
   }
   for (const key of Object.keys(left)) {
-    if (!(key in merged)) merged[key] = left[key];
+    if (!(key in merged)) {
+      merged[key] = left[key];
+    }
   }
   for (const key of Object.keys(right)) {
-    if (!(key in merged)) merged[key] = right[key];
+    if (!(key in merged)) {
+      merged[key] = right[key];
+    }
   }
   return merged;
 }
 
 function parseV2(data) {
-  const entries = data["entries"];
-  const expandFrom = data["expand_from"];
-  const expandInto = data["expand_into"];
-  const groupingKeys = data["grouping_keys"];
+  const entries = data.entries;
+  const expandFrom = data.expand_from;
+  const expandInto = data.expand_into;
+  const groupingKeys = data.grouping_keys;
 
   const result = [];
   for (const entry of entries) {
     const values = entry[expandFrom];
     const base = { ...entry };
     delete base[expandFrom];
-    if (!("primary" in base)) base["primary"] = false;
+    if (!("primary" in base)) {
+      base.primary = false;
+    }
 
     if (groupingKeys) {
       for (const gk of groupingKeys) {
-        if (gk in base) delete base[gk];
+        if (gk in base) {
+          delete base[gk];
+        }
       }
     }
 
