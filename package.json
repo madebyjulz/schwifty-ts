@@ -1,0 +1,46 @@
+{
+  "name": "schwifty-ts",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "./dist/index.mjs",
+  "types": "./dist/index.d.mts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "types": "./dist/index.d.mts"
+    }
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.4.6",
+    "@types/node": "^25.3.5",
+    "git-publish": "^2.4.3",
+    "tsdown": "^0.21.0",
+    "typescript": "^5.9.3",
+    "ultracite": "7.2.5",
+    "vitest": "^4.0.18"
+  },
+  "description": "",
+  "directories": {
+    "test": "tests"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/madebyjulz/schwifty-ts.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/madebyjulz/schwifty-ts/issues"
+  },
+  "homepage": "https://github.com/madebyjulz/schwifty-ts#readme",
+  "scripts": {
+    "prebuild": "node scripts/consolidate-registry.mjs",
+    "build": "tsdown",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "check": "ultracite check",
+    "fix": "ultracite fix",
+    "git-publish": "git-publish"
+  }
+}
