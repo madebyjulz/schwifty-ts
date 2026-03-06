@@ -10,7 +10,7 @@ import { fileURLToPath } from "node:url";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const projectRoot = join(__dirname, "..");
 const registrySource = join(projectRoot, "schwifty");
-const outDir = join(projectRoot, "ts", "src", "data");
+const outDir = join(projectRoot, "schwifty-ts", "src", "data");
 
 function mergeDicts(left, right) {
   const merged = {};
