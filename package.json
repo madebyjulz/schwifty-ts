@@ -1,10 +1,25 @@
 {
   "name": "schwifty-ts",
   "version": "0.1.0",
-  "type": "module",
+  "description": "",
+  "keywords": [],
+  "homepage": "https://github.com/madebyjulz/schwifty-ts#readme",
+  "bugs": {
+    "url": "https://github.com/madebyjulz/schwifty-ts/issues"
+  },
+  "license": "MIT",
+  "author": "",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/madebyjulz/schwifty-ts.git"
+  },
+  "directories": {
+    "test": "tests"
+  },
   "files": [
     "dist"
   ],
+  "type": "module",
   "main": "./dist/index.mjs",
   "types": "./dist/index.d.mts",
   "exports": {
@@ -14,7 +29,7 @@
     }
   },
   "scripts": {
-    "prebuild": "node scripts/consolidate-registry.mjs",
+    "prebuild": "node scripts/consolidate-registry.ts",
     "build": "tsdown",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -24,27 +39,14 @@
     "prepack": "pnpm run build"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.4.6",
-    "@types/node": "^25.3.5",
+    "@types/node": "^24.13.3",
     "git-publish": "^2.4.3",
-    "tsdown": "^0.21.0",
-    "typescript": "^5.9.3",
-    "ultracite": "7.2.5",
-    "vitest": "^4.0.18"
-  },
-  "description": "",
-  "directories": {
-    "test": "tests"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/madebyjulz/schwifty-ts.git"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/madebyjulz/schwifty-ts/issues"
-  },
-  "homepage": "https://github.com/madebyjulz/schwifty-ts#readme"
+    "oxfmt": "^0.60.0",
+    "oxlint": "^1.75.0",
+    "oxlint-tsgolint": "^7.0.2001",
+    "tsdown": "^0.22.13",
+    "typescript": "^7.0.2",
+    "ultracite": "7.9.4",
+    "vitest": "^4.1.10"
+  }
 }

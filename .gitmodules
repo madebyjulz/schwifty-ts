@@ -1,0 +1,3 @@
+[submodule "schwifty-py"]
+	path = schwifty-py
+	url = git@github.com:mdomke/schwifty.git
