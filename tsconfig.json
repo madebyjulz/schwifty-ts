@@ -24,9 +24,9 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true,
     "paths": {
-      "~/*": ["./schwifty-ts/src/*"]
+      "~/*": ["./src/*"]
     }
   },
-  "include": ["schwifty-ts/**/*.ts", "scripts/**/*.ts"],
+  "include": ["src/**/*.ts", "scripts/**/*.ts"],
   "exclude": ["node_modules", "dist"]
 }

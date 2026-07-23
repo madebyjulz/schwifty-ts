@@ -89,7 +89,7 @@ export default defineConfig({
     "typescript/no-confusing-void-expression": "off",
     "typescript/no-misused-promises": "warn",
     // Every string reaching this library is folded to printable ASCII by
-    // `clean()`/`toAscii()` in `schwifty-ts/src/common.ts`, so spreading a
+    // `clean()`/`toAscii()` in `src/common.ts`, so spreading a
     // string into code points is exactly the per-character split we want.
     "typescript/no-misused-spread": "off",
     // Error class names mirror the public API of the Python `schwifty`
