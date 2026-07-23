@@ -8,11 +8,7 @@ import vitest from "ultracite/oxlint/vitest";
 export default defineConfig({
   extends: [core, react, tanstack, next, vitest],
   globals: { __DEV__: "readonly" },
-  ignorePatterns: [
-    ...(core.ignorePatterns ?? []),
-    "**/.agents/**",
-    "**/.claude/**",
-  ],
+  ignorePatterns: [...(core.ignorePatterns ?? []), "**/.agents/**", "**/.claude/**"],
   options: {
     typeAware: true,
   },
@@ -70,5 +66,6 @@ export default defineConfig({
     "unicorn/no-useless-undefined": ["error", { checkArguments: false }],
     // Allow `never` in template expressions for satisfy never type assertions in switch statements.
     "typescript/restrict-template-expressions": ["error", { allowNever: true }],
+    "vitest/max-expects": "off",
   },
 });
