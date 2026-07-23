@@ -8,10 +8,7 @@ const _bicIso9362Re = /^[A-Z0-9]{4}[A-Z]{2}[A-Z0-9]{2}(?:[A-Z0-9]{3})?$/;
 const _bicSwiftRe = /^[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}(?:[A-Z0-9]{3})?$/;
 
 export class BIC extends Base {
-  constructor(
-    bic: string,
-    options?: { allowInvalid?: boolean; enforceSwiftCompliance?: boolean }
-  ) {
+  constructor(bic: string, options?: { allowInvalid?: boolean; enforceSwiftCompliance?: boolean }) {
     super(bic);
     if (!options?.allowInvalid) {
       this.validate(options?.enforceSwiftCompliance ?? false);
@@ -26,16 +23,10 @@ export class BIC extends Base {
       if (!entries) {
         throw new Error("not found");
       }
-      const sorted = [...entries].sort(
-        (a, b) => (b.primary ? 1 : 0) - (a.primary ? 1 : 0)
-      );
-      return sorted
-        .filter((entry) => entry.bic)
-        .map((entry) => new BIC(entry.bic));
+      const sorted = [...entries].toSorted((a, b) => (b.primary ? 1 : 0) - (a.primary ? 1 : 0));
+      return sorted.filter((entry) => entry.bic).map((entry) => new BIC(entry.bic));
     } catch {
-      throw new exceptions.InvalidBankCode(
-        `Unknown bank code '${bankCode}' for country '${countryCode}'`
-      );
+      throw new exceptions.InvalidBankCode(`Unknown bank code '${bankCode}' for country '${countryCode}'`);
     }
   }
 
@@ -45,25 +36,19 @@ export class BIC extends Base {
       if (candidates.length > 1) {
         const noBranch = candidates.filter((c) => !c.branchCode);
         if (noBranch.length > 0) {
-          return noBranch.sort((a, b) => a.compact.localeCompare(b.compact))[
-            noBranch.length - 1
-          ];
+          return noBranch.toSorted((a, b) => a.compact.localeCompare(b.compact))[noBranch.length - 1];
         }
         const xxxBranch = candidates.filter((c) => c.branchCode === "XXX");
         if (xxxBranch.length > 0) {
-          return xxxBranch.sort((a, b) => a.compact.localeCompare(b.compact))[
-            xxxBranch.length - 1
-          ];
+          return xxxBranch.toSorted((a, b) => a.compact.localeCompare(b.compact))[xxxBranch.length - 1];
         }
       }
       return candidates[0];
-    } catch (e) {
-      if (e instanceof exceptions.InvalidBankCode) {
-        throw e;
+    } catch (error) {
+      if (error instanceof exceptions.InvalidBankCode) {
+        throw error;
       }
-      throw new exceptions.InvalidBankCode(
-        `Unknown bank code '${bankCode}' for country '${countryCode}'`
-      );
+      throw new exceptions.InvalidBankCode(`Unknown bank code '${bankCode}' for country '${countryCode}'`);
     }
   }
 
@@ -83,17 +68,13 @@ export class BIC extends Base {
   private _validateStructure(enforceSwiftCompliance: boolean): void {
     const regex = enforceSwiftCompliance ? _bicSwiftRe : _bicIso9362Re;
     if (!regex.test(this._value)) {
-      throw new exceptions.InvalidStructure(
-        `Invalid structure '${this._value}'`
-      );
+      throw new exceptions.InvalidStructure(`Invalid structure '${this._value}'`);
     }
   }
 
   private _validateCountryCode(): void {
     if (this.country === undefined) {
-      throw new exceptions.InvalidCountryCode(
-        `Invalid country code '${this.countryCode}'`
-      );
+      throw new exceptions.InvalidCountryCode(`Invalid country code '${this.countryCode}'`);
     }
   }
 
@@ -123,7 +104,7 @@ export class BIC extends Base {
         values.add(String(val));
       }
     }
-    return [...values].sort();
+    return [...values].toSorted();
   }
 
   get domesticBankCodes(): string[] {

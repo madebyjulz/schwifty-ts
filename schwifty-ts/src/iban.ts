@@ -17,10 +17,7 @@ const _specToRe: Record<string, string> = {
 export class IBAN extends Base {
   readonly bban: BBAN;
 
-  constructor(
-    iban: string,
-    options?: { allowInvalid?: boolean; validateBban?: boolean }
-  ) {
+  constructor(iban: string, options?: { allowInvalid?: boolean; validateBban?: boolean }) {
     super(iban);
     this.bban = new BBAN(this.countryCode, this._getSlice(4));
     if (!options?.allowInvalid) {
@@ -31,7 +28,7 @@ export class IBAN extends Base {
   static fromBban(
     countryCode: string,
     bban: string | BBAN,
-    options?: { allowInvalid?: boolean; validateBban?: boolean }
+    options?: { allowInvalid?: boolean; validateBban?: boolean },
   ): IBAN {
     const bbanStr = typeof bban === "string" ? bban : bban.compact;
     const checksumAlgo = new ISO7064Mod97_10();
@@ -44,7 +41,7 @@ export class IBAN extends Base {
     bankCode: string,
     accountCode: string,
     branchCode = "",
-    extra?: Record<string, string>
+    extra?: Record<string, string>,
   ): IBAN {
     return IBAN.fromBban(
       countryCode,
@@ -53,14 +50,11 @@ export class IBAN extends Base {
         branch_code: branchCode,
         account_code: accountCode,
         ...extra,
-      })
+      }),
     );
   }
 
-  static random(
-    countryCode = "",
-    options?: { useRegistry?: boolean; values?: Record<string, string> }
-  ): IBAN {
+  static random(countryCode = "", options?: { useRegistry?: boolean; values?: Record<string, string> }): IBAN {
     const bban = BBAN.random(countryCode, {
       useRegistry: options?.useRegistry,
       values: options?.values,
@@ -80,10 +74,8 @@ export class IBAN extends Base {
   }
 
   private _validateCharacters(): void {
-    if (!/^[A-Z]{2}\d{2}[A-Z]*/.test(this._value)) {
-      throw new exceptions.InvalidStructure(
-        `Invalid characters in IBAN ${this._value}`
-      );
+    if (!/^[A-Z]{2}\d{2}[A-Z]*$/u.test(this._value)) {
+      throw new exceptions.InvalidStructure(`Invalid characters in IBAN ${this._value}`);
     }
   }
 
@@ -97,7 +89,7 @@ export class IBAN extends Base {
     const { regex } = this.spec;
     if (regex instanceof RegExp && !regex.test(this.bban.compact)) {
       throw new exceptions.InvalidStructure(
-        `Invalid BBAN structure: '${this.bban}' doesn't match '${this.spec.bban_spec}'`
+        `Invalid BBAN structure: '${this.bban.toString()}' doesn't match '${this.spec.bban_spec}'`,
       );
     }
   }
@@ -106,10 +98,7 @@ export class IBAN extends Base {
     const checksumAlgo = new ISO7064Mod97_10();
     if (
       this.numeric % 97n !== 1n ||
-      !checksumAlgo.validate(
-        [this.bban.compact, this.countryCode],
-        this.checksumDigits
-      )
+      !checksumAlgo.validate([this.bban.compact, this.countryCode], this.checksumDigits)
     ) {
       throw new exceptions.InvalidChecksumDigits("Invalid checksum digits");
     }
@@ -139,9 +128,7 @@ export class IBAN extends Base {
     const specs = registry.get<Record<string, IbanSpec>>("iban");
     const countrySpec = specs[this.countryCode];
     if (!countrySpec) {
-      throw new exceptions.InvalidCountryCode(
-        `Unknown country-code '${this.countryCode}'`
-      );
+      throw new exceptions.InvalidCountryCode(`Unknown country-code '${this.countryCode}'`);
     }
     return countrySpec;
   }
@@ -218,16 +205,13 @@ export class IBAN extends Base {
 // Transform IBAN registry: add compiled regexes
 function addBbanRegex(_country: string, spec: IbanSpec): IbanSpec {
   if (!spec.regex) {
-    spec.regex = new RegExp(convertBbanSpecToRegex(spec.bban_spec));
+    spec.regex = new RegExp(convertBbanSpecToRegex(spec.bban_spec), "u");
   }
   return spec;
 }
 
 export function convertBbanSpecToRegex(spec: string): string {
-  const specRe = new RegExp(
-    `(\\d+)(!)?([${Object.keys(_specToRe).join("")}])`,
-    "g"
-  );
+  const specRe = new RegExp(`(\\d+)(!)?([${Object.keys(_specToRe).join("")}])`, "gu");
   const converted = spec.replace(specRe, (_match, count, fixed, type) => {
     const quantifier = fixed ? `{${count}}` : `{1,${count}}`;
     return _specToRe[type] + quantifier;

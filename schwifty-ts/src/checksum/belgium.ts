@@ -8,7 +8,7 @@ class DefaultAlgorithm extends ISO7064Mod97_10 {
   }
 
   override postProcess(r: bigint): bigint {
-    return r !== 0n ? r : 97n;
+    return r === 0n ? 97n : r;
   }
 }
 

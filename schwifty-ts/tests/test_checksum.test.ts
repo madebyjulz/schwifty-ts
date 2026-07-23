@@ -65,12 +65,9 @@ describe("German checksum algorithms", () => {
     ["0499999999", "DE:99"],
   ];
 
-  it.each(successCases)(
-    "validates %s with algorithm %s",
-    (accountCode, algoName) => {
-      expect(algorithms[algoName].validate([accountCode], "")).toBe(true);
-    },
-  );
+  it.each(successCases)("validates %s with algorithm %s", (accountCode, algoName) => {
+    expect(algorithms[algoName].validate([accountCode], "")).toBeTruthy();
+  });
 
   const failureCases: [string, string][] = [
     ["8840017000", "DE:91"],
@@ -85,38 +82,27 @@ describe("German checksum algorithms", () => {
     ["8840057000", "DE:91"],
   ];
 
-  it.each(failureCases)(
-    "rejects %s with algorithm %s",
-    (accountCode, algoName) => {
-      expect(algorithms[algoName].validate([accountCode], "")).toBe(false);
-    },
-  );
+  it.each(failureCases)("rejects %s with algorithm %s", (accountCode, algoName) => {
+    expect(algorithms[algoName].validate([accountCode], "")).toBeFalsy();
+  });
 });
 
 describe("Belgium checksum", () => {
   it("validates correctly", () => {
-    expect(algorithms["BE:default"].validate(["539", "0075470"], "34")).toBe(
-      true,
-    );
+    expect(algorithms["BE:default"].validate(["539", "0075470"], "34")).toBeTruthy();
   });
 
   it("rejects invalid", () => {
-    expect(algorithms["BE:default"].validate(["050", "0001234"], "56")).toBe(
-      false,
-    );
+    expect(algorithms["BE:default"].validate(["050", "0001234"], "56")).toBeFalsy();
   });
 
   it("handles edge case mod 97 = 0", () => {
-    expect(algorithms["BE:default"].validate(["050", "0000177"], "97")).toBe(
-      true,
-    );
+    expect(algorithms["BE:default"].validate(["050", "0000177"], "97")).toBeTruthy();
   });
 });
 
 describe("Norway checksum", () => {
   it("handles edge case mod 11 = 0", () => {
-    expect(algorithms["NO:default"].validate(["6042", "143964"], "0")).toBe(
-      true,
-    );
+    expect(algorithms["NO:default"].validate(["6042", "143964"], "0")).toBeTruthy();
   });
 });

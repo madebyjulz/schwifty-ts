@@ -32,13 +32,8 @@ export class Base {
   }
 
   protected _getSlice(start: number, end?: number): string {
-    if (
-      start < this._value.length &&
-      (end === undefined || end <= this._value.length)
-    ) {
-      return end !== undefined
-        ? this._value.slice(start, end)
-        : this._value.slice(start);
+    if (start < this._value.length && (end === undefined || end <= this._value.length)) {
+      return end === undefined ? this._value.slice(start) : this._value.slice(start, end);
     }
     return "";
   }

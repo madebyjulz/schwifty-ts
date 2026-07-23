@@ -21,19 +21,16 @@ describe("BBAN random", () => {
     }
   });
 
-  it.each(countryCodes)(
-    "random without registry for %s produces some with no bank",
-    (countryCode) => {
-      const n = 100;
-      let hasNullBank = false;
-      for (let i = 0; i < n; i++) {
-        const bban = BBAN.random(countryCode, { useRegistry: false });
-        if (bban.bank === null) {
-          hasNullBank = true;
-          break;
-        }
+  it.each(countryCodes)("random without registry for %s produces some with no bank", (countryCode) => {
+    const n = 100;
+    let hasNullBank = false;
+    for (let i = 0; i < n; i++) {
+      const bban = BBAN.random(countryCode, { useRegistry: false });
+      if (bban.bank === null) {
+        hasNullBank = true;
+        break;
       }
-      expect(hasNullBank).toBe(true);
-    },
-  );
+    }
+    expect(hasNullBank).toBeTruthy();
+  });
 });

@@ -5,13 +5,10 @@ import type { BankEntry, IbanSpec } from "./types.ts";
 const _registry = new Map<string, unknown>();
 
 // Pre-populate with bundled data
-_registry.set("bank", bankData as BankEntry[]);
-_registry.set("iban", ibanData as unknown as Record<string, IbanSpec>);
+_registry.set("bank", bankData);
+_registry.set("iban", ibanData as unknown);
 
-export function mergeDicts<T extends Record<string, unknown>>(
-  left: T,
-  right: T
-): T {
+export function mergeDicts<T extends Record<string, unknown>>(left: T, right: T): T {
   const merged = {} as T;
   for (const key of Object.keys(right)) {
     if (key in left) {
@@ -27,7 +24,7 @@ export function mergeDicts<T extends Record<string, unknown>>(
       ) {
         (merged as Record<string, unknown>)[key] = mergeDicts(
           lv as Record<string, unknown>,
-          rv as Record<string, unknown>
+          rv as Record<string, unknown>,
         );
       } else {
         (merged as Record<string, unknown>)[key] = rv;
@@ -68,7 +65,7 @@ export function buildIndex(
   indexName: string,
   key: string | [string, string],
   accumulate = false,
-  predicate?: Record<string, unknown>
+  predicate?: Record<string, unknown>,
 ): void {
   function makeKey(entry: Record<string, unknown>): string {
     if (Array.isArray(key)) {
@@ -86,7 +83,7 @@ export function buildIndex(
 
   const base = get<Record<string, unknown>[]>(baseName);
   if (!Array.isArray(base)) {
-    throw new Error("Base must be a list");
+    throw new TypeError("Base must be a list");
   }
 
   if (accumulate) {
@@ -123,10 +120,7 @@ export function buildIndex(
   }
 }
 
-export function manipulate<V>(
-  name: string,
-  func: (key: string, value: V) => V
-): void {
+export function manipulate<V>(name: string, func: (key: string, value: V) => V): void {
   const reg = get<Record<string, V>>(name);
   for (const key of Object.keys(reg)) {
     reg[key] = func(key, reg[key]);

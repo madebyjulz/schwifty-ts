@@ -8,10 +8,7 @@ class DefaultAlgorithm extends Algorithm {
 
   compute(components: string[]): string {
     const [bankCode, accountCode] = components;
-    const value =
-      accountCode.slice(0, 2) === "00"
-        ? accountCode.slice(2)
-        : bankCode + accountCode;
+    const value = accountCode.startsWith("00") ? accountCode.slice(2) : bankCode + accountCode;
 
     const weights = [5, 4, 3, 2, 7, 6, 5, 4, 3, 2];
     let total = 0;
@@ -21,9 +18,7 @@ class DefaultAlgorithm extends Algorithm {
 
     const checkDigit = 11 - (total % 11);
     if (checkDigit === 10) {
-      throw new InvalidAccountCode(
-        "Check digit does not compute: Invalid account code."
-      );
+      throw new InvalidAccountCode("Check digit does not compute: Invalid account code.");
     }
     return (checkDigit % 11).toString();
   }

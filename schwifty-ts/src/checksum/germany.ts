@@ -13,8 +13,7 @@ interface Positions {
 }
 
 function digitSum(n: number): number {
-  return String(n)
-    .split("")
+  return [...String(n)]
     .reduce((s, d) => s + Number.parseInt(d, 10), 0);
 }
 
@@ -37,8 +36,7 @@ abstract class WeightedModulus extends Algorithm {
     const [accountCode] = components;
     const digits = this.getDigits(this.adjustInput(accountCode));
     this._remainder = this.computeRemainder(this.computeWeightedSum(digits));
-    const checksum =
-      this.minuend === null ? this._remainder : this.minuend - this._remainder;
+    const checksum = this.minuend === null ? this._remainder : this.minuend - this._remainder;
     return String(this.reconcile(checksum));
   }
 
@@ -49,10 +47,10 @@ abstract class WeightedModulus extends Algorithm {
   getDigits(accountCode: string): string {
     const positions = this.getPositions(accountCode);
     const start = positions.start - 1;
-    const end = positions.end;
+    const {end} = positions;
     let digits = accountCode.slice(start, end);
     if (this.reverse) {
-      digits = digits.split("").reverse().join("");
+      digits = [...digits].toReversed().join("");
     }
     return digits;
   }
@@ -64,10 +62,7 @@ abstract class WeightedModulus extends Algorithm {
   computeWeightedSum(digits: string): number {
     let sum = 0;
     for (let i = 0; i < digits.length; i++) {
-      sum += this.computeSummand(
-        Number.parseInt(digits[i], 10),
-        cycle(this.weights, i)
-      );
+      sum += this.computeSummand(Number.parseInt(digits[i], 10), cycle(this.weights, i));
     }
     return sum;
   }
@@ -545,11 +540,7 @@ class Algorithm25 extends WeightedMod11 {
   override validate(components: string[], expected: string): boolean {
     const result = super.validate(components, expected);
     const [accountCode] = components;
-    if (
-      this._remainder === 1 &&
-      accountCode[1] !== "8" &&
-      accountCode[1] !== "9"
-    ) {
+    if (this._remainder === 1 && accountCode[1] !== "8" && accountCode[1] !== "9") {
       return false;
     }
     return result;
@@ -671,7 +662,7 @@ class Algorithm61 extends WeightedMod10 {
     if (accountCode[8] === "8") {
       // Python: account_code[:7:-1] = chars from end down to index 8 (exclusive of 7)
       // For 10-char string: indices 9, 8
-      const prefix = accountCode.split("").slice(8).reverse().join("");
+      const prefix = [...accountCode].slice(8).toReversed().join("");
       digits = prefix + digits;
     }
     return digits;
@@ -695,7 +686,7 @@ class Algorithm63 extends WeightedMod10 {
 
   override validate(components: string[], expected: string): boolean {
     const [accountCode] = components;
-    if (accountCode[0] !== "0") {
+    if (!accountCode.startsWith("0")) {
       return false;
     }
     return super.validate(components, expected);
@@ -723,9 +714,7 @@ class Algorithm68 extends WeightedMod10 {
     digits = digits.replace(ZERO_PLUS_REGEX, "");
     if (digits.length === 9) {
       if (digits[5] !== "9") {
-        throw new InvalidBBANChecksum(
-          "10 digit long account codes require the 7th digit to be set to 9"
-        );
+        throw new InvalidBBANChecksum("10 digit long account codes require the 7th digit to be set to 9");
       }
       digits = digits.slice(0, 6);
     }
@@ -738,7 +727,7 @@ class Algorithm68 extends WeightedMod10 {
     if (acNum >= 400_000_000 && acNum <= 499_999_999) {
       return true;
     }
-    if (super.validate(components, expected) === false) {
+    if (!super.validate(components, expected)) {
       const modifiedCode = `${accountCode.slice(0, 2)}00${accountCode.slice(4)}`;
       const checkDigit = this.compute([modifiedCode]);
       return checkDigit === accountCode[this.positions.checkDigit - 1];

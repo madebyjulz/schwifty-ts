@@ -36,9 +36,7 @@ function getBbanSpec(countryCode: string): IbanSpec {
   const specs = registry.get<Record<string, IbanSpec>>("iban");
   const result = specs[countryCode];
   if (!result) {
-    throw new exceptions.InvalidCountryCode(
-      `Unknown country-code '${countryCode}'`,
-    );
+    throw new exceptions.InvalidCountryCode(`Unknown country-code '${countryCode}'`);
   }
   return result;
 }
@@ -57,10 +55,7 @@ function getPositionRanges(spec: IbanSpec): Record<Component, Range> {
   return result;
 }
 
-function computeNationalChecksum(
-  countryCode: string,
-  components: Record<Component, string>,
-): string {
+function computeNationalChecksum(countryCode: string, components: Record<Component, string>): string {
   const algo = getAlgorithm(`${countryCode}:default`);
   if (!algo) {
     return "";
@@ -76,61 +71,41 @@ export class BBAN extends Base {
     this.countryCode = countryCode;
   }
 
-  static fromComponents(
-    countryCode: string,
-    values: Record<string, string>,
-  ): BBAN {
+  static fromComponents(countryCode: string, values: Record<string, string>): BBAN {
     const spec = getBbanSpec(countryCode);
     if (!spec.positions) {
-      throw new exceptions.SchwiftyException(
-        `BBAN generation for ${countryCode} not supported`,
-      );
+      throw new exceptions.SchwiftyException(`BBAN generation for ${countryCode} not supported`);
     }
 
     const ranges = getPositionRanges(spec);
     const components = {} as Record<Component, string>;
 
     for (const [key, range] of Object.entries(ranges) as [Component, Range][]) {
-      components[key] = clean(values[key] || "").padStart(
-        rangeLength(range),
-        "0",
-      );
+      components[key] = clean(values[key] || "").padStart(rangeLength(range), "0");
     }
 
     const bankCodeLength = rangeLength(ranges[Component.BANK_CODE]);
     const branchCodeLength = rangeLength(ranges[Component.BRANCH_CODE]);
     const accountCodeLength = rangeLength(ranges[Component.ACCOUNT_CODE]);
 
-    if (
-      components[Component.BANK_CODE].length ===
-      bankCodeLength + branchCodeLength
-    ) {
+    if (components[Component.BANK_CODE].length === bankCodeLength + branchCodeLength) {
       components[Component.BRANCH_CODE] = components[Component.BANK_CODE].slice(
         bankCodeLength,
         bankCodeLength + branchCodeLength,
       );
-      components[Component.BANK_CODE] = components[Component.BANK_CODE].slice(
-        0,
-        bankCodeLength,
-      );
+      components[Component.BANK_CODE] = components[Component.BANK_CODE].slice(0, bankCodeLength);
     }
 
     if (components[Component.BANK_CODE].length > bankCodeLength) {
-      throw new exceptions.InvalidBankCode(
-        `Bank code exceeds maximum size ${bankCodeLength}`,
-      );
+      throw new exceptions.InvalidBankCode(`Bank code exceeds maximum size ${bankCodeLength}`);
     }
 
     if (components[Component.BRANCH_CODE].length > branchCodeLength) {
-      throw new exceptions.InvalidBranchCode(
-        `Branch code exceeds maximum size ${branchCodeLength}`,
-      );
+      throw new exceptions.InvalidBranchCode(`Branch code exceeds maximum size ${branchCodeLength}`);
     }
 
     if (components[Component.ACCOUNT_CODE].length > accountCodeLength) {
-      throw new exceptions.InvalidAccountCode(
-        `Account code exceeds maximum size ${accountCodeLength}`,
-      );
+      throw new exceptions.InvalidAccountCode(`Account code exceeds maximum size ${accountCodeLength}`);
     }
 
     const checksum = computeNationalChecksum(countryCode, components);
@@ -139,10 +114,7 @@ export class BBAN extends Base {
     }
 
     let bban = "0".repeat(spec.bban_length);
-    for (const [key, value] of Object.entries(components) as [
-      Component,
-      string,
-    ][]) {
+    for (const [key, value] of Object.entries(components) as [Component, string][]) {
       const range = ranges[key];
       if (rangeIsEmpty(range)) {
         continue;
@@ -188,17 +160,12 @@ export class BBAN extends Base {
       const randomBban = generateFromRegex(regexStr);
       const components = {} as Record<Component, string>;
 
-      for (const [key, range] of Object.entries(ranges) as [
-        Component,
-        Range,
-      ][]) {
-        if (values[key] !== undefined) {
-          components[key] = values[key];
-        } else {
+      for (const [key, range] of Object.entries(ranges) as [Component, Range][]) {
+        if (values[key] === undefined) {
           components[key] =
-            (bank as Record<string, string>)[key] ||
-            getSpecDefault(spec, key) ||
-            rangeCut(range, randomBban);
+            (bank as Record<string, string>)[key] || getSpecDefault(spec, key) || rangeCut(range, randomBban);
+        } else {
+          components[key] = values[key];
         }
       }
 
@@ -212,39 +179,30 @@ export class BBAN extends Base {
         components[Component.BRANCH_CODE] = bankCode.slice(start, end);
       }
 
-      for (const [key, value] of Object.entries(components) as [
-        Component,
-        string,
-      ][]) {
+      for (const [key, value] of Object.entries(components) as [Component, string][]) {
         components[key] = value.slice(0, rangeLength(ranges[key]));
       }
 
       try {
-        return BBAN.fromComponents(countryCode, {
-          ...Object.fromEntries(
-            Object.entries(components).map(([k, v]) => [k, v]),
-          ),
-        });
-      } catch (e) {
-        if (e instanceof exceptions.SchwiftyException) {
+        return BBAN.fromComponents(countryCode, Object.fromEntries(Object.entries(components).map(([k, v]) => [k, v])));
+      } catch (error) {
+        if (error instanceof exceptions.SchwiftyException) {
           continue;
         }
-        throw e;
+        throw error;
       }
     }
     throw new exceptions.GenerateRandomOverflowError();
   }
 
   validateNationalChecksum(): boolean {
-    const bank = this.bank;
+    const {bank} = this;
     const algoName = bank?.checksum_algo || "default";
     const algo = getAlgorithm(`${this.countryCode}:${algoName}`);
     if (!algo) {
       return true;
     }
-    const components = algo.accepts.map((component) =>
-      this._getComponent(component),
-    );
+    const components = algo.accepts.map((component) => this._getComponent(component));
     if (!algo.validate(components, this.nationalChecksumDigits)) {
       throw new exceptions.InvalidBBANChecksum("Invalid national checksum");
     }
@@ -261,9 +219,7 @@ export class BBAN extends Base {
   }
 
   get bic(): BIC | null {
-    const lookupBy: Component[] = this.spec.bic_lookup_components || [
-      Component.BANK_CODE,
-    ];
+    const lookupBy: Component[] = this.spec.bic_lookup_components || [Component.BANK_CODE];
     const key = lookupBy.map((c) => this._getComponent(c)).join("");
     try {
       return BIC.fromBankCode(this.countryCode, key);
@@ -305,11 +261,8 @@ export class BBAN extends Base {
   }
 
   get bank(): BankEntry | null {
-    const bankRegistry =
-      registry.get<Record<string, BankEntry[]>>("bank_code");
-    const lookupBy: Component[] = this.spec.bic_lookup_components || [
-      Component.BANK_CODE,
-    ];
+    const bankRegistry = registry.get<Record<string, BankEntry[]>>("bank_code");
+    const lookupBy: Component[] = this.spec.bic_lookup_components || [Component.BANK_CODE];
     const key = lookupBy.map((c) => this._getComponent(c)).join("");
     const bankEntry = bankRegistry[`${this.countryCode}\0${key}`];
     if (!bankEntry || bankEntry.length === 0) {
@@ -397,10 +350,10 @@ function expandCharClass(cls: string): string {
   let i = 0;
   while (i < cls.length) {
     if (i + 2 < cls.length && cls[i + 1] === "-") {
-      const start = cls.charCodeAt(i);
-      const end = cls.charCodeAt(i + 2);
+      const start = cls.codePointAt(i);
+      const end = cls.codePointAt(i + 2);
       for (let c = start; c <= end; c++) {
-        result += String.fromCharCode(c);
+        result += String.fromCodePoint(c);
       }
       i += 3;
     } else {

@@ -1,17 +1,12 @@
 import { describe, it, expect } from "vitest";
 import { BIC } from "../src/bic.ts";
-import {
-  InvalidLength,
-  InvalidStructure,
-  InvalidCountryCode,
-  InvalidBankCode,
-} from "../src/exceptions.ts";
+import { InvalidLength, InvalidStructure, InvalidCountryCode, InvalidBankCode } from "../src/exceptions.ts";
 
-describe("BIC", () => {
+describe(BIC, () => {
   it("validates a BIC", () => {
     const bic = new BIC("GENODEM1GLS");
     expect(bic.formatted).toBe("GENO DE M1 GLS");
-    expect(bic.validate()).toBe(true);
+    expect(bic.validate()).toBeTruthy();
   });
 
   it("allows invalid BIC with flag", () => {
@@ -29,36 +24,30 @@ describe("BIC", () => {
 
   it("has correct properties", () => {
     const bic = new BIC("GENODEM1GLS");
-    expect(bic.length).toBe(11);
+    expect(bic).toHaveLength(11);
     expect(bic.bankCode).toBe("GENO");
     expect(bic.countryCode).toBe("DE");
     expect(bic.locationCode).toBe("M1");
     expect(bic.branchCode).toBe("GLS");
-    expect(bic.domesticBankCodes).toEqual(["43060967", "43060988"]);
-    expect(bic.bankNames).toEqual([
-      "GLS Gemeinschaftsbank",
-      "GLS Gemeinschaftsbank (GAA)",
-    ]);
-    expect(bic.bankShortNames).toEqual([
-      "GLS Bank in Bochum (GAA)",
-      "GLS Gemeinschaftsbk Bochum",
-    ]);
+    expect(bic.domesticBankCodes).toStrictEqual(["43060967", "43060988"]);
+    expect(bic.bankNames).toStrictEqual(["GLS Gemeinschaftsbank", "GLS Gemeinschaftsbank (GAA)"]);
+    expect(bic.bankShortNames).toStrictEqual(["GLS Bank in Bochum (GAA)", "GLS Gemeinschaftsbk Bochum"]);
     expect(bic.country).toBeDefined();
-    expect(bic.exists).toBe(true);
+    expect(bic.exists).toBeTruthy();
     expect(bic.type).toBe("passive");
   });
 
   it("handles unknown BIC", () => {
     const bic = new BIC("ABNAJPJTXXX");
-    expect(bic.length).toBe(11);
+    expect(bic).toHaveLength(11);
     expect(bic.bankCode).toBe("ABNA");
     expect(bic.countryCode).toBe("JP");
     expect(bic.locationCode).toBe("JT");
     expect(bic.branchCode).toBe("XXX");
-    expect(bic.domesticBankCodes).toEqual([]);
-    expect(bic.bankNames).toEqual([]);
-    expect(bic.bankShortNames).toEqual([]);
-    expect(bic.exists).toBe(false);
+    expect(bic.domesticBankCodes).toStrictEqual([]);
+    expect(bic.bankNames).toStrictEqual([]);
+    expect(bic.bankShortNames).toStrictEqual([]);
+    expect(bic.exists).toBeFalsy();
     expect(bic.type).toBe("default");
   });
 
@@ -75,9 +64,7 @@ describe("BIC", () => {
   });
 
   it("enforces SWIFT compliance", () => {
-    expect(
-      () => new BIC("1234DEWWXXX", { enforceSwiftCompliance: true }),
-    ).toThrow(InvalidStructure);
+    expect(() => new BIC("1234DEWWXXX", { enforceSwiftCompliance: true })).toThrow(InvalidStructure);
   });
 
   const invalidCases: [string, new (...args: any[]) => Error][] = [
@@ -122,12 +109,9 @@ describe("BIC", () => {
     ["SK", "0900", "GIBASKBX"],
   ];
 
-  it.each(fromBankCodeCases)(
-    "from_bank_code(%s, %s) = %s",
-    (country, bankCode, expected) => {
-      expect(BIC.fromBankCode(country, bankCode).compact).toBe(expected);
-    },
-  );
+  it.each(fromBankCodeCases)("from_bank_code(%s, %s) = %s", (country, bankCode, expected) => {
+    expect(BIC.fromBankCode(country, bankCode).compact).toBe(expected);
+  });
 
   it("throws for unknown bank code", () => {
     expect(() => BIC.fromBankCode("PO", "12345678")).toThrow(InvalidBankCode);
@@ -139,10 +123,10 @@ describe("BIC", () => {
 
   it("magic methods", () => {
     const bic = new BIC("GENODEM1GLS");
-    expect(bic.equals("GENODEM1GLS")).toBe(true);
-    expect(bic.equals(new BIC("GENODEM1GLS"))).toBe(true);
-    expect(bic.equals(new BIC("GENODEMMXXX"))).toBe(false);
-    expect(bic.lessThan("GENODEM1GLT")).toBe(true);
+    expect(bic.equals("GENODEM1GLS")).toBeTruthy();
+    expect(bic.equals(new BIC("GENODEM1GLS"))).toBeTruthy();
+    expect(bic.equals(new BIC("GENODEMMXXX"))).toBeFalsy();
+    expect(bic.lessThan("GENODEM1GLT")).toBeTruthy();
     expect(String(bic)).toBe("GENODEM1GLS");
     expect(bic.repr()).toBe("<BIC=GENODEM1GLS>");
   });

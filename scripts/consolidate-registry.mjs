@@ -7,7 +7,7 @@ import { mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
+const __dirname = import.meta.dirname;
 const projectRoot = join(__dirname, "..");
 const registrySource = join(projectRoot, "schwifty");
 const outDir = join(projectRoot, "schwifty-ts", "src", "data");
@@ -46,7 +46,7 @@ function mergeDicts(left, right) {
 }
 
 function parseV2(data) {
-  const entries = data.entries;
+  const {entries} = data;
   const expandFrom = data.expand_from;
   const expandInto = data.expand_into;
   const groupingKeys = data.grouping_keys;
@@ -79,7 +79,7 @@ function loadRegistry(name) {
   const directory = join(registrySource, `${name}_registry`);
   const entries = readdirSync(directory)
     .filter((f) => f.endsWith(".json"))
-    .sort();
+    .toSorted();
 
   let data = null;
   for (const entry of entries) {

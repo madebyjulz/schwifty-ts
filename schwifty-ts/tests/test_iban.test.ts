@@ -1,9 +1,8 @@
 import { describe, it, expect } from "vitest";
 import { BIC } from "../src/bic.ts";
-import { BBAN } from "../src/bban.ts";
-import { IBAN, convertBbanSpecToRegex } from "../src/iban.ts";
-import { SchwiftyException } from "../src/exceptions.ts";
 import { getCountry } from "../src/countries.ts";
+import { SchwiftyException } from "../src/exceptions.ts";
+import { IBAN, convertBbanSpecToRegex } from "../src/iban.ts";
 
 const valid = [
   "AL47 2121 1009 0000 0002 3569 8741",
@@ -104,10 +103,43 @@ const invalid = [
 ];
 
 const sepaCountries = new Set([
-  "AD", "AT", "BE", "BG", "CH", "CY", "CZ", "DE", "DK", "EE", "ES",
-  "FI", "FR", "GB", "GI", "GR", "HR", "HU", "IE", "IS", "IT", "LI",
-  "LT", "LU", "LV", "MC", "MT", "NL", "NO", "PL", "PT", "RO", "SE",
-  "SK", "SI", "SM", "VA",
+  "AD",
+  "AT",
+  "BE",
+  "BG",
+  "CH",
+  "CY",
+  "CZ",
+  "DE",
+  "DK",
+  "EE",
+  "ES",
+  "FI",
+  "FR",
+  "GB",
+  "GI",
+  "GR",
+  "HR",
+  "HU",
+  "IE",
+  "IS",
+  "IT",
+  "LI",
+  "LT",
+  "LU",
+  "LV",
+  "MC",
+  "MT",
+  "NL",
+  "NO",
+  "PL",
+  "PT",
+  "RO",
+  "SE",
+  "SK",
+  "SI",
+  "SM",
+  "VA",
 ]);
 
 describe("IBAN parsing", () => {
@@ -131,7 +163,7 @@ describe("IBAN parsing", () => {
 describe("IBAN properties", () => {
   it("DE properties", () => {
     const iban = new IBAN("DE42430609677000534100");
-    expect(iban.isValid).toBe(true);
+    expect(iban.isValid).toBeTruthy();
     expect(iban.bankCode).toBe("43060967");
     expect(iban.branchCode).toBe("");
     expect(iban.accountCode).toBe("7000534100");
@@ -143,11 +175,11 @@ describe("IBAN properties", () => {
     expect(iban.nationalChecksumDigits).toBe("");
     expect(iban.bic?.compact).toBe("GENODEM1GLS");
     expect(iban.formatted).toBe("DE42 4306 0967 7000 5341 00");
-    expect(iban.length).toBe(22);
+    expect(iban).toHaveLength(22);
     expect(iban.country).toBeDefined();
     expect(iban.bankName).toBe("GLS Gemeinschaftsbank");
     expect(iban.bankShortName).toBe("GLS Gemeinschaftsbk Bochum");
-    expect(iban.inSepaZone).toBe(true);
+    expect(iban.inSepaZone).toBeTruthy();
   });
 
   it("IT properties", () => {
@@ -159,7 +191,7 @@ describe("IBAN properties", () => {
     expect(iban.country).toBeDefined();
     expect(iban.bic?.compact).toBe("BLOPIT22");
     expect(iban.bankName).toBe("Unione Di Banche Italiane SpA");
-    expect(iban.inSepaZone).toBe(true);
+    expect(iban.inSepaZone).toBeTruthy();
   });
 
   it("IS properties", () => {
@@ -173,7 +205,7 @@ describe("IBAN properties", () => {
 
   it("PL properties", () => {
     const iban = new IBAN("PL66114010100000123400005678");
-    expect(iban.isValid).toBe(true);
+    expect(iban.isValid).toBeTruthy();
     expect(iban.bankCode).toBe("11401010");
     expect(iban.branchCode).toBe("");
     expect(iban.accountCode).toBe("0000123400005678");
@@ -181,10 +213,10 @@ describe("IBAN properties", () => {
     expect(iban.nationalChecksumDigits).toBe("0");
     expect(iban.bic?.compact).toBe("BREXPLPWWA1");
     expect(iban.formatted).toBe("PL66 1140 1010 0000 1234 0000 5678");
-    expect(iban.length).toBe(28);
-    expect(iban.bankName).toBe("mBank Sp\u00f3\u0142ka Akcyjna");
-    expect(iban.bankShortName).toBe("mBank Sp\u00f3\u0142ka Akcyjna");
-    expect(iban.inSepaZone).toBe(true);
+    expect(iban).toHaveLength(28);
+    expect(iban.bankName).toBe("mBank Sp\u00F3\u0142ka Akcyjna");
+    expect(iban.bankShortName).toBe("mBank Sp\u00F3\u0142ka Akcyjna");
+    expect(iban.inSepaZone).toBeTruthy();
   });
 });
 
@@ -243,15 +275,10 @@ describe("IBAN generation", () => {
     ["PL", "11401010", "10000123400005678"],
   ];
 
-  it.each(invalidGenerateCases)(
-    "rejects invalid generation %j",
-    (components) => {
-      const [cc, bank, account, branch] = components;
-      expect(() => IBAN.generate(cc, bank, account, branch || "")).toThrow(
-        SchwiftyException,
-      );
-    },
-  );
+  it.each(invalidGenerateCases)("rejects invalid generation %j", (components) => {
+    const [cc, bank, account, branch] = components;
+    expect(() => IBAN.generate(cc, bank, account, branch || "")).toThrow(SchwiftyException);
+  });
 });
 
 describe("BIC from IBAN", () => {
@@ -298,14 +325,11 @@ describe("BIC from IBAN", () => {
     ["LI21088100002324013AA", "BLFLLI2XXXX"],
   ];
 
-  it.each(bicFromIbanCases)(
-    "BIC from IBAN %s = %s",
-    (ibanStr, expectedBic) => {
-      const bic = new IBAN(ibanStr).bic;
-      expect(bic).not.toBeNull();
-      expect(bic!.compact).toBe(expectedBic);
-    },
-  );
+  it.each(bicFromIbanCases)("BIC from IBAN %s = %s", (ibanStr, expectedBic) => {
+    const {bic} = new IBAN(ibanStr);
+    expect(bic).not.toBeNull();
+    expect(bic?.compact).toBe(expectedBic);
+  });
 
   it("unknown BIC from IBAN", () => {
     expect(new IBAN("SI72000001234567892").bic).toBeNull();
@@ -330,13 +354,13 @@ describe("IBAN random", () => {
 
   it("handles special cases", () => {
     const muIban = IBAN.random("MU");
-    expect(muIban.endsWith("000MUR")).toBe(true);
+    expect(muIban.endsWith("000MUR")).toBeTruthy();
 
     const scIban = IBAN.random("SC");
-    expect(scIban.endsWith("SCR")).toBe(true);
+    expect(scIban.endsWith("SCR")).toBeTruthy();
 
     const kmIban = IBAN.random("KM");
-    expect(kmIban.isValid).toBe(true);
+    expect(kmIban.isValid).toBeTruthy();
   });
 });
 
@@ -358,10 +382,10 @@ describe("BBAN spec to regex", () => {
 describe("IBAN magic methods", () => {
   it("equality and comparison", () => {
     const iban = new IBAN("DE42430609677000534100");
-    expect(iban.equals("DE42430609677000534100")).toBe(true);
-    expect(iban.equals(new IBAN("DE42430609677000534100"))).toBe(true);
-    expect(iban.equals(new IBAN("ES9121000418450200051332"))).toBe(false);
-    expect(iban.lessThan(new IBAN("ES9121000418450200051332"))).toBe(true);
+    expect(iban.equals("DE42430609677000534100")).toBeTruthy();
+    expect(iban.equals(new IBAN("DE42430609677000534100"))).toBeTruthy();
+    expect(iban.equals(new IBAN("ES9121000418450200051332"))).toBeFalsy();
+    expect(iban.lessThan(new IBAN("ES9121000418450200051332"))).toBeTruthy();
     expect(String(iban)).toBe("DE42430609677000534100");
     expect(iban.repr()).toBe("<IBAN=DE42430609677000534100>");
   });

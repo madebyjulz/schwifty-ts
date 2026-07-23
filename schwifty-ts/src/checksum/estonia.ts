@@ -7,7 +7,7 @@ class DefaultAlgorithm extends Algorithm {
 
   compute(components: string[]): string {
     const joined = components.join("");
-    const reversed = joined.split("").reverse();
+    const reversed = [...joined].toReversed();
     const weights = [7, 3, 1];
     let sum = 0;
     for (let i = 0; i < reversed.length; i++) {

@@ -41,9 +41,9 @@ const numerics: Record<string, string> = {
 
 function numerifyFR(value: string): bigint {
   return BigInt(
-    Array.from(value)
+    [...value]
       .map((c) => numerics[c])
-      .join("")
+      .join(""),
   );
 }
 
@@ -53,11 +53,7 @@ class DefaultAlgorithm extends ISO7064Mod97_10 {
 
   override preProcess(components: string[]): bigint {
     const [bankCode, branchCode, accountCode] = components;
-    return (
-      89n * numerifyFR(bankCode) +
-      15n * numerifyFR(branchCode) +
-      3n * numerifyFR(accountCode)
-    );
+    return 89n * numerifyFR(bankCode) + 15n * numerifyFR(branchCode) + 3n * numerifyFR(accountCode);
   }
 
   override postProcess(r: bigint): bigint {
