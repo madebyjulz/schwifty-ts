@@ -24,13 +24,14 @@
     "prepack": "pnpm run build"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.4.6",
-    "@types/node": "^25.3.5",
+    "@types/node": "^24.13.3",
     "git-publish": "^2.4.3",
-    "tsdown": "^0.21.0",
-    "typescript": "^5.9.3",
-    "ultracite": "7.2.5",
-    "vitest": "^4.0.18"
+    "oxfmt": "^0.60.0",
+    "oxlint": "^1.75.0",
+    "tsdown": "^0.22.13",
+    "typescript": "^7.0.2",
+    "ultracite": "7.9.4",
+    "vitest": "^4.1.10"
   },
   "description": "",
   "directories": {
