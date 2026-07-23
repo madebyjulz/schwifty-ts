@@ -1,5 +1,4 @@
 import { describe, it, expect } from "vitest";
-import { BIC } from "../src/bic.ts";
 import { getCountry } from "../src/countries.ts";
 import { SchwiftyException } from "../src/exceptions.ts";
 import { IBAN, convertBbanSpecToRegex } from "../src/iban.ts";
@@ -259,10 +258,9 @@ describe("IBAN generation", () => {
   ];
 
   it.each(generateCases)("generates from %j = %s", (components, compact) => {
-    const [cc, bank, account, branch, ...rest] = components;
-    const extra: Record<string, string> = {};
+    const [cc, bank, account, branch] = components;
     // No extra fields used in these tests
-    const iban = IBAN.generate(cc, bank, account, branch || "", extra);
+    const iban = IBAN.generate(cc, bank, account, branch || "", {});
     iban.validate(true);
     expect(iban.compact).toBe(compact);
   });
@@ -326,7 +324,7 @@ describe("BIC from IBAN", () => {
   ];
 
   it.each(bicFromIbanCases)("BIC from IBAN %s = %s", (ibanStr, expectedBic) => {
-    const {bic} = new IBAN(ibanStr);
+    const { bic } = new IBAN(ibanStr);
     expect(bic).not.toBeNull();
     expect(bic?.compact).toBe(expectedBic);
   });

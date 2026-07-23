@@ -74,7 +74,9 @@ export class IBAN extends Base {
   }
 
   private _validateCharacters(): void {
-    if (!/^[A-Z]{2}\d{2}[A-Z]*$/u.test(this._value)) {
+    // Mirrors Python's `re.match`, which is anchored at the start only: the
+    // trailing BBAN characters are checked by `_validateFormat` instead.
+    if (!/^[A-Z]{2}\d{2}[A-Z]*/u.test(this._value)) {
       throw new exceptions.InvalidStructure(`Invalid characters in IBAN ${this._value}`);
     }
   }
@@ -125,7 +127,7 @@ export class IBAN extends Base {
   }
 
   get spec(): IbanSpec {
-    const specs = registry.get<Record<string, IbanSpec>>("iban");
+    const specs = registry.get("iban");
     const countrySpec = specs[this.countryCode];
     if (!countrySpec) {
       throw new exceptions.InvalidCountryCode(`Unknown country-code '${this.countryCode}'`);
@@ -202,21 +204,21 @@ export class IBAN extends Base {
   }
 }
 
+export function convertBbanSpecToRegex(spec: string): string {
+  const specRe = new RegExp(`(\\d+)(!)?([${Object.keys(_specToRe).join("")}])`, "gu");
+  const converted = spec.replace(specRe, (_match: string, count: string, fixed: string | undefined, type: string) => {
+    const quantifier = fixed ? `{${count}}` : `{1,${count}}`;
+    return _specToRe[type] + quantifier;
+  });
+  return `^${converted}$`;
+}
+
 // Transform IBAN registry: add compiled regexes
 function addBbanRegex(_country: string, spec: IbanSpec): IbanSpec {
   if (!spec.regex) {
     spec.regex = new RegExp(convertBbanSpecToRegex(spec.bban_spec), "u");
   }
   return spec;
-}
-
-export function convertBbanSpecToRegex(spec: string): string {
-  const specRe = new RegExp(`(\\d+)(!)?([${Object.keys(_specToRe).join("")}])`, "gu");
-  const converted = spec.replace(specRe, (_match, count, fixed, type) => {
-    const quantifier = fixed ? `{${count}}` : `{1,${count}}`;
-    return _specToRe[type] + quantifier;
-  });
-  return `^${converted}$`;
 }
 
 registry.manipulate("iban", addBbanRegex);

@@ -4,8 +4,8 @@ import * as exceptions from "./exceptions.ts";
 import * as registry from "./registry.ts";
 import type { BankEntry } from "./types.ts";
 
-const _bicIso9362Re = /^[A-Z0-9]{4}[A-Z]{2}[A-Z0-9]{2}(?:[A-Z0-9]{3})?$/;
-const _bicSwiftRe = /^[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}(?:[A-Z0-9]{3})?$/;
+const _bicIso9362Re = /^[A-Z0-9]{4}[A-Z]{2}[A-Z0-9]{2}(?:[A-Z0-9]{3})?$/u;
+const _bicSwiftRe = /^[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}(?:[A-Z0-9]{3})?$/u;
 
 export class BIC extends Base {
   constructor(bic: string, options?: { allowInvalid?: boolean; enforceSwiftCompliance?: boolean }) {
@@ -17,7 +17,7 @@ export class BIC extends Base {
 
   static candidatesFromBankCode(countryCode: string, bankCode: string): BIC[] {
     try {
-      const index = registry.get<Record<string, BankEntry[]>>("bank_code");
+      const index = registry.get("bank_code");
       const key = `${countryCode}\0${bankCode}`;
       const entries = index[key];
       if (!entries) {
@@ -95,7 +95,7 @@ export class BIC extends Base {
   }
 
   private _lookupValues(key: keyof BankEntry): string[] {
-    const spec = registry.get<Record<string, BankEntry[]>>("bic");
+    const spec = registry.get("bic");
     const entries = spec[this._value] || [];
     const values = new Set<string>();
     for (const entry of entries) {
@@ -120,12 +120,12 @@ export class BIC extends Base {
   }
 
   get exists(): boolean {
-    const spec = registry.get<Record<string, BankEntry[]>>("bic");
+    const spec = registry.get("bic");
     return Boolean(spec[this._value]);
   }
 
   get type(): string {
-    const loc1 = this.locationCode[1];
+    const [, loc1] = this.locationCode;
     if (loc1 === "0") {
       return "testing";
     }
@@ -160,5 +160,5 @@ export class BIC extends Base {
 }
 
 // Build indexes on first import
-registry.buildIndex("bank", "bic", "bic", true);
-registry.buildIndex("bank", "bank_code", ["country_code", "bank_code"], true);
+registry.buildIndex("bic", "bic");
+registry.buildIndex("bank_code", ["country_code", "bank_code"]);

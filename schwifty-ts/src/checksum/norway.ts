@@ -13,7 +13,7 @@ class DefaultAlgorithm extends Algorithm {
     const weights = [5, 4, 3, 2, 7, 6, 5, 4, 3, 2];
     let total = 0;
     for (let i = 0; i < Math.min(weights.length, value.length); i++) {
-      total += weights[i] * Number.parseInt(value[i], 10);
+      total += weights[i] * Number(value[i]);
     }
 
     const checkDigit = 11 - (total % 11);

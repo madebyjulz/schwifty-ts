@@ -40,11 +40,7 @@ const numerics: Record<string, string> = {
 };
 
 function numerifyFR(value: string): bigint {
-  return BigInt(
-    [...value]
-      .map((c) => numerics[c])
-      .join(""),
-  );
+  return BigInt([...value].map((c) => numerics[c]).join(""));
 }
 
 // France (FR), Monaco (MC)

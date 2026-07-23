@@ -14,7 +14,7 @@ export class DefaultAlgorithm extends Algorithm {
     const [accountCode] = components;
     let sum = 0;
     for (let i = 0; i < accountCode.length; i++) {
-      sum += Number.parseInt(accountCode[i], 10) * (10 - i);
+      sum += Number(accountCode[i]) * (10 - i);
     }
     return sum % 11 === 0;
   }

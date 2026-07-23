@@ -67,7 +67,7 @@ describe(BIC, () => {
     expect(() => new BIC("1234DEWWXXX", { enforceSwiftCompliance: true })).toThrow(InvalidStructure);
   });
 
-  const invalidCases: [string, new (...args: any[]) => Error][] = [
+  const invalidCases: [string, new (message?: string) => Error][] = [
     ["AAAA", InvalidLength],
     ["AAAADEM1GLSX", InvalidLength],
     ["GENOD1M1GLS", InvalidStructure],

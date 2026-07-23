@@ -11,7 +11,7 @@ class DefaultAlgorithm extends Algorithm {
     const weights = [7, 3, 1];
     let sum = 0;
     for (let i = 0; i < reversed.length; i++) {
-      sum += weights[i % weights.length] * Number.parseInt(reversed[i], 10);
+      sum += weights[i % weights.length] * Number(reversed[i]);
     }
     let digit = sum % 10;
     digit = digit === 0 ? 0 : 10 - digit;

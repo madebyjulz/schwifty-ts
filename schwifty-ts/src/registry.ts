@@ -2,43 +2,49 @@ import bankData from "./data/bank.json";
 import ibanData from "./data/iban.json";
 import type { BankEntry, IbanSpec } from "./types.ts";
 
-const _registry = new Map<string, unknown>();
+/**
+ * What each registry key holds.
+ *
+ * `bank` and `iban` ship with the package as JSON; the rest are indexes over
+ * `bank` that `buildIndex` materialises when `bic.ts`/`bban.ts` are imported.
+ */
+export interface Registries {
+  bank: BankEntry[];
+  bank_code: Record<string, BankEntry[]>;
+  bic: Record<string, BankEntry[]>;
+  country: Record<string, BankEntry[]>;
+  iban: Record<string, IbanSpec>;
+}
 
-// Pre-populate with bundled data
-_registry.set("bank", bankData);
-_registry.set("iban", ibanData as unknown);
+/** Registries keyed by an arbitrary string rather than holding a flat list. */
+type MappingRegistry = Exclude<keyof Registries, "bank">;
 
-export function mergeDicts<T extends Record<string, unknown>>(left: T, right: T): T {
-  const merged = {} as T;
+const _registry = new Map<string, unknown>([
+  ["bank", bankData],
+  ["iban", ibanData],
+]);
+
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+export function mergeDicts(left: Record<string, unknown>, right: Record<string, unknown>): Record<string, unknown> {
+  const merged: Record<string, unknown> = {};
   for (const key of Object.keys(right)) {
     if (key in left) {
       const lv = left[key];
       const rv = right[key];
-      if (
-        typeof lv === "object" &&
-        lv !== null &&
-        !Array.isArray(lv) &&
-        typeof rv === "object" &&
-        rv !== null &&
-        !Array.isArray(rv)
-      ) {
-        (merged as Record<string, unknown>)[key] = mergeDicts(
-          lv as Record<string, unknown>,
-          rv as Record<string, unknown>,
-        );
-      } else {
-        (merged as Record<string, unknown>)[key] = rv;
-      }
+      merged[key] = isPlainObject(lv) && isPlainObject(rv) ? mergeDicts(lv, rv) : rv;
     }
   }
   for (const key of Object.keys(left)) {
     if (!(key in merged)) {
-      (merged as Record<string, unknown>)[key] = left[key];
+      merged[key] = left[key];
     }
   }
   for (const key of Object.keys(right)) {
     if (!(key in merged)) {
-      (merged as Record<string, unknown>)[key] = right[key];
+      merged[key] = right[key];
     }
   }
   return merged;
@@ -48,80 +54,52 @@ export function has(name: string): boolean {
   return _registry.has(name);
 }
 
-export function get<T>(name: string): T {
+export function get<K extends keyof Registries>(name: K): Registries[K] {
   const data = _registry.get(name);
-  if (!data) {
+  if (data === undefined) {
     throw new Error(`Unknown registry '${name}'`);
   }
-  return data as T;
+  // The store is keyed by string at runtime (mirroring `schwifty.registry` in
+  // the Python package) and the bundled JSON widens to plain array/object
+  // types, so `Registries` is the hand-maintained contract for what lives
+  // under each key. This is the single place that contract gets applied.
+  // oxlint-disable-next-line typescript/no-unsafe-type-assertion
+  return data as Registries[K];
 }
 
-export function save(name: string, data: unknown): void {
+export function save<K extends keyof Registries>(name: K, data: Registries[K]): void {
   _registry.set(name, data);
 }
 
-export function buildIndex(
-  baseName: string,
-  indexName: string,
-  key: string | [string, string],
-  accumulate = false,
-  predicate?: Record<string, unknown>,
-): void {
-  function makeKey(entry: Record<string, unknown>): string {
-    if (Array.isArray(key)) {
-      return key.map((k) => String(entry[k] ?? "")).join("\0");
+/**
+ * Group the bundled bank entries into `indexName`, keyed by one or more of
+ * their fields. Entries with a blank value for any part of the key are
+ * skipped, since they could not be looked up unambiguously anyway.
+ */
+export function buildIndex(indexName: MappingRegistry, key: keyof BankEntry | (keyof BankEntry)[]): void {
+  const keyFields = Array.isArray(key) ? key : [key];
+  const data: Record<string, BankEntry[]> = {};
+
+  for (const entry of get("bank")) {
+    const parts = keyFields.map((field) => String(entry[field] ?? ""));
+    if (parts.some((part) => !part)) {
+      continue;
     }
-    return String(entry[key] ?? "");
+    const indexKey = parts.join("\0");
+    data[indexKey] ??= [];
+    data[indexKey].push(entry);
   }
 
-  function match(entry: Record<string, unknown>): boolean {
-    if (!predicate) {
-      return true;
-    }
-    return Object.entries(predicate).every(([k, v]) => entry[k] === v);
-  }
-
-  const base = get<Record<string, unknown>[]>(baseName);
-  if (!Array.isArray(base)) {
-    throw new TypeError("Base must be a list");
-  }
-
-  if (accumulate) {
-    const data: Record<string, Record<string, unknown>[]> = {};
-    for (const entry of base) {
-      if (!match(entry)) {
-        continue;
-      }
-      const ik = makeKey(entry);
-      if (!ik) {
-        continue;
-      }
-      if (Array.isArray(key)) {
-        const parts = ik.split("\0");
-        if (parts.some((p) => !p)) {
-          continue;
-        }
-      }
-      if (!data[ik]) {
-        data[ik] = [];
-      }
-      data[ik].push(entry);
-    }
-    save(indexName, data);
-  } else {
-    const data: Record<string, Record<string, unknown>> = {};
-    for (const entry of base) {
-      if (!match(entry)) {
-        continue;
-      }
-      data[makeKey(entry)] = entry;
-    }
-    save(indexName, data);
-  }
+  save(indexName, data);
 }
 
-export function manipulate<V>(name: string, func: (key: string, value: V) => V): void {
-  const reg = get<Record<string, V>>(name);
+/**
+ * Rewrite every entry of the IBAN registry in place — used once at import time
+ * to attach the compiled BBAN regex to each country spec. Add an overload here
+ * if another registry ever needs the same treatment.
+ */
+export function manipulate(name: "iban", func: (key: string, value: IbanSpec) => IbanSpec): void {
+  const reg = get(name);
   for (const key of Object.keys(reg)) {
     reg[key] = func(key, reg[key]);
   }

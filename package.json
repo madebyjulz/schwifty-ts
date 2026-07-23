@@ -29,7 +29,7 @@
     }
   },
   "scripts": {
-    "prebuild": "node scripts/consolidate-registry.mjs",
+    "prebuild": "node scripts/consolidate-registry.ts",
     "build": "tsdown",
     "test": "vitest run",
     "test:watch": "vitest",

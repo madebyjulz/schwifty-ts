@@ -12,8 +12,34 @@ export default defineConfig({
   options: {
     typeAware: true,
   },
+  overrides: [
+    {
+      files: ["scripts/**"],
+      rules: {
+        // Build-time CLI scripts report progress on stdout.
+        "no-console": "off",
+      },
+    },
+    {
+      // The vitest preset ships these as `overrides`, which outrank the
+      // top-level `rules` below, so the opt-outs have to be repeated here.
+      files: ["**/*.{test,spec}.{ts,tsx,js,jsx}", "**/__tests__/**/*.{ts,tsx,js,jsx}"],
+      plugins: ["vitest"],
+      rules: {
+        "vitest/max-expects": "off",
+      },
+    },
+  ],
   rules: {
     "arrow-body-style": "off",
+    // The checksum modules are one tiny class per national algorithm (46 of
+    // them for Germany alone) and `exceptions.ts` is one class per error type.
+    // Splitting either across files would obscure more than it reveals.
+    "max-classes-per-file": "off",
+    // The `Algorithm` hierarchy is built on template-method hooks
+    // (`preProcess`, `computeSummand`, `reconcile`, ...). Base implementations
+    // legitimately ignore `this`; making them static would break overriding.
+    "class-methods-use-this": "off",
     complexity: "off",
     curly: "off",
     "func-style": "off",
@@ -27,6 +53,11 @@ export default defineConfig({
     "no-unused-vars": [
       "warn",
       {
+        // Overrides in the `Algorithm` hierarchy have to keep the full
+        // signature even when a hook ignores an argument; `_`-prefixing marks
+        // that deliberately.
+        argsIgnorePattern: "^_",
+        varsIgnorePattern: "^_",
         fix: {
           imports: "safe-fix",
           variables: "off",
@@ -57,7 +88,17 @@ export default defineConfig({
     "typescript/strict-void-return": "off",
     "typescript/no-confusing-void-expression": "off",
     "typescript/no-misused-promises": "warn",
-    "unicorn/filename-case": "warn",
+    // Every string reaching this library is folded to printable ASCII by
+    // `clean()`/`toAscii()` in `schwifty-ts/src/common.ts`, so spreading a
+    // string into code points is exactly the per-character split we want.
+    "typescript/no-misused-spread": "off",
+    // Error class names mirror the public API of the Python `schwifty`
+    // package (`SchwiftyException`, `InvalidLength`, ...) — renaming them to
+    // an `Error` suffix would fork the API of the port.
+    "unicorn/custom-error-definition": "off",
+    // Modules are a 1:1 port of the `schwifty-py` submodule and keep its
+    // snake_case module names so the two trees stay diff-able.
+    "unicorn/filename-case": ["warn", { cases: { kebabCase: true, snakeCase: true } }],
     "unicorn/no-array-for-each": "off",
     "unicorn/no-array-reduce": "warn",
     "unicorn/no-nested-ternary": "off",
@@ -66,6 +107,5 @@ export default defineConfig({
     "unicorn/no-useless-undefined": ["error", { checkArguments: false }],
     // Allow `never` in template expressions for satisfy never type assertions in switch statements.
     "typescript/restrict-template-expressions": ["error", { allowNever: true }],
-    "vitest/max-expects": "off",
   },
 });

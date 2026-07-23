@@ -23,17 +23,46 @@ function rangeCut(r: Range, s: string): string {
   return s.slice(r.start, r.end);
 }
 
-const _specDefaults: Record<string, keyof IbanSpec> = {
-  [Component.CURRENCY_CODE]: "default_currency_code",
+/** Components that fall back to a spec-level default when left unspecified. */
+const _specDefaults: Partial<Record<Component, (spec: IbanSpec) => string | undefined>> = {
+  [Component.CURRENCY_CODE]: (spec) => spec.default_currency_code,
 };
 
-function getSpecDefault(spec: IbanSpec, component: string): string | undefined {
-  const field = _specDefaults[component];
-  return field ? (spec[field] as string | undefined) : undefined;
+function getSpecDefault(spec: IbanSpec, component: Component): string | undefined {
+  return _specDefaults[component]?.(spec);
+}
+
+/**
+ * Build a fully populated record by evaluating `make` for every component.
+ *
+ * Spelled out key by key rather than assembled from `Object.fromEntries` so
+ * that the result is `Record<Component, T>` by construction — no cast, and a
+ * newly added component becomes a compile error here.
+ */
+function componentRecord<T>(make: (component: Component) => T): Record<Component, T> {
+  return {
+    [Component.ACCOUNT_ID]: make(Component.ACCOUNT_ID),
+    [Component.ACCOUNT_TYPE]: make(Component.ACCOUNT_TYPE),
+    [Component.ACCOUNT_CODE]: make(Component.ACCOUNT_CODE),
+    [Component.ACCOUNT_HOLDER_ID]: make(Component.ACCOUNT_HOLDER_ID),
+    [Component.CURRENCY_CODE]: make(Component.CURRENCY_CODE),
+    [Component.BANK_CODE]: make(Component.BANK_CODE),
+    [Component.BRANCH_CODE]: make(Component.BRANCH_CODE),
+    [Component.NATIONAL_CHECKSUM_DIGITS]: make(Component.NATIONAL_CHECKSUM_DIGITS),
+  };
+}
+
+function componentEntries<T>(record: Record<Component, T>): [Component, T][] {
+  return Object.values(Component).map((component) => [component, record[component]]);
+}
+
+/** The only `BankEntry` field that doubles as a BBAN component. */
+function getBankValue(bank: Partial<BankEntry>, component: Component): string | undefined {
+  return component === Component.BANK_CODE ? bank.bank_code : undefined;
 }
 
 function getBbanSpec(countryCode: string): IbanSpec {
-  const specs = registry.get<Record<string, IbanSpec>>("iban");
+  const specs = registry.get("iban");
   const result = specs[countryCode];
   if (!result) {
     throw new exceptions.InvalidCountryCode(`Unknown country-code '${countryCode}'`);
@@ -48,11 +77,7 @@ function getPositionRange(spec: IbanSpec, componentType: Component): Range {
 }
 
 function getPositionRanges(spec: IbanSpec): Record<Component, Range> {
-  const result = {} as Record<Component, Range>;
-  for (const component of Object.values(Component)) {
-    result[component] = getPositionRange(spec, component);
-  }
-  return result;
+  return componentRecord((component) => getPositionRange(spec, component));
 }
 
 function computeNationalChecksum(countryCode: string, components: Record<Component, string>): string {
@@ -61,6 +86,109 @@ function computeNationalChecksum(countryCode: string, components: Record<Compone
     return "";
   }
   return algo.compute(algo.accepts.map((key) => components[key]));
+}
+
+function pickRandom<T>(items: T[]): T {
+  return items[Math.floor(Math.random() * items.length)];
+}
+
+/** Expand a character-class body such as `A-Z0-9` into every character it matches. */
+function expandCharClass(cls: string): string {
+  let result = "";
+  let i = 0;
+  while (i < cls.length) {
+    const rangeStart = cls.codePointAt(i);
+    const rangeEnd = cls.codePointAt(i + 2);
+    if (cls[i + 1] === "-" && rangeStart !== undefined && rangeEnd !== undefined) {
+      for (let c = rangeStart; c <= rangeEnd; c++) {
+        result += String.fromCodePoint(c);
+      }
+      i += 3;
+    } else {
+      result += cls[i];
+      i++;
+    }
+  }
+  return result;
+}
+
+/** Read the quantifier at `i`, returning `[min, max, indexAfterQuantifier]`. */
+function parseQuantifier(src: string, i: number): [number, number, number] {
+  if (i >= src.length) {
+    return [1, 1, i];
+  }
+  if (src[i] === "{") {
+    const end = src.indexOf("}", i);
+    const inner = src.slice(i + 1, end);
+    if (inner.includes(",")) {
+      const [min, max] = inner.split(",");
+      return [Number(min), Number(max || min), end + 1];
+    }
+    const n = Number(inner);
+    return [n, n, end + 1];
+  }
+  if (src[i] === "+") {
+    return [1, 5, i + 1];
+  }
+  if (src[i] === "*") {
+    return [0, 5, i + 1];
+  }
+  if (src[i] === "?") {
+    return [0, 1, i + 1];
+  }
+  return [1, 1, i];
+}
+
+// Simple random string generator from regex-like patterns
+const CARET_RE = /^\^/u;
+const DOLLAR_RE = /\$$/u;
+
+function generateFromRegex(pattern: string): string {
+  let result = "";
+  let i = 0;
+  const src = pattern.replace(CARET_RE, "").replace(DOLLAR_RE, "");
+
+  const repeat = (chars: string): void => {
+    const [min, max, next] = parseQuantifier(src, i);
+    i = next;
+    const count = min + Math.floor(Math.random() * (max - min + 1));
+    for (let j = 0; j < count; j++) {
+      result += chars[Math.floor(Math.random() * chars.length)];
+    }
+  };
+
+  while (i < src.length) {
+    const ch = src[i];
+
+    if (ch === "[") {
+      const end = src.indexOf("]", i);
+      const chars = expandCharClass(src.slice(i + 1, end));
+      i = end + 1;
+      repeat(chars);
+    } else if (ch === "\\") {
+      i++;
+      const escaped = src[i];
+      i++;
+      repeat(escaped === "d" ? "0123456789" : escaped);
+    } else if (ch === " ") {
+      i++;
+      repeat(" ");
+    } else {
+      result += ch;
+      i++;
+    }
+  }
+  return result.toUpperCase();
+}
+
+const LEADING_SLASH_CARET_RE = /^\/\^?/u;
+const TRAILING_DOLLAR_SLASH_RE = /\$?\/$/u;
+
+function getRegexSource(spec: IbanSpec): string {
+  if (spec.regex instanceof RegExp) {
+    return spec.regex.source;
+  }
+  return String(spec.regex).replace(LEADING_SLASH_CARET_RE, "").replace(TRAILING_DOLLAR_SLASH_RE, "");
 }
 
 export class BBAN extends Base {
@@ -78,11 +206,9 @@ export class BBAN extends Base {
     }
 
     const ranges = getPositionRanges(spec);
-    const components = {} as Record<Component, string>;
-
-    for (const [key, range] of Object.entries(ranges) as [Component, Range][]) {
-      components[key] = clean(values[key] || "").padStart(rangeLength(range), "0");
-    }
+    const components = componentRecord((component) =>
+      clean(values[component] || "").padStart(rangeLength(ranges[component]), "0"),
+    );
 
     const bankCodeLength = rangeLength(ranges[Component.BANK_CODE]);
     const branchCodeLength = rangeLength(ranges[Component.BRANCH_CODE]);
@@ -114,7 +240,7 @@ export class BBAN extends Base {
     }
 
     let bban = "0".repeat(spec.bban_length);
-    for (const [key, value] of Object.entries(components) as [Component, string][]) {
+    for (const [key, value] of componentEntries(components)) {
       const range = ranges[key];
       if (rangeIsEmpty(range)) {
         continue;
@@ -135,56 +261,42 @@ export class BBAN extends Base {
     const useRegistry = options?.useRegistry ?? true;
     const values = options?.values ?? {};
 
-    const banksByCountry = registry.get<Record<string, BankEntry[]>>("country");
-    if (!countryCode) {
-      const keys = Object.keys(banksByCountry);
-      countryCode = keys[Math.floor(Math.random() * keys.length)];
-    }
+    const banksByCountry = registry.get("country");
+    const country = countryCode || pickRandom(Object.keys(banksByCountry));
 
-    const spec = getBbanSpec(countryCode);
-    let bank: Partial<BankEntry> = {};
-    const banks = banksByCountry[countryCode];
-    if (banks && useRegistry) {
-      bank = banks[Math.floor(Math.random() * banks.length)];
-    }
+    const spec = getBbanSpec(country);
+    const banks = banksByCountry[country];
+    const bank: Partial<BankEntry> = banks && useRegistry ? pickRandom(banks) : {};
 
     if (!spec.positions) {
-      const regexStr = getRegexSource(spec);
-      const bban = generateFromRegex(regexStr);
-      return new BBAN(countryCode, bban);
+      return new BBAN(country, generateFromRegex(getRegexSource(spec)));
     }
 
     const ranges = getPositionRanges(spec);
     for (let attempt = 0; attempt < 100; attempt++) {
-      const regexStr = getRegexSource(spec);
-      const randomBban = generateFromRegex(regexStr);
-      const components = {} as Record<Component, string>;
-
-      for (const [key, range] of Object.entries(ranges) as [Component, Range][]) {
-        if (values[key] === undefined) {
-          components[key] =
-            (bank as Record<string, string>)[key] || getSpecDefault(spec, key) || rangeCut(range, randomBban);
-        } else {
-          components[key] = values[key];
-        }
-      }
+      const randomBban = generateFromRegex(getRegexSource(spec));
+      // An explicitly supplied value wins even when blank; the remaining
+      // sources are skipped when they are blank as well as when absent.
+      const components = componentRecord(
+        (component) =>
+          values[component] ??
+          (getBankValue(bank, component) || getSpecDefault(spec, component) || rangeCut(ranges[component], randomBban)),
+      );
 
       const bankCode = components[Component.BANK_CODE];
       const bankCodeLength = rangeLength(ranges[Component.BANK_CODE]);
       const branchCodeLength = rangeLength(ranges[Component.BRANCH_CODE]);
 
       if (bankCode.length >= bankCodeLength + branchCodeLength) {
-        const start = bankCodeLength;
-        const end = start + branchCodeLength;
-        components[Component.BRANCH_CODE] = bankCode.slice(start, end);
+        components[Component.BRANCH_CODE] = bankCode.slice(bankCodeLength, bankCodeLength + branchCodeLength);
       }
 
-      for (const [key, value] of Object.entries(components) as [Component, string][]) {
+      for (const [key, value] of componentEntries(components)) {
         components[key] = value.slice(0, rangeLength(ranges[key]));
       }
 
       try {
-        return BBAN.fromComponents(countryCode, Object.fromEntries(Object.entries(components).map(([k, v]) => [k, v])));
+        return BBAN.fromComponents(country, Object.fromEntries(componentEntries(components)));
       } catch (error) {
         if (error instanceof exceptions.SchwiftyException) {
           continue;
@@ -196,7 +308,7 @@ export class BBAN extends Base {
   }
 
   validateNationalChecksum(): boolean {
-    const {bank} = this;
+    const { bank } = this;
     const algoName = bank?.checksum_algo || "default";
     const algo = getAlgorithm(`${this.countryCode}:${algoName}`);
     if (!algo) {
@@ -261,7 +373,7 @@ export class BBAN extends Base {
   }
 
   get bank(): BankEntry | null {
-    const bankRegistry = registry.get<Record<string, BankEntry[]>>("bank_code");
+    const bankRegistry = registry.get("bank_code");
     const lookupBy: Component[] = this.spec.bic_lookup_components || [Component.BANK_CODE];
     const key = lookupBy.map((c) => this._getComponent(c)).join("");
     const bankEntry = bankRegistry[`${this.countryCode}\0${key}`];
@@ -281,111 +393,4 @@ export class BBAN extends Base {
 }
 
 // Build country index
-registry.buildIndex("bank", "country", "country_code", true);
-
-function getRegexSource(spec: IbanSpec): string {
-  if (spec.regex instanceof RegExp) {
-    return spec.regex.source;
-  }
-  return String(spec.regex)
-    .replace(/^\/\^?/, "")
-    .replace(/\$?\/$/, "");
-}
-
-// Simple random string generator from regex-like patterns
-const CARET_RE = /^\^/;
-const DOLLAR_RE = /\$$/;
-
-function generateFromRegex(pattern: string): string {
-  let result = "";
-  let i = 0;
-  const src = pattern.replace(CARET_RE, "").replace(DOLLAR_RE, "");
-
-  while (i < src.length) {
-    const ch = src[i];
-
-    if (ch === "[") {
-      const end = src.indexOf("]", i);
-      const charClass = src.slice(i + 1, end);
-      const chars = expandCharClass(charClass);
-      i = end + 1;
-      const [min, max, newI] = parseQuantifier(src, i);
-      i = newI;
-      const count = min + Math.floor(Math.random() * (max - min + 1));
-      for (let j = 0; j < count; j++) {
-        result += chars[Math.floor(Math.random() * chars.length)];
-      }
-    } else if (ch === "\\") {
-      i++;
-      const escaped = src[i];
-      let chars: string;
-      if (escaped === "d") {
-        chars = "0123456789";
-      } else {
-        chars = escaped;
-      }
-      i++;
-      const [min, max, newI] = parseQuantifier(src, i);
-      i = newI;
-      const count = min + Math.floor(Math.random() * (max - min + 1));
-      for (let j = 0; j < count; j++) {
-        result += chars[Math.floor(Math.random() * chars.length)];
-      }
-    } else if (ch === " ") {
-      i++;
-      const [min, max, newI] = parseQuantifier(src, i);
-      i = newI;
-      const count = min + Math.floor(Math.random() * (max - min + 1));
-      result += " ".repeat(count);
-    } else {
-      result += ch;
-      i++;
-    }
-  }
-  return result.toUpperCase();
-}
-
-function expandCharClass(cls: string): string {
-  let result = "";
-  let i = 0;
-  while (i < cls.length) {
-    if (i + 2 < cls.length && cls[i + 1] === "-") {
-      const start = cls.codePointAt(i);
-      const end = cls.codePointAt(i + 2);
-      for (let c = start; c <= end; c++) {
-        result += String.fromCodePoint(c);
-      }
-      i += 3;
-    } else {
-      result += cls[i];
-      i++;
-    }
-  }
-  return result;
-}
-
-function parseQuantifier(src: string, i: number): [number, number, number] {
-  if (i >= src.length) {
-    return [1, 1, i];
-  }
-  if (src[i] === "{") {
-    const end = src.indexOf("}", i);
-    const inner = src.slice(i + 1, end);
-    if (inner.includes(",")) {
-      const [a, b] = inner.split(",");
-      return [Number.parseInt(a, 10), Number.parseInt(b || a, 10), end + 1];
-    }
-    const n = Number.parseInt(inner, 10);
-    return [n, n, end + 1];
-  }
-  if (src[i] === "+") {
-    return [1, 5, i + 1];
-  }
-  if (src[i] === "*") {
-    return [0, 5, i + 1];
-  }
-  if (src[i] === "?") {
-    return [0, 1, i + 1];
-  }
-  return [1, 1, i];
-}
+registry.buildIndex("country", "country_code");

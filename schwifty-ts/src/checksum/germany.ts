@@ -3,8 +3,8 @@ import { InvalidBBANChecksum } from "../exceptions.ts";
 import { Algorithm, register } from "./algorithm.ts";
 
 // const ACCOUNT_CODE_LENGTH = 10;
-const ZERO_PLUS_START_REGEX = /^0+/;
-const ZERO_PLUS_REGEX = /0+$/;
+const ZERO_PLUS_START_REGEX = /^0+/u;
+const ZERO_PLUS_REGEX = /0+$/u;
 
 interface Positions {
   checkDigit: number;
@@ -13,8 +13,7 @@ interface Positions {
 }
 
 function digitSum(n: number): number {
-  return [...String(n)]
-    .reduce((s, d) => s + Number.parseInt(d, 10), 0);
+  return [...String(n)].reduce((s, d) => s + Number(d), 0);
 }
 
 function cycle<T>(arr: T[], index: number): T {
@@ -47,7 +46,7 @@ abstract class WeightedModulus extends Algorithm {
   getDigits(accountCode: string): string {
     const positions = this.getPositions(accountCode);
     const start = positions.start - 1;
-    const {end} = positions;
+    const { end } = positions;
     let digits = accountCode.slice(start, end);
     if (this.reverse) {
       digits = [...digits].toReversed().join("");
@@ -62,7 +61,7 @@ abstract class WeightedModulus extends Algorithm {
   computeWeightedSum(digits: string): number {
     let sum = 0;
     for (let i = 0; i < digits.length; i++) {
-      sum += this.computeSummand(Number.parseInt(digits[i], 10), cycle(this.weights, i));
+      sum += this.computeSummand(Number(digits[i]), cycle(this.weights, i));
     }
     return sum;
   }
@@ -244,7 +243,7 @@ class Algorithm08 extends WeightedMod10 {
 
   override compute(components: string[]): string {
     const [accountCode] = components;
-    if (Number.parseInt(accountCode, 10) < this.minAccountCode) {
+    if (Number(accountCode) < this.minAccountCode) {
       return "";
     }
     return super.compute(components);
@@ -252,7 +251,7 @@ class Algorithm08 extends WeightedMod10 {
 
   override validate(components: string[], expected: string): boolean {
     const [accountCode] = components;
-    if (Number.parseInt(accountCode, 10) < this.minAccountCode) {
+    if (Number(accountCode) < this.minAccountCode) {
       return true;
     }
     return super.validate(components, expected);
@@ -510,7 +509,7 @@ class Algorithm24 extends WeightedMod10 {
 
   override getDigits(accountCode: string): string {
     let digits = super.getDigits(accountCode);
-    const firstDigit = Number.parseInt(digits[0], 10);
+    const firstDigit = Number(digits[0]);
     if ([3, 4, 5, 6].includes(firstDigit)) {
       digits = digits.slice(1);
     } else if (firstDigit === 9) {
@@ -723,7 +722,7 @@ class Algorithm68 extends WeightedMod10 {
 
   override validate(components: string[], expected: string): boolean {
     const [accountCode] = components;
-    const acNum = Number.parseInt(accountCode, 10);
+    const acNum = Number(accountCode);
     if (acNum >= 400_000_000 && acNum <= 499_999_999) {
       return true;
     }
@@ -756,7 +755,7 @@ class Algorithm76 extends WeightedMod11 {
 
   override validate(components: string[], expected: string): boolean {
     const [accountCode] = components;
-    const firstDigit = Number.parseInt(accountCode[0], 10);
+    const firstDigit = Number(accountCode[0]);
     if (![0, 4, 6, 7, 8, 9].includes(firstDigit)) {
       return false;
     }
@@ -785,30 +784,6 @@ class Algorithm88 extends WeightedMod11 {
 register("DE")(new Algorithm88());
 
 // Algorithm 91
-class Algorithm91 extends Algorithm {
-  override readonly name = "91";
-  override readonly accepts = [Component.ACCOUNT_CODE];
-
-  compute(components: string[]): string {
-    return new Algorithm91Variant1().compute(components);
-  }
-
-  override validate(components: string[], expected: string): boolean {
-    const variants = [
-      new Algorithm91Variant1(),
-      new Algorithm91Variant2(),
-      new Algorithm91Variant3(),
-      new Algorithm91Variant4(),
-    ];
-    for (const variant of variants) {
-      if (variant.validate(components, expected)) {
-        return true;
-      }
-    }
-    return false;
-  }
-}
-
 class Algorithm91Variant1 extends WeightedMod11 {
   override readonly name: string = "91v1";
   override readonly positions: Positions = {
@@ -839,6 +814,29 @@ class Algorithm91Variant4 extends Algorithm91Variant1 {
   override readonly weights = [2, 4, 8, 5, 10, 9];
 }
 
+class Algorithm91 extends Algorithm {
+  override readonly name = "91";
+  override readonly accepts = [Component.ACCOUNT_CODE];
+
+  compute(components: string[]): string {
+    return new Algorithm91Variant1().compute(components);
+  }
+
+  override validate(components: string[], expected: string): boolean {
+    const variants = [
+      new Algorithm91Variant1(),
+      new Algorithm91Variant2(),
+      new Algorithm91Variant3(),
+      new Algorithm91Variant4(),
+    ];
+    for (const variant of variants) {
+      if (variant.validate(components, expected)) {
+        return true;
+      }
+    }
+    return false;
+  }
+}
 register("DE")(new Algorithm91());
 
 // Algorithm 99

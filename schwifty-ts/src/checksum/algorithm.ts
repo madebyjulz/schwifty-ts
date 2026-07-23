@@ -3,11 +3,7 @@ import { Component } from "../domain.ts";
 const _alphabet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
 export function numerify(value: string): bigint {
-  return BigInt(
-    [...value]
-      .map((c) => _alphabet.indexOf(c).toString())
-      .join(""),
-  );
+  return BigInt([...value].map((c) => _alphabet.indexOf(c).toString()).join(""));
 }
 
 export function iso7064(n: bigint, mod: bigint, postProcess: (r: bigint) => bigint, nDigits = 2): string {
@@ -16,23 +12,21 @@ export function iso7064(n: bigint, mod: bigint, postProcess: (r: bigint) => bigi
 }
 
 export function weighted(value: Iterable<string>, mod: number, weights: Iterable<number>): number {
-  let sum = 0;
-  const wArr = Array.isArray(weights) ? weights : [...weights];
-  const vArr = Array.isArray(value) ? value : [...value];
+  const wArr = [...weights];
+  const vArr = [...value];
   const len = Math.min(wArr.length, vArr.length);
+  let sum = 0;
   for (let i = 0; i < len; i++) {
-    sum += wArr[i] * Number.parseInt(vArr[i], 10);
+    sum += wArr[i] * Number(vArr[i]);
   }
   return sum % mod;
 }
 
 export function luhn(value: string): string {
-  const numerical = [...value]
-    .map((n) => _alphabet.indexOf(n).toString())
-    .join("");
+  const numerical = [...value].map((n) => _alphabet.indexOf(n).toString()).join("");
   const reversed = [...numerical].toReversed();
-  const processed = reversed.map((n, i) => ((2 - (i % 2)) * Number.parseInt(n, 10)).toString()).join("");
-  const digitSum = [...processed].reduce((sum, n) => sum + Number.parseInt(n, 10), 0);
+  const processed = reversed.map((n, i) => ((2 - (i % 2)) * Number(n)).toString()).join("");
+  const digitSum = [...processed].reduce((sum, n) => sum + Number(n), 0);
   return ((10 - (digitSum % 10)) % 10).toString();
 }
 
