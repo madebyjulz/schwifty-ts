@@ -5,7 +5,7 @@
  *
  * Run before build: node scripts/consolidate-registry.ts
  */
-import { mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 
 // Declared as an interface rather than `Record<string, JsonValue>` so the
@@ -142,11 +142,36 @@ function loadRegistry(name: string): JsonObject[] | JsonObject {
   return data;
 }
 
-mkdirSync(outDir, { recursive: true });
+const REGISTRIES = ["bank", "iban"];
 
-for (const name of ["bank", "iban"]) {
-  const outPath = path.join(outDir, `${name}.json`);
-  writeFileSync(outPath, JSON.stringify(loadRegistry(name)));
-  const size = (readFileSync(outPath).length / BYTES_PER_KIB).toFixed(1);
-  console.log(`${name}: ${outPath} (${size} KB)`);
+/**
+ * The `schwifty-py` submodule is only checked out in a full development clone.
+ * Fresh worktrees (e.g. the one `git-publish` packs from) get an empty
+ * directory, but the consolidated JSON is committed, so regeneration can be
+ * skipped there.
+ */
+function sourceIsAvailable(): boolean {
+  return REGISTRIES.every((name) => existsSync(path.join(registrySource, `${name}_registry`)));
+}
+
+function outputIsPresent(): boolean {
+  return REGISTRIES.every((name) => existsSync(path.join(outDir, `${name}.json`)));
+}
+
+if (sourceIsAvailable()) {
+  mkdirSync(outDir, { recursive: true });
+
+  for (const name of REGISTRIES) {
+    const outPath = path.join(outDir, `${name}.json`);
+    writeFileSync(outPath, JSON.stringify(loadRegistry(name)));
+    const size = (readFileSync(outPath).length / BYTES_PER_KIB).toFixed(1);
+    console.log(`${name}: ${outPath} (${size} KB)`);
+  }
+} else if (outputIsPresent()) {
+  console.log(`schwifty-py submodule not checked out; reusing existing ${outDir}`);
+} else {
+  throw new Error(
+    `No registry source at ${registrySource} and no consolidated JSON in ${outDir}. ` +
+      "Run `git submodule update --init` first.",
+  );
 }
