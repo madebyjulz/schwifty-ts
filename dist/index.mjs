@@ -1,302 +1,4 @@
-//#region schwifty-ts/src/common.ts
-const _cleanRegex = /\s+/g;
-function clean(s) {
-	return s.replace(_cleanRegex, "").toUpperCase();
-}
-var Base = class Base {
-	_value;
-	constructor(value) {
-		this._value = clean(value);
-	}
-	toString() {
-		return this._value;
-	}
-	valueOf() {
-		return this._value;
-	}
-	[Symbol.toPrimitive]() {
-		return this._value;
-	}
-	get compact() {
-		return this._value;
-	}
-	get length() {
-		return this._value.length;
-	}
-	_getSlice(start, end) {
-		if (start < this._value.length && (end === void 0 || end <= this._value.length)) return end !== void 0 ? this._value.slice(start, end) : this._value.slice(start);
-		return "";
-	}
-	equals(other) {
-		if (other instanceof Base) return this._value === other._value;
-		return this._value === String(other);
-	}
-	lessThan(other) {
-		if (other instanceof Base) return this._value < other._value;
-		return this._value < String(other);
-	}
-	repr() {
-		return `<${this.constructor.name}=${this._value}>`;
-	}
-};
-//#endregion
-//#region schwifty-ts/src/countries.ts
-const countries = {
-	"AD": "Andorra",
-	"AE": "United Arab Emirates",
-	"AF": "Afghanistan",
-	"AG": "Antigua and Barbuda",
-	"AI": "Anguilla",
-	"AL": "Albania",
-	"AM": "Armenia",
-	"AO": "Angola",
-	"AQ": "Antarctica",
-	"AR": "Argentina",
-	"AS": "American Samoa",
-	"AT": "Austria",
-	"AU": "Australia",
-	"AW": "Aruba",
-	"AX": "Åland Islands",
-	"AZ": "Azerbaijan",
-	"BA": "Bosnia and Herzegovina",
-	"BB": "Barbados",
-	"BD": "Bangladesh",
-	"BE": "Belgium",
-	"BF": "Burkina Faso",
-	"BG": "Bulgaria",
-	"BH": "Bahrain",
-	"BI": "Burundi",
-	"BJ": "Benin",
-	"BL": "Saint Barthélemy",
-	"BM": "Bermuda",
-	"BN": "Brunei Darussalam",
-	"BO": "Bolivia, Plurinational State of",
-	"BQ": "Bonaire, Sint Eustatius and Saba",
-	"BR": "Brazil",
-	"BS": "Bahamas",
-	"BT": "Bhutan",
-	"BV": "Bouvet Island",
-	"BW": "Botswana",
-	"BY": "Belarus",
-	"BZ": "Belize",
-	"CA": "Canada",
-	"CC": "Cocos (Keeling) Islands",
-	"CD": "Congo, The Democratic Republic of the",
-	"CF": "Central African Republic",
-	"CG": "Congo",
-	"CH": "Switzerland",
-	"CI": "Côte d'Ivoire",
-	"CK": "Cook Islands",
-	"CL": "Chile",
-	"CM": "Cameroon",
-	"CN": "China",
-	"CO": "Colombia",
-	"CR": "Costa Rica",
-	"CU": "Cuba",
-	"CV": "Cabo Verde",
-	"CW": "Curaçao",
-	"CX": "Christmas Island",
-	"CY": "Cyprus",
-	"CZ": "Czechia",
-	"DE": "Germany",
-	"DJ": "Djibouti",
-	"DK": "Denmark",
-	"DM": "Dominica",
-	"DO": "Dominican Republic",
-	"DZ": "Algeria",
-	"EC": "Ecuador",
-	"EE": "Estonia",
-	"EG": "Egypt",
-	"EH": "Western Sahara",
-	"ER": "Eritrea",
-	"ES": "Spain",
-	"ET": "Ethiopia",
-	"FI": "Finland",
-	"FJ": "Fiji",
-	"FK": "Falkland Islands (Malvinas)",
-	"FM": "Micronesia, Federated States of",
-	"FO": "Faroe Islands",
-	"FR": "France",
-	"GA": "Gabon",
-	"GB": "United Kingdom",
-	"GD": "Grenada",
-	"GE": "Georgia",
-	"GF": "French Guiana",
-	"GG": "Guernsey",
-	"GH": "Ghana",
-	"GI": "Gibraltar",
-	"GL": "Greenland",
-	"GM": "Gambia",
-	"GN": "Guinea",
-	"GP": "Guadeloupe",
-	"GQ": "Equatorial Guinea",
-	"GR": "Greece",
-	"GS": "South Georgia and the South Sandwich Islands",
-	"GT": "Guatemala",
-	"GU": "Guam",
-	"GW": "Guinea-Bissau",
-	"GY": "Guyana",
-	"HK": "Hong Kong",
-	"HM": "Heard Island and McDonald Islands",
-	"HN": "Honduras",
-	"HR": "Croatia",
-	"HT": "Haiti",
-	"HU": "Hungary",
-	"ID": "Indonesia",
-	"IE": "Ireland",
-	"IL": "Israel",
-	"IM": "Isle of Man",
-	"IN": "India",
-	"IO": "British Indian Ocean Territory",
-	"IQ": "Iraq",
-	"IR": "Iran, Islamic Republic of",
-	"IS": "Iceland",
-	"IT": "Italy",
-	"JE": "Jersey",
-	"JM": "Jamaica",
-	"JO": "Jordan",
-	"JP": "Japan",
-	"KE": "Kenya",
-	"KG": "Kyrgyzstan",
-	"KH": "Cambodia",
-	"KI": "Kiribati",
-	"KM": "Comoros",
-	"KN": "Saint Kitts and Nevis",
-	"KP": "Korea, Democratic People's Republic of",
-	"KR": "Korea, Republic of",
-	"KW": "Kuwait",
-	"KY": "Cayman Islands",
-	"KZ": "Kazakhstan",
-	"LA": "Lao People's Democratic Republic",
-	"LB": "Lebanon",
-	"LC": "Saint Lucia",
-	"LI": "Liechtenstein",
-	"LK": "Sri Lanka",
-	"LR": "Liberia",
-	"LS": "Lesotho",
-	"LT": "Lithuania",
-	"LU": "Luxembourg",
-	"LV": "Latvia",
-	"LY": "Libya",
-	"MA": "Morocco",
-	"MC": "Monaco",
-	"MD": "Moldova, Republic of",
-	"ME": "Montenegro",
-	"MF": "Saint Martin (French part)",
-	"MG": "Madagascar",
-	"MH": "Marshall Islands",
-	"MK": "North Macedonia",
-	"ML": "Mali",
-	"MM": "Myanmar",
-	"MN": "Mongolia",
-	"MO": "Macao",
-	"MP": "Northern Mariana Islands",
-	"MQ": "Martinique",
-	"MR": "Mauritania",
-	"MS": "Montserrat",
-	"MT": "Malta",
-	"MU": "Mauritius",
-	"MV": "Maldives",
-	"MW": "Malawi",
-	"MX": "Mexico",
-	"MY": "Malaysia",
-	"MZ": "Mozambique",
-	"NA": "Namibia",
-	"NC": "New Caledonia",
-	"NE": "Niger",
-	"NF": "Norfolk Island",
-	"NG": "Nigeria",
-	"NI": "Nicaragua",
-	"NL": "Netherlands",
-	"NO": "Norway",
-	"NP": "Nepal",
-	"NR": "Nauru",
-	"NU": "Niue",
-	"NZ": "New Zealand",
-	"OM": "Oman",
-	"PA": "Panama",
-	"PE": "Peru",
-	"PF": "French Polynesia",
-	"PG": "Papua New Guinea",
-	"PH": "Philippines",
-	"PK": "Pakistan",
-	"PL": "Poland",
-	"PM": "Saint Pierre and Miquelon",
-	"PN": "Pitcairn",
-	"PR": "Puerto Rico",
-	"PS": "Palestine, State of",
-	"PT": "Portugal",
-	"PW": "Palau",
-	"PY": "Paraguay",
-	"QA": "Qatar",
-	"RE": "Réunion",
-	"RO": "Romania",
-	"RS": "Serbia",
-	"RU": "Russian Federation",
-	"RW": "Rwanda",
-	"SA": "Saudi Arabia",
-	"SB": "Solomon Islands",
-	"SC": "Seychelles",
-	"SD": "Sudan",
-	"SE": "Sweden",
-	"SG": "Singapore",
-	"SH": "Saint Helena, Ascension and Tristan da Cunha",
-	"SI": "Slovenia",
-	"SJ": "Svalbard and Jan Mayen",
-	"SK": "Slovakia",
-	"SL": "Sierra Leone",
-	"SM": "San Marino",
-	"SN": "Senegal",
-	"SO": "Somalia",
-	"SR": "Suriname",
-	"SS": "South Sudan",
-	"ST": "Sao Tome and Principe",
-	"SV": "El Salvador",
-	"SX": "Sint Maarten (Dutch part)",
-	"SY": "Syrian Arab Republic",
-	"SZ": "Eswatini",
-	"TC": "Turks and Caicos Islands",
-	"TD": "Chad",
-	"TF": "French Southern Territories",
-	"TG": "Togo",
-	"TH": "Thailand",
-	"TJ": "Tajikistan",
-	"TK": "Tokelau",
-	"TL": "Timor-Leste",
-	"TM": "Turkmenistan",
-	"TN": "Tunisia",
-	"TO": "Tonga",
-	"TR": "Türkiye",
-	"TT": "Trinidad and Tobago",
-	"TV": "Tuvalu",
-	"TW": "Taiwan, Province of China",
-	"TZ": "Tanzania, United Republic of",
-	"UA": "Ukraine",
-	"UG": "Uganda",
-	"UM": "United States Minor Outlying Islands",
-	"US": "United States",
-	"UY": "Uruguay",
-	"UZ": "Uzbekistan",
-	"VA": "Holy See (Vatican City State)",
-	"VC": "Saint Vincent and the Grenadines",
-	"VE": "Venezuela, Bolivarian Republic of",
-	"VG": "Virgin Islands, British",
-	"VI": "Virgin Islands, U.S.",
-	"VN": "Viet Nam",
-	"VU": "Vanuatu",
-	"WF": "Wallis and Futuna",
-	"WS": "Samoa",
-	"YE": "Yemen",
-	"YT": "Mayotte",
-	"ZA": "South Africa",
-	"ZM": "Zambia",
-	"ZW": "Zimbabwe"
-};
-function getCountry(alpha2) {
-	return countries[alpha2];
-}
-//#endregion
-//#region schwifty-ts/src/exceptions.ts
+//#region src/exceptions.ts
 var SchwiftyException = class extends Error {
 	constructor(message) {
 		super(message);
@@ -358,7 +60,326 @@ var GenerateRandomOverflowError = class extends SchwiftyException {
 	}
 };
 //#endregion
-//#region schwifty-ts/src/data/bank.json
+//#region src/common.ts
+const _whitespaceRegex = /\s+/gu;
+const _combiningMarkRegex = /\p{M}+/gu;
+const _nonAsciiRegex = /[^ -~]/u;
+/**
+* Fold a caller-supplied value into printable ASCII.
+*
+* IBANs, BICs and BBANs are defined over ASCII alone, so the value is first
+* normalised with NFKD to map the compatibility forms people routinely paste
+* (full-width digits, accented latin letters, ligatures) onto their ASCII
+* equivalents. Anything still outside printable ASCII afterwards is rejected
+* rather than dropped: silently deleting a stray character would turn a
+* malformed account number into a seemingly well-formed one.
+*
+* Every string entering this library passes through here, which is what makes
+* spreading a value into code points (`[...value]`) a safe per-character split.
+*/
+function toAscii(value) {
+	const folded = value.normalize("NFKD").replace(_combiningMarkRegex, "");
+	const offender = _nonAsciiRegex.exec(folded);
+	if (offender) throw new InvalidStructure(`Invalid non-ASCII character '${offender[0]}' in '${value}'`);
+	return folded;
+}
+function clean(s) {
+	return toAscii(s.replace(_whitespaceRegex, "")).toUpperCase();
+}
+var Base = class Base {
+	_value;
+	constructor(value) {
+		this._value = clean(value);
+	}
+	toString() {
+		return this._value;
+	}
+	valueOf() {
+		return this._value;
+	}
+	[Symbol.toPrimitive]() {
+		return this._value;
+	}
+	get compact() {
+		return this._value;
+	}
+	get length() {
+		return this._value.length;
+	}
+	_getSlice(start, end) {
+		if (start < this._value.length && (end === void 0 || end <= this._value.length)) return end === void 0 ? this._value.slice(start) : this._value.slice(start, end);
+		return "";
+	}
+	equals(other) {
+		if (other instanceof Base) return this._value === other._value;
+		return this._value === String(other);
+	}
+	lessThan(other) {
+		if (other instanceof Base) return this._value < other._value;
+		return this._value < String(other);
+	}
+	repr() {
+		return `<${this.constructor.name}=${this._value}>`;
+	}
+};
+//#endregion
+//#region src/countries.ts
+const countries = {
+	AD: "Andorra",
+	AE: "United Arab Emirates",
+	AF: "Afghanistan",
+	AG: "Antigua and Barbuda",
+	AI: "Anguilla",
+	AL: "Albania",
+	AM: "Armenia",
+	AO: "Angola",
+	AQ: "Antarctica",
+	AR: "Argentina",
+	AS: "American Samoa",
+	AT: "Austria",
+	AU: "Australia",
+	AW: "Aruba",
+	AX: "Åland Islands",
+	AZ: "Azerbaijan",
+	BA: "Bosnia and Herzegovina",
+	BB: "Barbados",
+	BD: "Bangladesh",
+	BE: "Belgium",
+	BF: "Burkina Faso",
+	BG: "Bulgaria",
+	BH: "Bahrain",
+	BI: "Burundi",
+	BJ: "Benin",
+	BL: "Saint Barthélemy",
+	BM: "Bermuda",
+	BN: "Brunei Darussalam",
+	BO: "Bolivia, Plurinational State of",
+	BQ: "Bonaire, Sint Eustatius and Saba",
+	BR: "Brazil",
+	BS: "Bahamas",
+	BT: "Bhutan",
+	BV: "Bouvet Island",
+	BW: "Botswana",
+	BY: "Belarus",
+	BZ: "Belize",
+	CA: "Canada",
+	CC: "Cocos (Keeling) Islands",
+	CD: "Congo, The Democratic Republic of the",
+	CF: "Central African Republic",
+	CG: "Congo",
+	CH: "Switzerland",
+	CI: "Côte d'Ivoire",
+	CK: "Cook Islands",
+	CL: "Chile",
+	CM: "Cameroon",
+	CN: "China",
+	CO: "Colombia",
+	CR: "Costa Rica",
+	CU: "Cuba",
+	CV: "Cabo Verde",
+	CW: "Curaçao",
+	CX: "Christmas Island",
+	CY: "Cyprus",
+	CZ: "Czechia",
+	DE: "Germany",
+	DJ: "Djibouti",
+	DK: "Denmark",
+	DM: "Dominica",
+	DO: "Dominican Republic",
+	DZ: "Algeria",
+	EC: "Ecuador",
+	EE: "Estonia",
+	EG: "Egypt",
+	EH: "Western Sahara",
+	ER: "Eritrea",
+	ES: "Spain",
+	ET: "Ethiopia",
+	FI: "Finland",
+	FJ: "Fiji",
+	FK: "Falkland Islands (Malvinas)",
+	FM: "Micronesia, Federated States of",
+	FO: "Faroe Islands",
+	FR: "France",
+	GA: "Gabon",
+	GB: "United Kingdom",
+	GD: "Grenada",
+	GE: "Georgia",
+	GF: "French Guiana",
+	GG: "Guernsey",
+	GH: "Ghana",
+	GI: "Gibraltar",
+	GL: "Greenland",
+	GM: "Gambia",
+	GN: "Guinea",
+	GP: "Guadeloupe",
+	GQ: "Equatorial Guinea",
+	GR: "Greece",
+	GS: "South Georgia and the South Sandwich Islands",
+	GT: "Guatemala",
+	GU: "Guam",
+	GW: "Guinea-Bissau",
+	GY: "Guyana",
+	HK: "Hong Kong",
+	HM: "Heard Island and McDonald Islands",
+	HN: "Honduras",
+	HR: "Croatia",
+	HT: "Haiti",
+	HU: "Hungary",
+	ID: "Indonesia",
+	IE: "Ireland",
+	IL: "Israel",
+	IM: "Isle of Man",
+	IN: "India",
+	IO: "British Indian Ocean Territory",
+	IQ: "Iraq",
+	IR: "Iran, Islamic Republic of",
+	IS: "Iceland",
+	IT: "Italy",
+	JE: "Jersey",
+	JM: "Jamaica",
+	JO: "Jordan",
+	JP: "Japan",
+	KE: "Kenya",
+	KG: "Kyrgyzstan",
+	KH: "Cambodia",
+	KI: "Kiribati",
+	KM: "Comoros",
+	KN: "Saint Kitts and Nevis",
+	KP: "Korea, Democratic People's Republic of",
+	KR: "Korea, Republic of",
+	KW: "Kuwait",
+	KY: "Cayman Islands",
+	KZ: "Kazakhstan",
+	LA: "Lao People's Democratic Republic",
+	LB: "Lebanon",
+	LC: "Saint Lucia",
+	LI: "Liechtenstein",
+	LK: "Sri Lanka",
+	LR: "Liberia",
+	LS: "Lesotho",
+	LT: "Lithuania",
+	LU: "Luxembourg",
+	LV: "Latvia",
+	LY: "Libya",
+	MA: "Morocco",
+	MC: "Monaco",
+	MD: "Moldova, Republic of",
+	ME: "Montenegro",
+	MF: "Saint Martin (French part)",
+	MG: "Madagascar",
+	MH: "Marshall Islands",
+	MK: "North Macedonia",
+	ML: "Mali",
+	MM: "Myanmar",
+	MN: "Mongolia",
+	MO: "Macao",
+	MP: "Northern Mariana Islands",
+	MQ: "Martinique",
+	MR: "Mauritania",
+	MS: "Montserrat",
+	MT: "Malta",
+	MU: "Mauritius",
+	MV: "Maldives",
+	MW: "Malawi",
+	MX: "Mexico",
+	MY: "Malaysia",
+	MZ: "Mozambique",
+	NA: "Namibia",
+	NC: "New Caledonia",
+	NE: "Niger",
+	NF: "Norfolk Island",
+	NG: "Nigeria",
+	NI: "Nicaragua",
+	NL: "Netherlands",
+	NO: "Norway",
+	NP: "Nepal",
+	NR: "Nauru",
+	NU: "Niue",
+	NZ: "New Zealand",
+	OM: "Oman",
+	PA: "Panama",
+	PE: "Peru",
+	PF: "French Polynesia",
+	PG: "Papua New Guinea",
+	PH: "Philippines",
+	PK: "Pakistan",
+	PL: "Poland",
+	PM: "Saint Pierre and Miquelon",
+	PN: "Pitcairn",
+	PR: "Puerto Rico",
+	PS: "Palestine, State of",
+	PT: "Portugal",
+	PW: "Palau",
+	PY: "Paraguay",
+	QA: "Qatar",
+	RE: "Réunion",
+	RO: "Romania",
+	RS: "Serbia",
+	RU: "Russian Federation",
+	RW: "Rwanda",
+	SA: "Saudi Arabia",
+	SB: "Solomon Islands",
+	SC: "Seychelles",
+	SD: "Sudan",
+	SE: "Sweden",
+	SG: "Singapore",
+	SH: "Saint Helena, Ascension and Tristan da Cunha",
+	SI: "Slovenia",
+	SJ: "Svalbard and Jan Mayen",
+	SK: "Slovakia",
+	SL: "Sierra Leone",
+	SM: "San Marino",
+	SN: "Senegal",
+	SO: "Somalia",
+	SR: "Suriname",
+	SS: "South Sudan",
+	ST: "Sao Tome and Principe",
+	SV: "El Salvador",
+	SX: "Sint Maarten (Dutch part)",
+	SY: "Syrian Arab Republic",
+	SZ: "Eswatini",
+	TC: "Turks and Caicos Islands",
+	TD: "Chad",
+	TF: "French Southern Territories",
+	TG: "Togo",
+	TH: "Thailand",
+	TJ: "Tajikistan",
+	TK: "Tokelau",
+	TL: "Timor-Leste",
+	TM: "Turkmenistan",
+	TN: "Tunisia",
+	TO: "Tonga",
+	TR: "Türkiye",
+	TT: "Trinidad and Tobago",
+	TV: "Tuvalu",
+	TW: "Taiwan, Province of China",
+	TZ: "Tanzania, United Republic of",
+	UA: "Ukraine",
+	UG: "Uganda",
+	UM: "United States Minor Outlying Islands",
+	US: "United States",
+	UY: "Uruguay",
+	UZ: "Uzbekistan",
+	VA: "Holy See (Vatican City State)",
+	VC: "Saint Vincent and the Grenadines",
+	VE: "Venezuela, Bolivarian Republic of",
+	VG: "Virgin Islands, British",
+	VI: "Virgin Islands, U.S.",
+	VN: "Viet Nam",
+	VU: "Vanuatu",
+	WF: "Wallis and Futuna",
+	WS: "Samoa",
+	YE: "Yemen",
+	YT: "Mayotte",
+	ZA: "South Africa",
+	ZM: "Zambia",
+	ZW: "Zimbabwe"
+};
+function getCountry(alpha2) {
+	return countries[alpha2];
+}
+//#endregion
+//#region src/data/bank.json
 var bank_default = [
 	{
 		"country_code": "AT",
@@ -23107,24 +23128,6 @@ var bank_default = [
 		"checksum_algo": "09"
 	},
 	{
-		"bank_code": "10030700",
-		"name": "Eurocity Bank",
-		"short_name": "Eurocity Bank",
-		"bic": "DLGHDEB1XXX",
-		"primary": true,
-		"country_code": "DE",
-		"checksum_algo": "16"
-	},
-	{
-		"bank_code": "10030730",
-		"name": "Eurocity Bank Gf GAA",
-		"short_name": "Eurocity Bank Gf GAA",
-		"bic": "DLGHDEB1XXX",
-		"primary": true,
-		"country_code": "DE",
-		"checksum_algo": "16"
-	},
-	{
 		"bank_code": "10033300",
 		"name": "Santander Consumer Bank",
 		"short_name": "Santander Bank Berlin",
@@ -28040,8 +28043,8 @@ var bank_default = [
 	},
 	{
 		"bank_code": "21050055",
-		"name": "Hamburg Commercial Bank, GF Retail",
-		"short_name": "Hamburg Commercial Bank",
+		"name": "Hamburg Commercial Bank, Gf Hamburg Direct Bank",
+		"short_name": "HCOB - Hamburg Direct Bank",
 		"bic": "HHDBDEH2XXX",
 		"primary": true,
 		"country_code": "DE",
@@ -29192,7 +29195,7 @@ var bank_default = [
 	},
 	{
 		"bank_code": "25055500",
-		"name": "LBS-Norddeutsche Landesbausparkasse",
+		"name": "LBS Landesbausparkasse NordWest",
 		"short_name": "LBS-Nord, Hannover",
 		"bic": "NOLADE21LBS",
 		"primary": true,
@@ -29534,8 +29537,8 @@ var bank_default = [
 	},
 	{
 		"bank_code": "25151371",
-		"name": "Stadtsparkasse Burgdorf",
-		"short_name": "Stadtsparkasse Burgdorf",
+		"name": "Stadtsparkasse Burgdorf -alt-",
+		"short_name": "Stadtspk Burgdorf -alt-",
 		"bic": "NOLADE21BUF",
 		"primary": true,
 		"country_code": "DE",
@@ -32363,15 +32366,6 @@ var bank_default = [
 		"name": "Bankhaus Neelmeyer",
 		"short_name": "Bankhaus Neelmeyer Bremen",
 		"bic": "NEELDE22XXX",
-		"primary": true,
-		"country_code": "DE",
-		"checksum_algo": "09"
-	},
-	{
-		"bank_code": "29020200",
-		"name": "Greensill Bank",
-		"short_name": "Greensill Bank Bremen",
-		"bic": "NFHBDE21XXX",
 		"primary": true,
 		"country_code": "DE",
 		"checksum_algo": "09"
@@ -42647,8 +42641,8 @@ var bank_default = [
 	},
 	{
 		"bank_code": "50060414",
-		"name": "DZ BANK für Bausparkasse Schwäbisch Hall",
-		"short_name": "DZ BANK für BSH",
+		"name": "DZ BANK GF BSH",
+		"short_name": "DZ BANK GF BSH",
 		"bic": "GENODEF1VK3",
 		"primary": true,
 		"country_code": "DE",
@@ -42656,8 +42650,8 @@ var bank_default = [
 	},
 	{
 		"bank_code": "50060415",
-		"name": "DZ BANK für Bausparkasse Schwäbisch Hall",
-		"short_name": "DZ BANK für BSH",
+		"name": "DZ BANK GF BSH",
+		"short_name": "DZ BANK GF BSH",
 		"bic": "GENODEF1VK4",
 		"primary": true,
 		"country_code": "DE",
@@ -42665,8 +42659,8 @@ var bank_default = [
 	},
 	{
 		"bank_code": "50060416",
-		"name": "DZ BANK GF TSG",
-		"short_name": "DZ BANK GF TSG",
+		"name": "DZ BANK GF VK6",
+		"short_name": "DZ BANK GF VK6",
 		"bic": "GENODEF1VK6",
 		"primary": true,
 		"country_code": "DE",
@@ -42701,8 +42695,8 @@ var bank_default = [
 	},
 	{
 		"bank_code": "50060420",
-		"name": "DZ BANK GF BSH",
-		"short_name": "DZ BANK GF BSH",
+		"name": "DZ BANK GF V20",
+		"short_name": "DZ BANK GF V20",
 		"bic": "GENODEF1V20",
 		"primary": true,
 		"country_code": "DE",
@@ -42710,8 +42704,8 @@ var bank_default = [
 	},
 	{
 		"bank_code": "50060421",
-		"name": "DZ BANK GF BSH",
-		"short_name": "DZ BANK GF BSH",
+		"name": "DZ BANK GF AIS",
+		"short_name": "DZ BANK GF AIS",
 		"bic": "GENODEF1V21",
 		"primary": true,
 		"country_code": "DE",
@@ -42719,8 +42713,8 @@ var bank_default = [
 	},
 	{
 		"bank_code": "50060422",
-		"name": "DZ BANK GF GRX",
-		"short_name": "DZ BANK GF GRX",
+		"name": "DZ BANK GF V22",
+		"short_name": "DZ BANK GF V22",
 		"bic": "GENODEF1V22",
 		"primary": true,
 		"country_code": "DE",
@@ -42728,8 +42722,8 @@ var bank_default = [
 	},
 	{
 		"bank_code": "50060423",
-		"name": "DZ BANK GF GRX",
-		"short_name": "DZ BANK GF GRX",
+		"name": "DZ BANK GF V23",
+		"short_name": "DZ BANK GF V23",
 		"bic": "GENODEF1V23",
 		"primary": true,
 		"country_code": "DE",
@@ -42737,8 +42731,8 @@ var bank_default = [
 	},
 	{
 		"bank_code": "50060424",
-		"name": "DZ BANK GF DEV",
-		"short_name": "DZ BANK GF DEV",
+		"name": "DZ BANK GF V24",
+		"short_name": "DZ BANK GF V24",
 		"bic": "GENODEF1V24",
 		"primary": true,
 		"country_code": "DE",
@@ -43780,6 +43774,15 @@ var bank_default = [
 		"checksum_algo": "06"
 	},
 	{
+		"bank_code": "50215500",
+		"name": "Hauck Aufhäuser Lampe Privatbank",
+		"short_name": "Hauck Aufhäuser Lampe",
+		"bic": "ABASDEFFXXX",
+		"primary": true,
+		"country_code": "DE",
+		"checksum_algo": "09"
+	},
+	{
 		"bank_code": "50220085",
 		"name": "UBS Europe",
 		"short_name": "UBS Europe",
@@ -44600,8 +44603,8 @@ var bank_default = [
 	},
 	{
 		"bank_code": "50850150",
-		"name": "Stadt- und Kreis-Sparkasse Darmstadt",
-		"short_name": "St u Kr Spk Darmstadt",
+		"name": "Sparkasse Darmstadt und Dieburg",
+		"short_name": "Spk Darmstadt und Dieburg",
 		"bic": "HELADEF1DAS",
 		"primary": true,
 		"country_code": "DE",
@@ -44627,8 +44630,8 @@ var bank_default = [
 	},
 	{
 		"bank_code": "50852651",
-		"name": "Sparkasse Dieburg",
-		"short_name": "Sparkasse Dieburg",
+		"name": "Sparkasse Dieburg -alt-",
+		"short_name": "Sparkasse Dieburg -alt-",
 		"bic": "HELADEF1DIE",
 		"primary": true,
 		"country_code": "DE",
@@ -45449,15 +45452,6 @@ var bank_default = [
 		"name": "Bank of China",
 		"short_name": "Bank of China Frankfurt",
 		"bic": "BKCHDEFFXXX",
-		"primary": true,
-		"country_code": "DE",
-		"checksum_algo": "09"
-	},
-	{
-		"bank_code": "51410800",
-		"name": "Commerzbank - GF onvista",
-		"short_name": "Commerzbank - GF onvista",
-		"bic": "BOURDEFFXXX",
 		"primary": true,
 		"country_code": "DE",
 		"checksum_algo": "09"
@@ -56677,15 +56671,6 @@ var bank_default = [
 		"checksum_algo": "09"
 	},
 	{
-		"bank_code": "70110570",
-		"name": "Münchener Hypothekenbank",
-		"short_name": "Münch Hypoth Bank München",
-		"bic": "MHYPDEMMSCA",
-		"primary": true,
-		"country_code": "DE",
-		"checksum_algo": "09"
-	},
-	{
 		"bank_code": "70120100",
 		"name": "State Street Bank International",
 		"short_name": "State Street Bk Int.München",
@@ -59153,8 +59138,8 @@ var bank_default = [
 	},
 	{
 		"bank_code": "74020100",
-		"name": "Raiffeisenlandesbank OÖ Zndl Süddeutschland",
-		"short_name": "RLB OÖ Zndl Süddeutschland",
+		"name": "Raiffeisenlandesbank OÖ Niederlassung Deutschland",
+		"short_name": "RLB OÖ Ndl Deutschland",
 		"bic": "RZOODE77XXX",
 		"primary": true,
 		"country_code": "DE",
@@ -59162,9 +59147,9 @@ var bank_default = [
 	},
 	{
 		"bank_code": "74020150",
-		"name": "Raiffeisenlandesbank OÖ Zndl Südde - für interne Zwecke",
-		"short_name": "RLB OÖ Zndl Süddeutschland",
-		"bic": "RZOODE77050",
+		"name": "Raiffeisenlandesbank OÖ Ndl  Deutschl.- für interne Zwecke",
+		"short_name": "RLB OÖ Ndl Deutschland",
+		"bic": "RZOODE77XXX",
 		"primary": true,
 		"country_code": "DE",
 		"checksum_algo": "60"
@@ -60433,15 +60418,6 @@ var bank_default = [
 		"bank_code": "76060618",
 		"name": "Volksbank Raiffeisenbank -alt-",
 		"short_name": "VR Bank Nürnberg -alt-",
-		"bic": "GENODEF1N02",
-		"primary": true,
-		"country_code": "DE",
-		"checksum_algo": "88"
-	},
-	{
-		"bank_code": "76060620",
-		"name": "Volksbank Raiffeisenbank Nürnberg (Gf GAA)",
-		"short_name": "VR Bank Nbg (Gf GAA)",
 		"bic": "GENODEF1N02",
 		"primary": true,
 		"country_code": "DE",
@@ -106668,2456 +106644,2456 @@ var bank_default = [
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10900004"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10900020"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10900046"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10900075"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10900088"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10901014"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10901030"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10901043"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10901056"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10901069"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10901072"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10901098"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10901102"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10901115"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10901128"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10901131"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10901144"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10901157"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10901160"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10901173"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10901186"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10901199"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10901203"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10901216"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10901229"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10901232"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10901245"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10901258"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10901261"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10901274"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10901287"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10901290"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10901304"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10901317"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10901320"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10901333"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10901346"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10901359"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10901362"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10901375"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10901388"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10901391"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10901405"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10901418"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10901421"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10901434"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10901447"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10901450"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10901463"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10901476"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10901489"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10901492"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10901506"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10901519"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10901522"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10901535"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10901548"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10901551"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10901564"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10901577"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10901580"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10901593"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10901607"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10901623"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10901636"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10901649"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10901652"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10901665"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10901678"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10901681"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10901694"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10901708"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10901711"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10901737"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10901740"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10901753"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10901766"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10901779"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10901782"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10901795"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10901809"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10901812"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10901825"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10901838"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10901841"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10901854"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10901867"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10901870"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10901883"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10901896"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10901900"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10901926"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10901939"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10901942"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10901955"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10901968"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10901971"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10901984"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10901997"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10902008"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10902011"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10902024"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10902037"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10902040"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10902053"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10902066"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10902079"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10902082"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10902095"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10902109"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10902112"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10902125"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10902138"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10902141"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10902154"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10902167"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10902170"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10902183"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10902196"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10902200"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10902213"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10902226"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10902239"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10902242"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10902255"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10902268"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10902271"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10902284"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10902297"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10902301"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10902314"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10902327"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10902330"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10902343"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10902356"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10902369"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10902372"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10902385"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10902398"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10902402"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10902415"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10902428"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10902431"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10902444"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10902457"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10902460"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10902473"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10902486"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10902499"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10902503"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10902516"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10902529"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10902532"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10902545"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10902558"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10902561"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10902574"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10902587"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10902590"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10902604"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10902617"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10902620"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10902633"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10902646"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10902659"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10902662"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10902675"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10902688"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10902705"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10902718"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10902721"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10902734"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10902747"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10902750"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10902763"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10902776"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10902789"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10902792"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10902806"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10902819"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10902835"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10902848"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10902851"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15000002"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15000028"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15000031"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15000044"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15000057"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15000060"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15001012"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15001025"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15001038"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15001041"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15001054"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15001067"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15001070"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15001083"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15001096"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15001100"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15001113"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15001126"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15001139"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15001142"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15001155"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15001168"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15001171"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15001197"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15001201"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15001214"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15001272"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15001298"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15001331"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15001344"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15001357"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15001360"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15001373"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15001386"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15001399"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15001403"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15001416"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15001429"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15001432"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15001445"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15001458"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15001461"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15001487"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15001490"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15001504"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15001517"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15001520"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15001533"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15001546"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15001559"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15001562"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15001575"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15001588"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15001605"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15001618"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15001621"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15001634"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15001647"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15001663"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15001676"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15001689"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15001692"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15001706"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15001719"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15001722"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15001735"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15001748"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15001751"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15001764"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15001777"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15001780"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15001793"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15001807"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15001810"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15001865"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15001878"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15001881"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15001894"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15001911"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15001979"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15001982"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15002006"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15002022"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15002051"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15002080"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15002110"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15002149"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15002152"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15002165"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15002178"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15002181"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15002194"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15002208"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15002211"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15002224"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15002237"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15002240"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15002253"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15002266"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15002279"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15002282"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15002295"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15002309"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15002325"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15002338"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15002341"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15002354"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15002367"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15002370"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15002383"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10900033"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10900059"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10900091"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15001285"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15002312"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPP",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "10900105"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPP",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "19100009"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPP",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "19101019"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPP",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "19101048"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPP",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "19101064"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPP",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "19101123"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPP",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "19101136"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WBKPPLPP",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "19101152"
 	},
 	{
 		"country_code": "PL",
 		"primary": true,
 		"bic": "WNKPPLPPXXX",
-		"name": "Santander Bank Polska Spółka Akcyjna",
-		"short_name": "Santander Bank Polska Spółka Akcyjna",
+		"name": "Erste Bank Polska Spółka Akcyjna",
+		"short_name": "Erste Bank Polska Spółka Akcyjna",
 		"bank_code": "15000073"
 	},
 	{
@@ -109135,6 +109111,14 @@ var bank_default = [
 		"name": "Bank Gospodarstwa Krajowego",
 		"short_name": "Bank Gospodarstwa Krajowego",
 		"bank_code": "11300010"
+	},
+	{
+		"country_code": "PL",
+		"primary": true,
+		"bic": "GOSKPLPWXXX",
+		"name": "Bank Gospodarstwa Krajowego",
+		"short_name": "Bank Gospodarstwa Krajowego",
+		"bank_code": "11300023"
 	},
 	{
 		"country_code": "PL",
@@ -118623,6 +118607,14 @@ var bank_default = [
 		"name": "UniCredit S.A. Spółka Akcyjna Oddział w Polsce",
 		"short_name": "UniCredit S.A. Spółka Akcyjna Oddział w Polsce",
 		"bank_code": "29100022"
+	},
+	{
+		"country_code": "PL",
+		"primary": true,
+		"bic": "BMPBPLP2XXX",
+		"name": "UniCredit S.A. Spółka Akcyjna Oddział w Polsce",
+		"short_name": "UniCredit S.A. Spółka Akcyjna Oddział w Polsce",
+		"bank_code": "29100035"
 	},
 	{
 		"country_code": "PL",
@@ -236857,6 +236849,14 @@ var bank_default = [
 		"primary": true
 	},
 	{
+		"country_code": "FR",
+		"bic": "BAMYFR22",
+		"bank_code": "17959",
+		"name": "BANQUE MICHEL INCHAUSPE",
+		"short_name": "BAMI",
+		"primary": true
+	},
+	{
 		"primary": true,
 		"name": "HALIFAX (A TRADING NAME OF BANK OF SCOTLAND PLC)",
 		"short_name": "HALIFAX",
@@ -237654,6 +237654,14 @@ var bank_default = [
 		"bank_code": "REVO",
 		"name": "Revolut Bank UAB",
 		"short_name": "Revolut Bank UAB",
+		"primary": true
+	},
+	{
+		"country_code": "IE",
+		"bic": "PPSEIE22XXX",
+		"bank_code": "PPSE",
+		"name": "Paysafe Prepaid Services Limited",
+		"short_name": "Paysafe Prepaid Services",
 		"primary": true
 	},
 	{
@@ -241882,7 +241890,7 @@ var bank_default = [
 	}
 ];
 //#endregion
-//#region schwifty-ts/src/data/iban.json
+//#region src/data/iban.json
 var iban_default = {
 	AL: {
 		"positions": {
@@ -243500,89 +243508,241 @@ var iban_default = {
 			"account_code": [10, 22],
 			"national_checksum_digits": [22, 24]
 		}
+	},
+	YE: {
+		"country": "YE",
+		"bban_spec": "4!a4!n18!c",
+		"bban_length": 26,
+		"iban_spec": "YE2!n4!a4!n18!c",
+		"iban_length": 30,
+		"positions": {
+			"account_code": [8, 26],
+			"bank_code": [0, 4],
+			"branch_code": [4, 8]
+		},
+		"in_sepa_zone": false
 	}
 };
 //#endregion
-//#region schwifty-ts/src/registry.ts
-const _registry = /* @__PURE__ */ new Map();
-_registry.set("bank", bank_default);
-_registry.set("iban", iban_default);
-function get(name) {
-	const data = _registry.get(name);
-	if (!data) throw new Error(`Unknown registry '${name}'`);
-	return data;
-}
-function save(name, data) {
-	_registry.set(name, data);
-}
-function buildIndex(baseName, indexName, key, accumulate = false, predicate) {
-	function makeKey(entry) {
-		if (Array.isArray(key)) return key.map((k) => String(entry[k] ?? "")).join("\0");
-		return String(entry[key] ?? "");
+//#region src/domain.ts
+/**
+* The addressable parts of a BBAN.
+*
+* Modelled as a const object rather than a TypeScript `enum` so the module
+* stays erasable (see `erasableSyntaxOnly` in tsconfig.json) while keeping
+* `Component.BANK_CODE` and `Object.values(Component)` working as before.
+*/
+const Component = {
+	ACCOUNT_ID: "account_id",
+	ACCOUNT_TYPE: "account_type",
+	ACCOUNT_CODE: "account_code",
+	ACCOUNT_HOLDER_ID: "account_holder_id",
+	CURRENCY_CODE: "currency_code",
+	BANK_CODE: "bank_code",
+	BRANCH_CODE: "branch_code",
+	NATIONAL_CHECKSUM_DIGITS: "national_checksum_digits"
+};
+/** Half-open `[start, end)` slice of a BBAN occupied by one component. */
+var Range = class {
+	start;
+	end;
+	constructor(start = 0, end = 0) {
+		this.start = start;
+		this.end = end;
 	}
-	function match(entry) {
-		if (!predicate) return true;
-		return Object.entries(predicate).every(([k, v]) => entry[k] === v);
+	get length() {
+		return this.end - this.start;
 	}
-	const base = get(baseName);
-	if (!Array.isArray(base)) throw new Error("Base must be a list");
-	if (accumulate) {
-		const data = {};
-		for (const entry of base) {
-			if (!match(entry)) continue;
-			const ik = makeKey(entry);
-			if (!ik) continue;
-			if (Array.isArray(key)) {
-				if (ik.split("\0").some((p) => !p)) continue;
-			}
-			if (!data[ik]) data[ik] = [];
-			data[ik].push(entry);
-		}
-		save(indexName, data);
-	} else {
-		const data = {};
-		for (const entry of base) {
-			if (!match(entry)) continue;
-			data[makeKey(entry)] = entry;
-		}
-		save(indexName, data);
+	/** A component the country's BBAN layout does not define at all. */
+	get isEmpty() {
+		return this.start === 0 && this.end === 0;
 	}
+	cut(s) {
+		return s.slice(this.start, this.end);
+	}
+};
+/**
+* Build a fully populated record by evaluating `make` for every component.
+*
+* Spelled out key by key rather than assembled from `Object.fromEntries` so
+* that the result is `Record<Component, T>` by construction — no cast, and a
+* newly added component becomes a compile error here.
+*/
+function componentRecord(make) {
+	return {
+		[Component.ACCOUNT_ID]: make(Component.ACCOUNT_ID),
+		[Component.ACCOUNT_TYPE]: make(Component.ACCOUNT_TYPE),
+		[Component.ACCOUNT_CODE]: make(Component.ACCOUNT_CODE),
+		[Component.ACCOUNT_HOLDER_ID]: make(Component.ACCOUNT_HOLDER_ID),
+		[Component.CURRENCY_CODE]: make(Component.CURRENCY_CODE),
+		[Component.BANK_CODE]: make(Component.BANK_CODE),
+		[Component.BRANCH_CODE]: make(Component.BRANCH_CODE),
+		[Component.NATIONAL_CHECKSUM_DIGITS]: make(Component.NATIONAL_CHECKSUM_DIGITS)
+	};
 }
-function manipulate(name, func) {
-	const reg = get(name);
-	for (const key of Object.keys(reg)) reg[key] = func(key, reg[key]);
-	save(name, reg);
+function componentEntries(record) {
+	return Object.values(Component).map((component) => [component, record[component]]);
+}
+/**
+* Whether the country declares a positional BBAN layout.
+*
+* `IBANSpec.positions` always holds an entry per component, so its mere
+* presence says nothing; a country the registry has no layout for (Angola,
+* Iran, ...) collapses to eight empty ranges and its BBANs have to be
+* generated straight from the regex instead of assembled component by
+* component.
+*/
+function hasPositions(spec) {
+	return Object.values(spec.positions).some((range) => !range.isEmpty);
 }
 //#endregion
-//#region schwifty-ts/src/bic.ts
-const _bicIso9362Re = /^[A-Z0-9]{4}[A-Z]{2}[A-Z0-9]{2}(?:[A-Z0-9]{3})?$/;
-const _bicSwiftRe = /^[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}(?:[A-Z0-9]{3})?$/;
+//#region src/registry.ts
+const _specToRe = {
+	n: "\\d",
+	a: "[A-Z]",
+	c: "[A-Za-z0-9]",
+	e: " "
+};
+/** Translate a SWIFT BBAN specification such as `8!n10!n` into a regex source. */
+function convertBbanSpecToRegex(spec) {
+	const specRe = new RegExp(`(\\d+)(!)?([${Object.keys(_specToRe).join("")}])`, "gu");
+	return `^${spec.replace(specRe, (_match, count, fixed, type) => {
+		const quantifier = fixed ? `{${count}}` : `{1,${count}}`;
+		return _specToRe[type] + quantifier;
+	})}$`;
+}
+const _rawBanks = bank_default;
+const _rawIbanSpecs = iban_default;
+const _componentValues = new Set(Object.values(Component));
+function isComponent(value) {
+	return _componentValues.has(value);
+}
+function parseIbanSpec(countryCode, data) {
+	const rawPositions = data.positions ?? {};
+	const positions = componentRecord((component) => {
+		const coords = rawPositions[component];
+		if (coords === void 0 || coords.length < 2) return new Range();
+		return new Range(coords[0], coords[1]);
+	});
+	const bicLookupComponents = (data.bic_lookup_components ?? [Component.BANK_CODE]).filter(isComponent);
+	const defaults = {};
+	for (const [key, value] of Object.entries(data)) if (key.startsWith("default_") && (typeof value === "string" || typeof value === "number")) defaults[key] = String(value);
+	return {
+		country: countryCode,
+		bban_spec: data.bban_spec,
+		bban_length: data.bban_length,
+		iban_spec: data.iban_spec,
+		iban_length: data.iban_length,
+		in_sepa_zone: data.in_sepa_zone ?? false,
+		regex: new RegExp(convertBbanSpecToRegex(data.bban_spec), "u"),
+		positions,
+		bic_lookup_components: bicLookupComponents,
+		defaults
+	};
+}
+function parseBank(data) {
+	return {
+		country_code: data.country_code ?? "",
+		bic: data.bic ?? "",
+		bank_code: data.bank_code ?? "",
+		name: data.name ?? "",
+		short_name: data.short_name ?? null,
+		primary: data.primary ?? false,
+		checksum_algo: data.checksum_algo ?? "default"
+	};
+}
+const _ibanSpecs = /* @__PURE__ */ new Map();
+let _banks = null;
+let _byCountry = null;
+let _byBankCode = null;
+let _byBic = null;
+/**
+* Compound key for the `(country_code, bank_code)` index.
+*
+* NUL separates the parts so that no pair of codes can collide, whatever
+* characters a national bank code turns out to use.
+*/
+function bankCodeKey(countryCode, bankCode) {
+	return `${countryCode}\u0000${bankCode}`;
+}
+function allBanks() {
+	_banks ??= _rawBanks.map(parseBank);
+	return _banks;
+}
+/**
+* Group the banks into an index keyed by `keyOf`. Entries the key is blank for
+* are skipped, since they could not be looked up unambiguously anyway.
+*/
+function buildIndex(keyOf) {
+	const index = /* @__PURE__ */ new Map();
+	for (const bank of allBanks()) {
+		const key = keyOf(bank);
+		if (!key) continue;
+		const bucket = index.get(key);
+		if (bucket === void 0) index.set(key, [bank]);
+		else bucket.push(bank);
+	}
+	return index;
+}
+/**
+* The country specific IBAN specification.
+*
+* @throws {InvalidCountryCode} If the registry has no entry for `countryCode`.
+*/
+function getIbanSpec(countryCode) {
+	const cached = _ibanSpecs.get(countryCode);
+	if (cached !== void 0) return cached;
+	const raw = _rawIbanSpecs[countryCode];
+	if (raw === void 0) throw new InvalidCountryCode(`Unknown country-code '${countryCode}'`);
+	const spec = parseIbanSpec(countryCode, raw);
+	_ibanSpecs.set(countryCode, spec);
+	return spec;
+}
+function getBanksByCountry(countryCode) {
+	_byCountry ??= buildIndex((bank) => bank.country_code);
+	return _byCountry.get(countryCode) ?? [];
+}
+function getBanksByCode(countryCode, bankCode) {
+	_byBankCode ??= buildIndex((bank) => bank.country_code && bank.bank_code ? bankCodeKey(bank.country_code, bank.bank_code) : "");
+	return _byBankCode.get(bankCodeKey(countryCode, bankCode)) ?? [];
+}
+function getBanksByBic(bic) {
+	_byBic ??= buildIndex((bank) => bank.bic);
+	return _byBic.get(bic) ?? [];
+}
+function getCountries() {
+	_byCountry ??= buildIndex((bank) => bank.country_code);
+	return [..._byCountry.keys()];
+}
+function getAllBanks() {
+	return allBanks();
+}
+//#endregion
+//#region src/bic.ts
+const _bicIso9362Re = /^[A-Z0-9]{4}[A-Z]{2}[A-Z0-9]{2}(?:[A-Z0-9]{3})?$/u;
+const _bicSwiftRe = /^[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}(?:[A-Z0-9]{3})?$/u;
 var BIC = class BIC extends Base {
 	constructor(bic, options) {
 		super(bic);
 		if (!options?.allowInvalid) this.validate(options?.enforceSwiftCompliance ?? false);
 	}
 	static candidatesFromBankCode(countryCode, bankCode) {
-		try {
-			const entries = get("bank_code")[`${countryCode}\0${bankCode}`];
-			if (!entries) throw new Error("not found");
-			return [...entries].sort((a, b) => (b.primary ? 1 : 0) - (a.primary ? 1 : 0)).filter((entry) => entry.bic).map((entry) => new BIC(entry.bic));
-		} catch {
-			throw new InvalidBankCode(`Unknown bank code '${bankCode}' for country '${countryCode}'`);
-		}
+		const banks = getBanksByCode(countryCode, bankCode).toSorted((a, b) => (b.primary ? 1 : 0) - (a.primary ? 1 : 0));
+		if (banks.length === 0) throw new InvalidBankCode(`Unknown bank code '${bankCode}' for country '${countryCode}'`);
+		return banks.filter((entry) => entry.bic).map((entry) => new BIC(entry.bic));
 	}
 	static fromBankCode(countryCode, bankCode) {
 		try {
 			const candidates = BIC.candidatesFromBankCode(countryCode, bankCode);
 			if (candidates.length > 1) {
 				const noBranch = candidates.filter((c) => !c.branchCode);
-				if (noBranch.length > 0) return noBranch.sort((a, b) => a.compact.localeCompare(b.compact))[noBranch.length - 1];
+				if (noBranch.length > 0) return noBranch.toSorted((a, b) => a.compact.localeCompare(b.compact))[noBranch.length - 1];
 				const xxxBranch = candidates.filter((c) => c.branchCode === "XXX");
-				if (xxxBranch.length > 0) return xxxBranch.sort((a, b) => a.compact.localeCompare(b.compact))[xxxBranch.length - 1];
+				if (xxxBranch.length > 0) return xxxBranch.toSorted((a, b) => a.compact.localeCompare(b.compact))[xxxBranch.length - 1];
 			}
 			return candidates[0];
-		} catch (e) {
-			if (e instanceof InvalidBankCode) throw e;
+		} catch (error) {
+			if (error instanceof InvalidBankCode) throw error;
 			throw new InvalidBankCode(`Unknown bank code '${bankCode}' for country '${countryCode}'`);
 		}
 	}
@@ -243614,13 +243774,12 @@ var BIC = class BIC extends Base {
 		return formatted;
 	}
 	_lookupValues(key) {
-		const entries = get("bic")[this._value] || [];
 		const values = /* @__PURE__ */ new Set();
-		for (const entry of entries) {
-			const val = entry[key];
-			if (val) values.add(String(val));
+		for (const entry of getBanksByBic(this._value)) {
+			const value = entry[key];
+			if (value) values.add(value);
 		}
-		return [...values].sort();
+		return [...values].toSorted();
 	}
 	get domesticBankCodes() {
 		return this._lookupValues("bank_code");
@@ -243632,11 +243791,10 @@ var BIC = class BIC extends Base {
 		return this._lookupValues("short_name");
 	}
 	get exists() {
-		const spec = get("bic");
-		return Boolean(spec[this._value]);
+		return getBanksByBic(this._value).length > 0;
 	}
 	get type() {
-		const loc1 = this.locationCode[1];
+		const [, loc1] = this.locationCode;
 		if (loc1 === "0") return "testing";
 		if (loc1 === "1") return "passive";
 		if (loc1 === "2") return "reverse billing";
@@ -243658,41 +243816,26 @@ var BIC = class BIC extends Base {
 		return this._getSlice(8, 11);
 	}
 };
-buildIndex("bank", "bic", "bic", true);
-buildIndex("bank", "bank_code", ["country_code", "bank_code"], true);
 //#endregion
-//#region schwifty-ts/src/domain.ts
-let Component = /* @__PURE__ */ function(Component) {
-	Component["ACCOUNT_ID"] = "account_id";
-	Component["ACCOUNT_TYPE"] = "account_type";
-	Component["ACCOUNT_CODE"] = "account_code";
-	Component["ACCOUNT_HOLDER_ID"] = "account_holder_id";
-	Component["CURRENCY_CODE"] = "currency_code";
-	Component["BANK_CODE"] = "bank_code";
-	Component["BRANCH_CODE"] = "branch_code";
-	Component["NATIONAL_CHECKSUM_DIGITS"] = "national_checksum_digits";
-	return Component;
-}({});
-//#endregion
-//#region schwifty-ts/src/checksum/algorithm.ts
+//#region src/checksum/algorithm.ts
+const DIGITS$1 = "0123456789";
 const _alphabet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 function numerify(value) {
-	return BigInt(Array.from(value).map((c) => _alphabet.indexOf(c).toString()).join(""));
+	return BigInt([...value].map((c) => _alphabet.indexOf(c).toString()).join(""));
 }
 function iso7064(n, mod, postProcess, nDigits = 2) {
 	return postProcess(n % mod).toString().padStart(nDigits, "0");
 }
 function weighted(value, mod, weights) {
-	let sum = 0;
-	const wArr = Array.isArray(weights) ? weights : [...weights];
-	const vArr = Array.isArray(value) ? value : [...value];
+	const wArr = [...weights];
+	const vArr = [...value];
 	const len = Math.min(wArr.length, vArr.length);
-	for (let i = 0; i < len; i++) sum += wArr[i] * Number.parseInt(vArr[i], 10);
+	let sum = 0;
+	for (let i = 0; i < len; i++) sum += wArr[i] * Number(vArr[i]);
 	return sum % mod;
 }
 function luhn(value) {
-	const processed = Array.from(value).map((n) => _alphabet.indexOf(n).toString()).join("").split("").reverse().map((n, i) => ((2 - i % 2) * Number.parseInt(n, 10)).toString()).join("");
-	return ((10 - Array.from(processed).reduce((sum, n) => sum + Number.parseInt(n, 10), 0) % 10) % 10).toString();
+	return ((10 - [...[...[...value].map((n) => _alphabet.indexOf(n).toString()).join("")].toReversed().map((n, i) => ((2 - i % 2) * Number(n)).toString()).join("")].reduce((sum, n) => sum + Number(n), 0) % 10) % 10).toString();
 }
 var Algorithm = class {
 	accepts = [
@@ -243702,6 +243845,19 @@ var Algorithm = class {
 	];
 	validate(components, expected) {
 		return this.compute(components) === expected;
+	}
+	/**
+	* Return `components` adjusted so that the checksum validates.
+	*
+	* Algorithms whose checksum occupies its own BBAN field are fully determined
+	* by their inputs, so there is nothing to adjust and the components are
+	* returned unchanged (the caller writes the computed checksum into the
+	* separate field). Algorithms that embed a check digit inside one of the
+	* accepted components override this to splice in a valid check digit,
+	* returning `null` when the given input admits no valid one.
+	*/
+	solve(components) {
+		return components;
 	}
 };
 var ISO7064Mod97_10 = class extends Algorithm {
@@ -243726,13 +243882,13 @@ function getAlgorithm(name) {
 	return algorithms[name];
 }
 //#endregion
-//#region schwifty-ts/src/checksum/iso7064_mod97_10.ts
+//#region src/checksum/iso7064_mod97_10.ts
 var DefaultAlgorithm$11 = class extends ISO7064Mod97_10 {
 	name = "default";
 };
-register("BT", "ME", "MK", "PT", "RS", "SI", "TL")(new DefaultAlgorithm$11());
+register("BA", "ME", "MK", "PT", "RS", "SI", "TL")(new DefaultAlgorithm$11());
 //#endregion
-//#region schwifty-ts/src/checksum/iso7064_mod97_10_variant.ts
+//#region src/checksum/iso7064_mod97_10_variant.ts
 var DefaultAlgorithm$10 = class extends ISO7064Mod97_10 {
 	name = "default";
 	postProcess(r) {
@@ -243741,19 +243897,19 @@ var DefaultAlgorithm$10 = class extends ISO7064Mod97_10 {
 };
 register("MR", "TN")(new DefaultAlgorithm$10());
 //#endregion
-//#region schwifty-ts/src/checksum/belgium.ts
+//#region src/checksum/belgium.ts
 var DefaultAlgorithm$9 = class extends ISO7064Mod97_10 {
 	name = "default";
 	preProcess(components) {
 		return super.preProcess(components) / 100n;
 	}
 	postProcess(r) {
-		return r !== 0n ? r : 97n;
+		return r === 0n ? 97n : r;
 	}
 };
 register("BE")(new DefaultAlgorithm$9());
 //#endregion
-//#region schwifty-ts/src/checksum/france.ts
+//#region src/checksum/france.ts
 const numerics = {
 	"0": "0",
 	"1": "1",
@@ -243793,7 +243949,7 @@ const numerics = {
 	Z: "9"
 };
 function numerifyFR(value) {
-	return BigInt(Array.from(value).map((c) => numerics[c]).join(""));
+	return BigInt([...value].map((c) => numerics[c]).join(""));
 }
 var DefaultAlgorithm$8 = class extends ISO7064Mod97_10 {
 	name = "default";
@@ -243807,7 +243963,7 @@ var DefaultAlgorithm$8 = class extends ISO7064Mod97_10 {
 };
 register("FR", "MC")(new DefaultAlgorithm$8());
 //#endregion
-//#region schwifty-ts/src/checksum/italy.ts
+//#region src/checksum/italy.ts
 const DIGITS = "0123456789";
 const UPPERCASE = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 function getIndex(char) {
@@ -243855,7 +244011,7 @@ var DefaultAlgorithm$7 = class extends Algorithm {
 };
 register("IT", "SM")(new DefaultAlgorithm$7());
 //#endregion
-//#region schwifty-ts/src/checksum/spain.ts
+//#region src/checksum/spain.ts
 function reconcile(n) {
 	if (n === 11) return 0;
 	if (n === 10) return 1;
@@ -243887,13 +244043,13 @@ var DefaultAlgorithm$6 = class extends Algorithm {
 };
 register("ES")(new DefaultAlgorithm$6());
 //#endregion
-//#region schwifty-ts/src/checksum/norway.ts
+//#region src/checksum/norway.ts
 var DefaultAlgorithm$5 = class extends Algorithm {
 	name = "default";
 	accepts = [Component.BANK_CODE, Component.ACCOUNT_CODE];
 	compute(components) {
 		const [bankCode, accountCode] = components;
-		const value = accountCode.slice(0, 2) === "00" ? accountCode.slice(2) : bankCode + accountCode;
+		const value = accountCode.startsWith("00") ? accountCode.slice(2) : bankCode + accountCode;
 		const weights = [
 			5,
 			4,
@@ -243907,7 +244063,7 @@ var DefaultAlgorithm$5 = class extends Algorithm {
 			2
 		];
 		let total = 0;
-		for (let i = 0; i < Math.min(weights.length, value.length); i++) total += weights[i] * Number.parseInt(value[i], 10);
+		for (let i = 0; i < Math.min(weights.length, value.length); i++) total += weights[i] * Number(value[i]);
 		const checkDigit = 11 - total % 11;
 		if (checkDigit === 10) throw new InvalidAccountCode("Check digit does not compute: Invalid account code.");
 		return (checkDigit % 11).toString();
@@ -243915,7 +244071,7 @@ var DefaultAlgorithm$5 = class extends Algorithm {
 };
 register("NO")(new DefaultAlgorithm$5());
 //#endregion
-//#region schwifty-ts/src/checksum/finland.ts
+//#region src/checksum/finland.ts
 var DefaultAlgorithm$4 = class extends Algorithm {
 	name = "default";
 	accepts = [Component.BANK_CODE, Component.ACCOUNT_CODE];
@@ -243925,19 +244081,19 @@ var DefaultAlgorithm$4 = class extends Algorithm {
 };
 register("FI")(new DefaultAlgorithm$4());
 //#endregion
-//#region schwifty-ts/src/checksum/estonia.ts
+//#region src/checksum/estonia.ts
 var DefaultAlgorithm$3 = class extends Algorithm {
 	name = "default";
 	accepts = [Component.BRANCH_CODE, Component.ACCOUNT_CODE];
 	compute(components) {
-		const reversed = components.join("").split("").reverse();
+		const reversed = [...components.join("")].toReversed();
 		const weights = [
 			7,
 			3,
 			1
 		];
 		let sum = 0;
-		for (let i = 0; i < reversed.length; i++) sum += weights[i % weights.length] * Number.parseInt(reversed[i], 10);
+		for (let i = 0; i < reversed.length; i++) sum += weights[i % weights.length] * Number(reversed[i]);
 		let digit = sum % 10;
 		digit = digit === 0 ? 0 : 10 - digit;
 		return digit.toString();
@@ -243945,35 +244101,50 @@ var DefaultAlgorithm$3 = class extends Algorithm {
 };
 register("EE")(new DefaultAlgorithm$3());
 //#endregion
-//#region schwifty-ts/src/checksum/czech_republic.ts
+//#region src/checksum/czech_republic.ts
 var DefaultAlgorithm$2 = class extends Algorithm {
 	name = "default";
 	accepts = [Component.BRANCH_CODE, Component.ACCOUNT_CODE];
+	weights = [
+		6,
+		3,
+		7,
+		9,
+		10,
+		5,
+		8,
+		4,
+		2,
+		1
+	];
 	compute(_components) {
 		return "";
 	}
 	validate(components, _expected) {
 		const [branchCode, accountCode] = components;
-		const weights = [
-			6,
-			3,
-			7,
-			9,
-			10,
-			5,
-			8,
-			4,
-			2,
-			1
-		];
-		const d1 = weighted(branchCode, 11, weights.slice(4));
-		const d2 = weighted(accountCode, 11, weights);
+		const d1 = weighted(branchCode, 11, this.weights.slice(4));
+		const d2 = weighted(accountCode, 11, this.weights);
 		return d1 === 0 && d2 === 0;
+	}
+	solve(components) {
+		const [branchCode, accountCode] = components;
+		const branch = this._solveCode(branchCode, this.weights.slice(4));
+		const account = this._solveCode(accountCode, this.weights);
+		if (branch === null || account === null) return null;
+		return [branch, account];
+	}
+	_solveCode(code, weights) {
+		for (const digit of DIGITS$1) {
+			const candidate = code.slice(0, -1) + digit;
+			if (weighted(candidate, 11, weights) === 0) return candidate;
+		}
+		return null;
 	}
 };
 register("CZ", "SK")(new DefaultAlgorithm$2());
 //#endregion
-//#region schwifty-ts/src/checksum/iceland.ts
+//#region src/checksum/iceland.ts
+const CHECK_DIGIT_INDEX = 8;
 var DefaultAlgorithm$1 = class extends Algorithm {
 	name = "default";
 	accepts = [Component.ACCOUNT_HOLDER_ID];
@@ -243993,12 +244164,20 @@ var DefaultAlgorithm$1 = class extends Algorithm {
 	}
 	validate(components, _expected) {
 		const [accountHolderId] = components;
-		return this.compute(components) === accountHolderId[8];
+		return this.compute(components) === accountHolderId[CHECK_DIGIT_INDEX];
+	}
+	solve(components) {
+		const [accountHolderId] = components;
+		for (const digit of DIGITS$1) {
+			const candidate = accountHolderId.slice(0, CHECK_DIGIT_INDEX) + digit + accountHolderId.slice(9);
+			if (this.validate([candidate], "")) return [candidate];
+		}
+		return null;
 	}
 };
 register("IS")(new DefaultAlgorithm$1());
 //#endregion
-//#region schwifty-ts/src/checksum/poland.ts
+//#region src/checksum/poland.ts
 var DefaultAlgorithm = class extends Algorithm {
 	name = "default";
 	accepts = [Component.BANK_CODE, Component.BRANCH_CODE];
@@ -244018,11 +244197,11 @@ var DefaultAlgorithm = class extends Algorithm {
 };
 register("PL")(new DefaultAlgorithm());
 //#endregion
-//#region schwifty-ts/src/checksum/germany.ts
-const ZERO_PLUS_START_REGEX = /^0+/;
-const ZERO_PLUS_REGEX = /0+$/;
+//#region src/checksum/germany.ts
+const ZERO_PLUS_START_REGEX = /^0+/u;
+const ZERO_PLUS_REGEX = /0+$/u;
 function digitSum(n) {
-	return String(n).split("").reduce((s, d) => s + Number.parseInt(d, 10), 0);
+	return [...String(n)].reduce((s, d) => s + Number(d), 0);
 }
 function cycle(arr, index) {
 	return arr[index % arr.length];
@@ -244046,9 +244225,9 @@ var WeightedModulus = class extends Algorithm {
 	getDigits(accountCode) {
 		const positions = this.getPositions(accountCode);
 		const start = positions.start - 1;
-		const end = positions.end;
+		const { end } = positions;
 		let digits = accountCode.slice(start, end);
-		if (this.reverse) digits = digits.split("").reverse().join("");
+		if (this.reverse) digits = [...digits].toReversed().join("");
 		return digits;
 	}
 	getPositions(_accountCode) {
@@ -244056,7 +244235,7 @@ var WeightedModulus = class extends Algorithm {
 	}
 	computeWeightedSum(digits) {
 		let sum = 0;
-		for (let i = 0; i < digits.length; i++) sum += this.computeSummand(Number.parseInt(digits[i], 10), cycle(this.weights, i));
+		for (let i = 0; i < digits.length; i++) sum += this.computeSummand(Number(digits[i]), cycle(this.weights, i));
 		return sum;
 	}
 	computeSummand(digit, weight) {
@@ -244071,6 +244250,20 @@ var WeightedModulus = class extends Algorithm {
 	validate(components, _expected) {
 		const accountCode = this.adjustInput(components[0]);
 		return this.compute(components) === accountCode[this.getPositions(accountCode).checkDigit - 1];
+	}
+	solve(components) {
+		const [accountCode] = components;
+		const index = this.getPositions(accountCode).checkDigit - 1;
+		for (const digit of DIGITS$1) {
+			const candidate = accountCode.slice(0, index) + digit + accountCode.slice(index + 1);
+			try {
+				if (this.validate([candidate], "")) return [candidate];
+			} catch (error) {
+				if (error instanceof InvalidBBANChecksum) continue;
+				throw error;
+			}
+		}
+		return null;
 	}
 };
 var WeightedMod10 = class extends WeightedModulus {
@@ -244228,18 +244421,18 @@ var Algorithm08 = class extends WeightedMod10 {
 		checkDigit: 10
 	};
 	weights = [2, 1];
-	minAccountCode = 6e3;
+	minAccountCode = 6e4;
 	computeSummand(digit, weight) {
 		return digitSum(digit * weight);
 	}
 	compute(components) {
 		const [accountCode] = components;
-		if (Number.parseInt(accountCode, 10) < this.minAccountCode) return "";
+		if (Number(accountCode) < this.minAccountCode) return "";
 		return super.compute(components);
 	}
 	validate(components, expected) {
 		const [accountCode] = components;
-		if (Number.parseInt(accountCode, 10) < this.minAccountCode) return true;
+		if (Number(accountCode) < this.minAccountCode) return true;
 		return super.validate(components, expected);
 	}
 };
@@ -244295,7 +244488,7 @@ var Algorithm11 = class extends WeightedMod11 {
 	];
 	reconcile(checksum) {
 		if (checksum === 10) return 9;
-		return checksum;
+		return super.reconcile(checksum);
 	}
 };
 register("DE")(new Algorithm11());
@@ -244352,7 +244545,7 @@ register("DE")(new Algorithm15());
 var Algorithm16 = class extends WeightedMod11 {
 	name = "16";
 	positions = {
-		start: 6,
+		start: 1,
 		end: 9,
 		checkDigit: 10
 	};
@@ -244515,7 +244708,7 @@ var Algorithm24 = class extends WeightedMod10 {
 	];
 	getDigits(accountCode) {
 		let digits = super.getDigits(accountCode);
-		const firstDigit = Number.parseInt(digits[0], 10);
+		const firstDigit = Number(digits[0]);
 		if ([
 			3,
 			4,
@@ -244689,7 +244882,7 @@ var Algorithm61 = class extends WeightedMod10 {
 	}
 	getDigits(accountCode) {
 		let digits = super.getDigits(accountCode);
-		if (accountCode[8] === "8") digits = accountCode.split("").slice(8).reverse().join("") + digits;
+		if (accountCode[8] === "8") digits = [...accountCode].slice(8).toReversed().join("") + digits;
 		return digits;
 	}
 };
@@ -244707,8 +244900,12 @@ var Algorithm63 = class extends WeightedMod10 {
 	}
 	validate(components, expected) {
 		const [accountCode] = components;
-		if (accountCode[0] !== "0") return false;
+		if (!accountCode.startsWith("0")) return false;
 		return super.validate(components, expected);
+	}
+	solve(components) {
+		const [accountCode] = components;
+		return super.solve([`0${accountCode.slice(1)}`]);
 	}
 };
 register("DE")(new Algorithm63());
@@ -244734,16 +244931,29 @@ var Algorithm68 = class extends WeightedMod10 {
 	}
 	validate(components, expected) {
 		const [accountCode] = components;
-		const acNum = Number.parseInt(accountCode, 10);
+		const acNum = Number(accountCode);
 		if (acNum >= 4e8 && acNum <= 499999999) return true;
-		if (super.validate(components, expected) === false) {
+		if (!super.validate(components, expected)) {
 			const modifiedCode = `${accountCode.slice(0, 2)}00${accountCode.slice(4)}`;
 			return this.compute([modifiedCode]) === accountCode[this.positions.checkDigit - 1];
 		}
 		return true;
 	}
+	solve(components) {
+		const [accountCode] = components;
+		if (accountCode.startsWith("0")) return super.solve([accountCode]);
+		return super.solve([`${accountCode.slice(0, 3)}9${accountCode.slice(4)}`]);
+	}
 };
 register("DE")(new Algorithm68());
+const ALLOWED_LEADING_DIGITS_76 = /* @__PURE__ */ new Set([
+	0,
+	4,
+	6,
+	7,
+	8,
+	9
+]);
 var Algorithm76 = class extends WeightedMod11 {
 	name = "76";
 	minuend = null;
@@ -244768,16 +244978,13 @@ var Algorithm76 = class extends WeightedMod11 {
 	}
 	validate(components, expected) {
 		const [accountCode] = components;
-		const firstDigit = Number.parseInt(accountCode[0], 10);
-		if (![
-			0,
-			4,
-			6,
-			7,
-			8,
-			9
-		].includes(firstDigit)) return false;
+		if (!ALLOWED_LEADING_DIGITS_76.has(Number(accountCode[0]))) return false;
 		return super.validate(components, expected);
+	}
+	solve(components) {
+		const [accountCode] = components;
+		if (ALLOWED_LEADING_DIGITS_76.has(Number(accountCode[0]))) return super.solve([accountCode]);
+		return super.solve([`0${accountCode.slice(1)}`]);
 	}
 };
 register("DE")(new Algorithm76());
@@ -244807,23 +245014,6 @@ var Algorithm88 = class extends WeightedMod11 {
 	}
 };
 register("DE")(new Algorithm88());
-var Algorithm91 = class extends Algorithm {
-	name = "91";
-	accepts = [Component.ACCOUNT_CODE];
-	compute(components) {
-		return new Algorithm91Variant1().compute(components);
-	}
-	validate(components, expected) {
-		const variants = [
-			new Algorithm91Variant1(),
-			new Algorithm91Variant2(),
-			new Algorithm91Variant3(),
-			new Algorithm91Variant4()
-		];
-		for (const variant of variants) if (variant.validate(components, expected)) return true;
-		return false;
-	}
-};
 var Algorithm91Variant1 = class extends WeightedMod11 {
 	name = "91v1";
 	positions = {
@@ -244882,6 +245072,32 @@ var Algorithm91Variant4 = class extends Algorithm91Variant1 {
 		9
 	];
 };
+var Algorithm91 = class Algorithm91 extends Algorithm {
+	name = "91";
+	accepts = [Component.ACCOUNT_CODE];
+	compute(components) {
+		return new Algorithm91Variant1().compute(components);
+	}
+	validate(components, expected) {
+		for (const variant of Algorithm91._variants()) if (variant.validate(components, expected)) return true;
+		return false;
+	}
+	solve(components) {
+		for (const variant of Algorithm91._variants()) {
+			const solved = variant.solve(components);
+			if (solved !== null && this.validate(solved, "")) return solved;
+		}
+		return null;
+	}
+	static _variants() {
+		return [
+			new Algorithm91Variant1(),
+			new Algorithm91Variant2(),
+			new Algorithm91Variant3(),
+			new Algorithm91Variant4()
+		];
+	}
+};
 register("DE")(new Algorithm91());
 var Algorithm99 = class extends WeightedMod11 {
 	name = "99";
@@ -244906,235 +245122,53 @@ var Algorithm99 = class extends WeightedMod11 {
 };
 register("DE")(new Algorithm99());
 //#endregion
-//#region schwifty-ts/src/bban.ts
-function rangeLength(r) {
-	return r.end - r.start;
-}
-function rangeIsEmpty(r) {
-	return r.start === 0 && r.end === 0;
-}
-function rangeCut(r, s) {
-	return s.slice(r.start, r.end);
-}
-const _specDefaults = { [Component.CURRENCY_CODE]: "default_currency_code" };
-function getSpecDefault(spec, component) {
-	const field = _specDefaults[component];
-	return field ? spec[field] : void 0;
-}
+//#region src/bban.ts
+/**
+* The national checksum is constructed rather than guessed, so a valid BBAN is
+* found on the first attempt for virtually every country and method. The only
+* residual regeneration is for the German mod-11 methods where roughly 1 in 11
+* random account bodies admits no valid check digit at all (the computation
+* lands on the reserved remainder); those bodies are simply regenerated. This
+* bound only backstops that regeneration — at that ~90% per-attempt success
+* rate exhausting it is impossible in practice (~0.1**200).
+*/
+const _MAX_RANDOM_ATTEMPTS = 200;
 function getBbanSpec(countryCode) {
-	const result = get("iban")[countryCode];
-	if (!result) throw new InvalidCountryCode(`Unknown country-code '${countryCode}'`);
-	return result;
+	return getIbanSpec(countryCode);
 }
-function getPositionRange(spec, componentType) {
-	const [start, end] = (spec.positions || {})[componentType] || [0, 0];
-	return {
-		start,
-		end
-	};
+function getNationalChecksumAlgorithm(countryCode, bank) {
+	return getAlgorithm(`${countryCode}:${bank === null ? "default" : bank.checksum_algo}`);
 }
-function getPositionRanges(spec) {
-	const result = {};
-	for (const component of Object.values(Component)) result[component] = getPositionRange(spec, component);
-	return result;
+/** The only `Bank` field that doubles as a BBAN component. */
+function getBankValue(bank, component) {
+	return bank !== null && component === Component.BANK_CODE ? bank.bank_code : void 0;
 }
 function computeNationalChecksum(countryCode, components) {
 	const algo = getAlgorithm(`${countryCode}:default`);
 	if (!algo) return "";
 	return algo.compute(algo.accepts.map((key) => components[key]));
 }
-var BBAN = class BBAN extends Base {
-	countryCode;
-	constructor(countryCode, value) {
-		super(value);
-		this.countryCode = countryCode;
-	}
-	static fromComponents(countryCode, values) {
-		const spec = getBbanSpec(countryCode);
-		if (!spec.positions) throw new SchwiftyException(`BBAN generation for ${countryCode} not supported`);
-		const ranges = getPositionRanges(spec);
-		const components = {};
-		for (const [key, range] of Object.entries(ranges)) components[key] = clean(values[key] || "").padStart(rangeLength(range), "0");
-		const bankCodeLength = rangeLength(ranges[Component.BANK_CODE]);
-		const branchCodeLength = rangeLength(ranges[Component.BRANCH_CODE]);
-		const accountCodeLength = rangeLength(ranges[Component.ACCOUNT_CODE]);
-		if (components[Component.BANK_CODE].length === bankCodeLength + branchCodeLength) {
-			components[Component.BRANCH_CODE] = components[Component.BANK_CODE].slice(bankCodeLength, bankCodeLength + branchCodeLength);
-			components[Component.BANK_CODE] = components[Component.BANK_CODE].slice(0, bankCodeLength);
-		}
-		if (components[Component.BANK_CODE].length > bankCodeLength) throw new InvalidBankCode(`Bank code exceeds maximum size ${bankCodeLength}`);
-		if (components[Component.BRANCH_CODE].length > branchCodeLength) throw new InvalidBranchCode(`Branch code exceeds maximum size ${branchCodeLength}`);
-		if (components[Component.ACCOUNT_CODE].length > accountCodeLength) throw new InvalidAccountCode(`Account code exceeds maximum size ${accountCodeLength}`);
-		const checksum = computeNationalChecksum(countryCode, components);
-		if (checksum) components[Component.NATIONAL_CHECKSUM_DIGITS] = checksum;
-		let bban = "0".repeat(spec.bban_length);
-		for (const [key, value] of Object.entries(components)) {
-			const range = ranges[key];
-			if (rangeIsEmpty(range)) continue;
-			bban = bban.slice(0, range.start) + value + bban.slice(range.end);
-		}
-		return new BBAN(countryCode, bban);
-	}
-	static random(countryCode = "", options) {
-		const useRegistry = options?.useRegistry ?? true;
-		const values = options?.values ?? {};
-		const banksByCountry = get("country");
-		if (!countryCode) {
-			const keys = Object.keys(banksByCountry);
-			countryCode = keys[Math.floor(Math.random() * keys.length)];
-		}
-		const spec = getBbanSpec(countryCode);
-		let bank = {};
-		const banks = banksByCountry[countryCode];
-		if (banks && useRegistry) bank = banks[Math.floor(Math.random() * banks.length)];
-		if (!spec.positions) {
-			const bban = generateFromRegex(getRegexSource(spec));
-			return new BBAN(countryCode, bban);
-		}
-		const ranges = getPositionRanges(spec);
-		for (let attempt = 0; attempt < 100; attempt++) {
-			const randomBban = generateFromRegex(getRegexSource(spec));
-			const components = {};
-			for (const [key, range] of Object.entries(ranges)) if (values[key] !== void 0) components[key] = values[key];
-			else components[key] = bank[key] || getSpecDefault(spec, key) || rangeCut(range, randomBban);
-			const bankCode = components[Component.BANK_CODE];
-			const bankCodeLength = rangeLength(ranges[Component.BANK_CODE]);
-			const branchCodeLength = rangeLength(ranges[Component.BRANCH_CODE]);
-			if (bankCode.length >= bankCodeLength + branchCodeLength) {
-				const start = bankCodeLength;
-				const end = start + branchCodeLength;
-				components[Component.BRANCH_CODE] = bankCode.slice(start, end);
-			}
-			for (const [key, value] of Object.entries(components)) components[key] = value.slice(0, rangeLength(ranges[key]));
-			try {
-				return BBAN.fromComponents(countryCode, { ...Object.fromEntries(Object.entries(components).map(([k, v]) => [k, v])) });
-			} catch (e) {
-				if (e instanceof SchwiftyException) continue;
-				throw e;
-			}
-		}
-		throw new GenerateRandomOverflowError();
-	}
-	validateNationalChecksum() {
-		const algoName = this.bank?.checksum_algo || "default";
-		const algo = getAlgorithm(`${this.countryCode}:${algoName}`);
-		if (!algo) return true;
-		const components = algo.accepts.map((component) => this._getComponent(component));
-		if (!algo.validate(components, this.nationalChecksumDigits)) throw new InvalidBBANChecksum("Invalid national checksum");
-		return false;
-	}
-	_getComponent(componentType) {
-		const position = getPositionRange(this.spec, componentType);
-		return this._getSlice(position.start, position.end);
-	}
-	get spec() {
-		return getBbanSpec(this.countryCode);
-	}
-	get bic() {
-		const key = (this.spec.bic_lookup_components || [Component.BANK_CODE]).map((c) => this._getComponent(c)).join("");
-		try {
-			return BIC.fromBankCode(this.countryCode, key);
-		} catch {
-			return null;
-		}
-	}
-	get nationalChecksumDigits() {
-		return this._getComponent(Component.NATIONAL_CHECKSUM_DIGITS);
-	}
-	get bankCode() {
-		return this._getComponent(Component.BANK_CODE);
-	}
-	get branchCode() {
-		return this._getComponent(Component.BRANCH_CODE);
-	}
-	get accountCode() {
-		return this._getComponent(Component.ACCOUNT_CODE);
-	}
-	get accountId() {
-		return this._getComponent(Component.ACCOUNT_ID);
-	}
-	get accountType() {
-		return this._getComponent(Component.ACCOUNT_TYPE);
-	}
-	get accountHolderId() {
-		return this._getComponent(Component.ACCOUNT_HOLDER_ID);
-	}
-	get currencyCode() {
-		return this._getComponent(Component.CURRENCY_CODE);
-	}
-	get bank() {
-		const bankRegistry = get("bank_code");
-		const key = (this.spec.bic_lookup_components || [Component.BANK_CODE]).map((c) => this._getComponent(c)).join("");
-		const bankEntry = bankRegistry[`${this.countryCode}\0${key}`];
-		if (!bankEntry || bankEntry.length === 0) return null;
-		return bankEntry[0];
-	}
-	get bankName() {
-		return this.bank === null ? null : this.bank.name;
-	}
-	get bankShortName() {
-		return this.bank === null ? null : this.bank.short_name;
-	}
-};
-buildIndex("bank", "country", "country_code", true);
-function getRegexSource(spec) {
-	if (spec.regex instanceof RegExp) return spec.regex.source;
-	return String(spec.regex).replace(/^\/\^?/, "").replace(/\$?\/$/, "");
+function pickRandom(items) {
+	return items[Math.floor(Math.random() * items.length)];
 }
-const CARET_RE = /^\^/;
-const DOLLAR_RE = /\$$/;
-function generateFromRegex(pattern) {
-	let result = "";
-	let i = 0;
-	const src = pattern.replace(CARET_RE, "").replace(DOLLAR_RE, "");
-	while (i < src.length) {
-		const ch = src[i];
-		if (ch === "[") {
-			const end = src.indexOf("]", i);
-			const chars = expandCharClass(src.slice(i + 1, end));
-			i = end + 1;
-			const [min, max, newI] = parseQuantifier(src, i);
-			i = newI;
-			const count = min + Math.floor(Math.random() * (max - min + 1));
-			for (let j = 0; j < count; j++) result += chars[Math.floor(Math.random() * chars.length)];
-		} else if (ch === "\\") {
-			i++;
-			const escaped = src[i];
-			let chars;
-			if (escaped === "d") chars = "0123456789";
-			else chars = escaped;
-			i++;
-			const [min, max, newI] = parseQuantifier(src, i);
-			i = newI;
-			const count = min + Math.floor(Math.random() * (max - min + 1));
-			for (let j = 0; j < count; j++) result += chars[Math.floor(Math.random() * chars.length)];
-		} else if (ch === " ") {
-			i++;
-			const [min, max, newI] = parseQuantifier(src, i);
-			i = newI;
-			const count = min + Math.floor(Math.random() * (max - min + 1));
-			result += " ".repeat(count);
-		} else {
-			result += ch;
-			i++;
-		}
-	}
-	return result.toUpperCase();
-}
+/** Expand a character-class body such as `A-Z0-9` into every character it matches. */
 function expandCharClass(cls) {
 	let result = "";
 	let i = 0;
-	while (i < cls.length) if (i + 2 < cls.length && cls[i + 1] === "-") {
-		const start = cls.charCodeAt(i);
-		const end = cls.charCodeAt(i + 2);
-		for (let c = start; c <= end; c++) result += String.fromCharCode(c);
-		i += 3;
-	} else {
-		result += cls[i];
-		i++;
+	while (i < cls.length) {
+		const rangeStart = cls.codePointAt(i);
+		const rangeEnd = cls.codePointAt(i + 2);
+		if (cls[i + 1] === "-" && rangeStart !== void 0 && rangeEnd !== void 0) {
+			for (let c = rangeStart; c <= rangeEnd; c++) result += String.fromCodePoint(c);
+			i += 3;
+		} else {
+			result += cls[i];
+			i++;
+		}
 	}
 	return result;
 }
+/** Read the quantifier at `i`, returning `[min, max, indexAfterQuantifier]`. */
 function parseQuantifier(src, i) {
 	if (i >= src.length) return [
 		1,
@@ -245145,14 +245179,14 @@ function parseQuantifier(src, i) {
 		const end = src.indexOf("}", i);
 		const inner = src.slice(i + 1, end);
 		if (inner.includes(",")) {
-			const [a, b] = inner.split(",");
+			const [min, max] = inner.split(",");
 			return [
-				Number.parseInt(a, 10),
-				Number.parseInt(b || a, 10),
+				Number(min),
+				Number(max || min),
 				end + 1
 			];
 		}
-		const n = Number.parseInt(inner, 10);
+		const n = Number(inner);
 		return [
 			n,
 			n,
@@ -245180,14 +245214,173 @@ function parseQuantifier(src, i) {
 		i
 	];
 }
-//#endregion
-//#region schwifty-ts/src/iban.ts
-const _specToRe = {
-	n: "\\d",
-	a: "[A-Z]",
-	c: "[A-Za-z0-9]",
-	e: " "
+const CARET_RE = /^\^/u;
+const DOLLAR_RE = /\$$/u;
+function generateFromRegex(pattern) {
+	let result = "";
+	let i = 0;
+	const src = pattern.replace(CARET_RE, "").replace(DOLLAR_RE, "");
+	const repeat = (chars) => {
+		const [min, max, next] = parseQuantifier(src, i);
+		i = next;
+		const count = min + Math.floor(Math.random() * (max - min + 1));
+		for (let j = 0; j < count; j++) result += chars[Math.floor(Math.random() * chars.length)];
+	};
+	while (i < src.length) {
+		const ch = src[i];
+		if (ch === "[") {
+			const end = src.indexOf("]", i);
+			const chars = expandCharClass(src.slice(i + 1, end));
+			i = end + 1;
+			repeat(chars);
+		} else if (ch === "\\") {
+			i++;
+			const escaped = src[i];
+			i++;
+			repeat(escaped === "d" ? "0123456789" : escaped);
+		} else if (ch === " ") {
+			i++;
+			repeat(" ");
+		} else {
+			result += ch;
+			i++;
+		}
+	}
+	return result.toUpperCase();
+}
+var BBAN = class BBAN extends Base {
+	countryCode;
+	constructor(countryCode, value) {
+		super(value);
+		this.countryCode = countryCode;
+	}
+	static fromComponents(countryCode, values) {
+		const spec = getBbanSpec(countryCode);
+		if (!hasPositions(spec)) throw new SchwiftyException(`BBAN generation for ${countryCode} not supported`);
+		const ranges = spec.positions;
+		const components = componentRecord((component) => clean(values[component] || "").padStart(ranges[component].length, "0"));
+		const bankCodeLength = ranges[Component.BANK_CODE].length;
+		const branchCodeLength = ranges[Component.BRANCH_CODE].length;
+		const accountCodeLength = ranges[Component.ACCOUNT_CODE].length;
+		if (components[Component.BANK_CODE].length === bankCodeLength + branchCodeLength) {
+			components[Component.BRANCH_CODE] = components[Component.BANK_CODE].slice(bankCodeLength, bankCodeLength + branchCodeLength);
+			components[Component.BANK_CODE] = components[Component.BANK_CODE].slice(0, bankCodeLength);
+		}
+		if (components[Component.BANK_CODE].length > bankCodeLength) throw new InvalidBankCode(`Bank code exceeds maximum size ${bankCodeLength}`);
+		if (components[Component.BRANCH_CODE].length > branchCodeLength) throw new InvalidBranchCode(`Branch code exceeds maximum size ${branchCodeLength}`);
+		if (components[Component.ACCOUNT_CODE].length > accountCodeLength) throw new InvalidAccountCode(`Account code exceeds maximum size ${accountCodeLength}`);
+		const checksum = computeNationalChecksum(countryCode, components);
+		if (checksum) components[Component.NATIONAL_CHECKSUM_DIGITS] = checksum;
+		let bban = "0".repeat(spec.bban_length);
+		for (const [key, value] of componentEntries(components)) {
+			const range = ranges[key];
+			if (range.isEmpty) continue;
+			bban = bban.slice(0, range.start) + value + bban.slice(range.end);
+		}
+		return new BBAN(countryCode, bban);
+	}
+	static random(countryCode = "", options) {
+		const useRegistry = options?.useRegistry ?? true;
+		const values = options?.values ?? {};
+		const country = countryCode || pickRandom(getCountries());
+		const spec = getBbanSpec(country);
+		const banks = getBanksByCountry(country);
+		const bank = banks.length > 0 && useRegistry ? pickRandom(banks) : null;
+		if (!hasPositions(spec)) return new BBAN(country, generateFromRegex(spec.regex.source));
+		const ranges = spec.positions;
+		const algo = getNationalChecksumAlgorithm(country, bank);
+		for (let attempt = 0; attempt < _MAX_RANDOM_ATTEMPTS; attempt++) {
+			const randomBban = generateFromRegex(spec.regex.source);
+			const components = componentRecord((component) => values[component] ?? (getBankValue(bank, component) || spec.defaults[`default_${component}`] || ranges[component].cut(randomBban)));
+			const bankCode = components[Component.BANK_CODE];
+			const bankCodeLength = ranges[Component.BANK_CODE].length;
+			const branchCodeLength = ranges[Component.BRANCH_CODE].length;
+			if (bankCode.length >= bankCodeLength + branchCodeLength) components[Component.BRANCH_CODE] = bankCode.slice(bankCodeLength, bankCodeLength + branchCodeLength);
+			for (const [key, value] of componentEntries(components)) components[key] = value.slice(0, ranges[key].length);
+			if (algo !== void 0 && !algo.accepts.some((component) => component in values)) {
+				const solved = algo.solve(algo.accepts.map((component) => components[component]));
+				if (solved === null) continue;
+				for (const [index, component] of algo.accepts.entries()) components[component] = solved[index];
+			}
+			try {
+				const bban = BBAN.fromComponents(country, Object.fromEntries(componentEntries(components)));
+				bban.validateNationalChecksum();
+				return bban;
+			} catch (error) {
+				if (error instanceof SchwiftyException) continue;
+				throw error;
+			}
+		}
+		throw new GenerateRandomOverflowError();
+	}
+	/**
+	* Validate the national checksum digits.
+	*
+	* @throws {InvalidBBANChecksum} If the country specific BBAN checksum is invalid.
+	*/
+	validateNationalChecksum() {
+		const algo = getNationalChecksumAlgorithm(this.countryCode, this.bank);
+		if (!algo) return true;
+		const components = algo.accepts.map((component) => this._getComponent(component));
+		if (!algo.validate(components, this.nationalChecksumDigits)) throw new InvalidBBANChecksum("Invalid national checksum");
+		return true;
+	}
+	_getComponent(componentType) {
+		const position = this.spec.positions[componentType] ?? new Range();
+		return this._getSlice(position.start, position.end);
+	}
+	get spec() {
+		return getBbanSpec(this.countryCode);
+	}
+	get bic() {
+		const key = this._bankLookupKey();
+		try {
+			return BIC.fromBankCode(this.countryCode, key);
+		} catch {
+			return null;
+		}
+	}
+	_bankLookupKey() {
+		return (this.spec.bic_lookup_components.length > 0 ? this.spec.bic_lookup_components : [Component.BANK_CODE]).map((component) => this._getComponent(component)).join("");
+	}
+	get nationalChecksumDigits() {
+		return this._getComponent(Component.NATIONAL_CHECKSUM_DIGITS);
+	}
+	get bankCode() {
+		return this._getComponent(Component.BANK_CODE);
+	}
+	get branchCode() {
+		return this._getComponent(Component.BRANCH_CODE);
+	}
+	get accountCode() {
+		return this._getComponent(Component.ACCOUNT_CODE);
+	}
+	get accountId() {
+		return this._getComponent(Component.ACCOUNT_ID);
+	}
+	get accountType() {
+		return this._getComponent(Component.ACCOUNT_TYPE);
+	}
+	get accountHolderId() {
+		return this._getComponent(Component.ACCOUNT_HOLDER_ID);
+	}
+	get currencyCode() {
+		return this._getComponent(Component.CURRENCY_CODE);
+	}
+	get bank() {
+		const banks = getBanksByCode(this.countryCode, this._bankLookupKey());
+		if (banks.length === 0) return null;
+		return banks[0];
+	}
+	get bankName() {
+		return this.bank === null ? null : this.bank.name;
+	}
+	get bankShortName() {
+		return this.bank === null ? null : this.bank.short_name;
+	}
 };
+//#endregion
+//#region src/iban.ts
 var IBAN = class IBAN extends Base {
 	bban;
 	constructor(iban, options) {
@@ -245197,7 +245390,8 @@ var IBAN = class IBAN extends Base {
 	}
 	static fromBban(countryCode, bban, options) {
 		const bbanStr = typeof bban === "string" ? bban : bban.compact;
-		return new IBAN(countryCode + new ISO7064Mod97_10().compute([bbanStr, countryCode]) + bbanStr, options);
+		const checkDigits = new ISO7064Mod97_10().compute([bbanStr, countryCode]);
+		return new IBAN(countryCode + checkDigits + bbanStr, options);
 	}
 	static generate(countryCode, bankCode, accountCode, branchCode = "", extra) {
 		return IBAN.fromBban(countryCode, BBAN.fromComponents(countryCode, {
@@ -245223,14 +245417,14 @@ var IBAN = class IBAN extends Base {
 		return true;
 	}
 	_validateCharacters() {
-		if (!/^[A-Z]{2}\d{2}[A-Z]*/.test(this._value)) throw new InvalidStructure(`Invalid characters in IBAN ${this._value}`);
+		if (!/^[A-Z]{2}\d{2}[A-Z0-9]+$/u.test(this._value)) throw new InvalidStructure(`Invalid characters in IBAN ${this._value}`);
 	}
 	_validateLength() {
 		if (this.spec.iban_length !== this.length) throw new InvalidLength("Invalid IBAN length");
 	}
 	_validateFormat() {
 		const { regex } = this.spec;
-		if (regex instanceof RegExp && !regex.test(this.bban.compact)) throw new InvalidStructure(`Invalid BBAN structure: '${this.bban}' doesn't match '${this.spec.bban_spec}'`);
+		if (!regex.test(this.bban.compact)) throw new InvalidStructure(`Invalid BBAN structure: '${this.bban.toString()}' doesn't match '${this.spec.bban_spec}'`);
 	}
 	_validateIbanChecksum() {
 		const checksumAlgo = new ISO7064Mod97_10();
@@ -245252,9 +245446,7 @@ var IBAN = class IBAN extends Base {
 		return parts.join(" ");
 	}
 	get spec() {
-		const countrySpec = get("iban")[this.countryCode];
-		if (!countrySpec) throw new InvalidCountryCode(`Unknown country-code '${this.countryCode}'`);
-		return countrySpec;
+		return getIbanSpec(this.countryCode);
 	}
 	get bic() {
 		return this.bban.bic;
@@ -245308,19 +245500,7 @@ var IBAN = class IBAN extends Base {
 		return this._value.endsWith(suffix);
 	}
 };
-function addBbanRegex(_country, spec) {
-	if (!spec.regex) spec.regex = new RegExp(convertBbanSpecToRegex(spec.bban_spec));
-	return spec;
-}
-function convertBbanSpecToRegex(spec) {
-	const specRe = new RegExp(`(\\d+)(!)?([${Object.keys(_specToRe).join("")}])`, "g");
-	return `^${spec.replace(specRe, (_match, count, fixed, type) => {
-		const quantifier = fixed ? `{${count}}` : `{1,${count}}`;
-		return _specToRe[type] + quantifier;
-	})}$`;
-}
-manipulate("iban", addBbanRegex);
 //#endregion
-export { BBAN, BIC, Component, GenerateRandomOverflowError, IBAN, InvalidAccountCode, InvalidBBANChecksum, InvalidBankCode, InvalidBranchCode, InvalidChecksumDigits, InvalidCountryCode, InvalidLength, InvalidStructure, SchwiftyException, algorithms, convertBbanSpecToRegex, getAlgorithm };
+export { BBAN, BIC, Component, GenerateRandomOverflowError, IBAN, InvalidAccountCode, InvalidBBANChecksum, InvalidBankCode, InvalidBranchCode, InvalidChecksumDigits, InvalidCountryCode, InvalidLength, InvalidStructure, Range, SchwiftyException, algorithms, clean, convertBbanSpecToRegex, getAlgorithm, getAllBanks, getBanksByBic, getBanksByCode, getBanksByCountry, getCountries, getIbanSpec, toAscii };
 
 //# sourceMappingURL=index.mjs.map
