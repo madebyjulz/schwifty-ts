@@ -1,6 +1,9 @@
 import { Component } from "../domain.ts";
 
-const _alphabet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+export const DIGITS = "0123456789";
+export const UPPERCASE = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+const _alphabet = DIGITS + UPPERCASE;
 
 export function numerify(value: string): bigint {
   return BigInt([...value].map((c) => _alphabet.indexOf(c).toString()).join(""));
@@ -38,6 +41,20 @@ export abstract class Algorithm {
 
   validate(components: string[], expected: string): boolean {
     return this.compute(components) === expected;
+  }
+
+  /**
+   * Return `components` adjusted so that the checksum validates.
+   *
+   * Algorithms whose checksum occupies its own BBAN field are fully determined
+   * by their inputs, so there is nothing to adjust and the components are
+   * returned unchanged (the caller writes the computed checksum into the
+   * separate field). Algorithms that embed a check digit inside one of the
+   * accepted components override this to splice in a valid check digit,
+   * returning `null` when the given input admits no valid one.
+   */
+  solve(components: string[]): string[] | null {
+    return components;
   }
 }
 

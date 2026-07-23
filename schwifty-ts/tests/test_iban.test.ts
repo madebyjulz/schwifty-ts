@@ -1,7 +1,8 @@
 import { describe, it, expect } from "vitest";
 import { getCountry } from "../src/countries.ts";
 import { SchwiftyException } from "../src/exceptions.ts";
-import { IBAN, convertBbanSpecToRegex } from "../src/iban.ts";
+import { IBAN } from "../src/iban.ts";
+import { convertBbanSpecToRegex } from "../src/registry.ts";
 
 const valid = [
   "AL47 2121 1009 0000 0002 3569 8741",
@@ -84,6 +85,7 @@ const valid = [
   "FO62 6460 0001 6316 34",
   "GL89 6471 0001 0002 06",
   "IQ98 NBIQ 8501 2345 6789 012",
+  "YE15 CBYE 0001 0188 6123 4567 8912 34",
 ];
 
 const invalid = [
@@ -155,6 +157,19 @@ describe("IBAN parsing", () => {
   });
 
   it.each(invalid)("rejects invalid IBAN %s", (value) => {
+    expect(() => new IBAN(value)).toThrow(SchwiftyException);
+  });
+});
+
+describe("IBAN character validation", () => {
+  // `_validateCharacters` used to be anchored only at the start and to exclude
+  // digits from the BBAN, so an invalid character inside the BBAN slipped past
+  // character validation. Both of these are printable ASCII, so they survive
+  // the ASCII folding in `clean()` and reach the character check itself.
+  it.each([
+    "GB82WEST1234*698765432", // star where a digit is expected
+    "GB82WEST1234-698765432", // dash where a digit is expected
+  ])("rejects invalid characters inside the BBAN of %s", (value) => {
     expect(() => new IBAN(value)).toThrow(SchwiftyException);
   });
 });
@@ -359,6 +374,15 @@ describe("IBAN random", () => {
 
     const kmIban = IBAN.random("KM");
     expect(kmIban.isValid).toBeTruthy();
+  });
+
+  // Randomly generated IBANs for countries with a bank-specific national
+  // checksum (e.g. the German methods) must satisfy that checksum, i.e.
+  // `validate(true)` must not throw.
+  it.each(["DE", "IT", "BE", "CZ", "SK", "IS"])("random %s IBANs pass the national checksum", (countryCode) => {
+    for (let i = 0; i < 50; i++) {
+      expect(IBAN.random(countryCode).validate(true)).toBeTruthy();
+    }
   });
 });
 

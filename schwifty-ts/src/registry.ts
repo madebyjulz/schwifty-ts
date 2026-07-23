@@ -1,107 +1,169 @@
 import bankData from "./data/bank.json";
 import ibanData from "./data/iban.json";
-import type { BankEntry, IbanSpec } from "./types.ts";
+import type { Bank, IBANSpec } from "./domain.ts";
+import { Component, componentRecord, Range } from "./domain.ts";
+import * as exceptions from "./exceptions.ts";
+import type { RawBank, RawIbanSpec } from "./types.ts";
+
+const _specToRe: Record<string, string> = {
+  n: "\\d",
+  a: "[A-Z]",
+  c: "[A-Za-z0-9]",
+  e: " ",
+};
+
+/** Translate a SWIFT BBAN specification such as `8!n10!n` into a regex source. */
+export function convertBbanSpecToRegex(spec: string): string {
+  const specRe = new RegExp(`(\\d+)(!)?([${Object.keys(_specToRe).join("")}])`, "gu");
+  const converted = spec.replace(specRe, (_match: string, count: string, fixed: string | undefined, type: string) => {
+    const quantifier = fixed ? `{${count}}` : `{1,${count}}`;
+    return _specToRe[type] + quantifier;
+  });
+  return `^${converted}$`;
+}
+
+// The bundled JSON widens to plain array/object types on import, so these two
+// assertions are where the hand-maintained contract about the file layout gets
+// applied. Everything downstream works off the parsed domain objects instead.
+// oxlint-disable-next-line typescript/no-unsafe-type-assertion
+const _rawBanks = bankData as RawBank[];
+// oxlint-disable-next-line typescript/no-unsafe-type-assertion
+const _rawIbanSpecs = ibanData as Record<string, RawIbanSpec>;
+
+const _componentValues = new Set<string>(Object.values(Component));
+
+function isComponent(value: string): value is Component {
+  return _componentValues.has(value);
+}
+
+function parseIbanSpec(countryCode: string, data: RawIbanSpec): IBANSpec {
+  const rawPositions = data.positions ?? {};
+  const positions = componentRecord((component) => {
+    const coords = rawPositions[component];
+    if (coords === undefined || coords.length < 2) {
+      return new Range();
+    }
+    return new Range(coords[0], coords[1]);
+  });
+
+  const bicLookupComponents = (data.bic_lookup_components ?? [Component.BANK_CODE]).filter(isComponent);
+
+  const defaults: Record<string, string> = {};
+  for (const [key, value] of Object.entries(data)) {
+    if (key.startsWith("default_") && (typeof value === "string" || typeof value === "number")) {
+      defaults[key] = String(value);
+    }
+  }
+
+  return {
+    country: countryCode,
+    bban_spec: data.bban_spec,
+    bban_length: data.bban_length,
+    iban_spec: data.iban_spec,
+    iban_length: data.iban_length,
+    in_sepa_zone: data.in_sepa_zone ?? false,
+    regex: new RegExp(convertBbanSpecToRegex(data.bban_spec), "u"),
+    positions,
+    bic_lookup_components: bicLookupComponents,
+    defaults,
+  };
+}
+
+function parseBank(data: RawBank): Bank {
+  return {
+    country_code: data.country_code ?? "",
+    bic: data.bic ?? "",
+    bank_code: data.bank_code ?? "",
+    name: data.name ?? "",
+    short_name: data.short_name ?? null,
+    primary: data.primary ?? false,
+    checksum_algo: data.checksum_algo ?? "default",
+  };
+}
+
+const _ibanSpecs = new Map<string, IBANSpec>();
+let _banks: Bank[] | null = null;
+let _byCountry: Map<string, Bank[]> | null = null;
+let _byBankCode: Map<string, Bank[]> | null = null;
+let _byBic: Map<string, Bank[]> | null = null;
 
 /**
- * What each registry key holds.
+ * Compound key for the `(country_code, bank_code)` index.
  *
- * `bank` and `iban` ship with the package as JSON; the rest are indexes over
- * `bank` that `buildIndex` materialises when `bic.ts`/`bban.ts` are imported.
+ * NUL separates the parts so that no pair of codes can collide, whatever
+ * characters a national bank code turns out to use.
  */
-export interface Registries {
-  bank: BankEntry[];
-  bank_code: Record<string, BankEntry[]>;
-  bic: Record<string, BankEntry[]>;
-  country: Record<string, BankEntry[]>;
-  iban: Record<string, IbanSpec>;
+function bankCodeKey(countryCode: string, bankCode: string): string {
+  return `${countryCode}\u0000${bankCode}`;
 }
 
-/** Registries keyed by an arbitrary string rather than holding a flat list. */
-type MappingRegistry = Exclude<keyof Registries, "bank">;
-
-const _registry = new Map<string, unknown>([
-  ["bank", bankData],
-  ["iban", ibanData],
-]);
-
-function isPlainObject(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
-export function mergeDicts(left: Record<string, unknown>, right: Record<string, unknown>): Record<string, unknown> {
-  const merged: Record<string, unknown> = {};
-  for (const key of Object.keys(right)) {
-    if (key in left) {
-      const lv = left[key];
-      const rv = right[key];
-      merged[key] = isPlainObject(lv) && isPlainObject(rv) ? mergeDicts(lv, rv) : rv;
-    }
-  }
-  for (const key of Object.keys(left)) {
-    if (!(key in merged)) {
-      merged[key] = left[key];
-    }
-  }
-  for (const key of Object.keys(right)) {
-    if (!(key in merged)) {
-      merged[key] = right[key];
-    }
-  }
-  return merged;
-}
-
-export function has(name: string): boolean {
-  return _registry.has(name);
-}
-
-export function get<K extends keyof Registries>(name: K): Registries[K] {
-  const data = _registry.get(name);
-  if (data === undefined) {
-    throw new Error(`Unknown registry '${name}'`);
-  }
-  // The store is keyed by string at runtime (mirroring `schwifty.registry` in
-  // the Python package) and the bundled JSON widens to plain array/object
-  // types, so `Registries` is the hand-maintained contract for what lives
-  // under each key. This is the single place that contract gets applied.
-  // oxlint-disable-next-line typescript/no-unsafe-type-assertion
-  return data as Registries[K];
-}
-
-export function save<K extends keyof Registries>(name: K, data: Registries[K]): void {
-  _registry.set(name, data);
+function allBanks(): Bank[] {
+  _banks ??= _rawBanks.map(parseBank);
+  return _banks;
 }
 
 /**
- * Group the bundled bank entries into `indexName`, keyed by one or more of
- * their fields. Entries with a blank value for any part of the key are
- * skipped, since they could not be looked up unambiguously anyway.
+ * Group the banks into an index keyed by `keyOf`. Entries the key is blank for
+ * are skipped, since they could not be looked up unambiguously anyway.
  */
-export function buildIndex(indexName: MappingRegistry, key: keyof BankEntry | (keyof BankEntry)[]): void {
-  const keyFields = Array.isArray(key) ? key : [key];
-  const data: Record<string, BankEntry[]> = {};
-
-  for (const entry of get("bank")) {
-    const parts = keyFields.map((field) => String(entry[field] ?? ""));
-    if (parts.some((part) => !part)) {
+function buildIndex(keyOf: (bank: Bank) => string): Map<string, Bank[]> {
+  const index = new Map<string, Bank[]>();
+  for (const bank of allBanks()) {
+    const key = keyOf(bank);
+    if (!key) {
       continue;
     }
-    const indexKey = parts.join("\0");
-    data[indexKey] ??= [];
-    data[indexKey].push(entry);
+    const bucket = index.get(key);
+    if (bucket === undefined) {
+      index.set(key, [bank]);
+    } else {
+      bucket.push(bank);
+    }
   }
-
-  save(indexName, data);
+  return index;
 }
 
 /**
- * Rewrite every entry of the IBAN registry in place — used once at import time
- * to attach the compiled BBAN regex to each country spec. Add an overload here
- * if another registry ever needs the same treatment.
+ * The country specific IBAN specification.
+ *
+ * @throws {InvalidCountryCode} If the registry has no entry for `countryCode`.
  */
-export function manipulate(name: "iban", func: (key: string, value: IbanSpec) => IbanSpec): void {
-  const reg = get(name);
-  for (const key of Object.keys(reg)) {
-    reg[key] = func(key, reg[key]);
+export function getIbanSpec(countryCode: string): IBANSpec {
+  const cached = _ibanSpecs.get(countryCode);
+  if (cached !== undefined) {
+    return cached;
   }
-  save(name, reg);
+  const raw = _rawIbanSpecs[countryCode];
+  if (raw === undefined) {
+    throw new exceptions.InvalidCountryCode(`Unknown country-code '${countryCode}'`);
+  }
+  const spec = parseIbanSpec(countryCode, raw);
+  _ibanSpecs.set(countryCode, spec);
+  return spec;
+}
+
+export function getBanksByCountry(countryCode: string): Bank[] {
+  _byCountry ??= buildIndex((bank) => bank.country_code);
+  return _byCountry.get(countryCode) ?? [];
+}
+
+export function getBanksByCode(countryCode: string, bankCode: string): Bank[] {
+  _byBankCode ??= buildIndex((bank) =>
+    bank.country_code && bank.bank_code ? bankCodeKey(bank.country_code, bank.bank_code) : "",
+  );
+  return _byBankCode.get(bankCodeKey(countryCode, bankCode)) ?? [];
+}
+
+export function getBanksByBic(bic: string): Bank[] {
+  _byBic ??= buildIndex((bank) => bank.bic);
+  return _byBic.get(bic) ?? [];
+}
+
+export function getCountries(): string[] {
+  _byCountry ??= buildIndex((bank) => bank.country_code);
+  return [..._byCountry.keys()];
+}
+
+export function getAllBanks(): Bank[] {
+  return allBanks();
 }

@@ -3,16 +3,9 @@ import type { BIC } from "./bic.ts";
 import { ISO7064Mod97_10, numerify } from "./checksum/index.ts";
 import { Base } from "./common.ts";
 import { getCountry } from "./countries.ts";
+import type { Bank, IBANSpec } from "./domain.ts";
 import * as exceptions from "./exceptions.ts";
 import * as registry from "./registry.ts";
-import type { BankEntry, IbanSpec } from "./types.ts";
-
-const _specToRe: Record<string, string> = {
-  n: "\\d",
-  a: "[A-Z]",
-  c: "[A-Za-z0-9]",
-  e: " ",
-};
 
 export class IBAN extends Base {
   readonly bban: BBAN;
@@ -74,9 +67,10 @@ export class IBAN extends Base {
   }
 
   private _validateCharacters(): void {
-    // Mirrors Python's `re.match`, which is anchored at the start only: the
-    // trailing BBAN characters are checked by `_validateFormat` instead.
-    if (!/^[A-Z]{2}\d{2}[A-Z]*/u.test(this._value)) {
+    // Anchored at both ends over the alphanumeric BBAN: matching only the
+    // country/check-digit prefix (and excluding digits from the BBAN) used to
+    // let invalid characters further along the string slip through.
+    if (!/^[A-Z]{2}\d{2}[A-Z0-9]+$/u.test(this._value)) {
       throw new exceptions.InvalidStructure(`Invalid characters in IBAN ${this._value}`);
     }
   }
@@ -89,7 +83,7 @@ export class IBAN extends Base {
 
   private _validateFormat(): void {
     const { regex } = this.spec;
-    if (regex instanceof RegExp && !regex.test(this.bban.compact)) {
+    if (!regex.test(this.bban.compact)) {
       throw new exceptions.InvalidStructure(
         `Invalid BBAN structure: '${this.bban.toString()}' doesn't match '${this.spec.bban_spec}'`,
       );
@@ -126,13 +120,8 @@ export class IBAN extends Base {
     return parts.join(" ");
   }
 
-  get spec(): IbanSpec {
-    const specs = registry.get("iban");
-    const countrySpec = specs[this.countryCode];
-    if (!countrySpec) {
-      throw new exceptions.InvalidCountryCode(`Unknown country-code '${this.countryCode}'`);
-    }
-    return countrySpec;
+  get spec(): IBANSpec {
+    return registry.getIbanSpec(this.countryCode);
   }
 
   get bic(): BIC | null {
@@ -187,7 +176,7 @@ export class IBAN extends Base {
     return this.bban.currencyCode;
   }
 
-  get bank(): BankEntry | null {
+  get bank(): Bank | null {
     return this.bban.bank;
   }
 
@@ -203,22 +192,3 @@ export class IBAN extends Base {
     return this._value.endsWith(suffix);
   }
 }
-
-export function convertBbanSpecToRegex(spec: string): string {
-  const specRe = new RegExp(`(\\d+)(!)?([${Object.keys(_specToRe).join("")}])`, "gu");
-  const converted = spec.replace(specRe, (_match: string, count: string, fixed: string | undefined, type: string) => {
-    const quantifier = fixed ? `{${count}}` : `{1,${count}}`;
-    return _specToRe[type] + quantifier;
-  });
-  return `^${converted}$`;
-}
-
-// Transform IBAN registry: add compiled regexes
-function addBbanRegex(_country: string, spec: IbanSpec): IbanSpec {
-  if (!spec.regex) {
-    spec.regex = new RegExp(convertBbanSpecToRegex(spec.bban_spec), "u");
-  }
-  return spec;
-}
-
-registry.manipulate("iban", addBbanRegex);

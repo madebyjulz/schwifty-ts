@@ -1,6 +1,6 @@
 import { Component } from "../domain.ts";
 import { InvalidBBANChecksum } from "../exceptions.ts";
-import { Algorithm, register } from "./algorithm.ts";
+import { Algorithm, DIGITS, register } from "./algorithm.ts";
 
 // const ACCOUNT_CODE_LENGTH = 10;
 const ZERO_PLUS_START_REGEX = /^0+/u;
@@ -83,6 +83,32 @@ abstract class WeightedModulus extends Algorithm {
     const checkDigit = this.compute(components);
     const positions = this.getPositions(accountCode);
     return checkDigit === accountCode[positions.checkDigit - 1];
+  }
+
+  override solve(components: string[]): string[] | null {
+    // The check digit sits at a fixed position inside the 10-digit account
+    // code, so there is exactly one unknown to determine. Try every possible
+    // value at that position and keep the one the method accepts, using the
+    // existing `validate` as the oracle so per-method quirks (exception
+    // ranges, special-case reconciliations) are honoured without duplicating
+    // their logic. `null` signals that this random account body cannot be
+    // made valid (e.g. methods that reject a whole class of inputs).
+    const [accountCode] = components;
+    const index = this.getPositions(accountCode).checkDigit - 1;
+    for (const digit of DIGITS) {
+      const candidate = accountCode.slice(0, index) + digit + accountCode.slice(index + 1);
+      try {
+        if (this.validate([candidate], "")) {
+          return [candidate];
+        }
+      } catch (error) {
+        if (error instanceof InvalidBBANChecksum) {
+          continue;
+        }
+        throw error;
+      }
+    }
+    return null;
   }
 }
 
@@ -235,7 +261,9 @@ class Algorithm08 extends WeightedMod10 {
     checkDigit: 10,
   };
   override readonly weights = [2, 1];
-  private readonly minAccountCode = 6000;
+  // Per the Bundesbank specification the check digit only applies from account
+  // number 60000 upward.
+  private readonly minAccountCode = 60_000;
 
   override computeSummand(digit: number, weight: number): number {
     return digitSum(digit * weight);
@@ -300,7 +328,9 @@ class Algorithm11 extends WeightedMod11 {
     if (checksum === 10) {
       return 9;
     }
-    return checksum;
+    // Anything else at or above 10 — in practice 11, i.e. a check digit of 0 —
+    // falls back to the base method's mapping rather than being returned raw.
+    return super.reconcile(checksum);
   }
 }
 register("DE")(new Algorithm11());
@@ -358,8 +388,10 @@ register("DE")(new Algorithm15());
 // Algorithm 16
 class Algorithm16 extends WeightedMod11 {
   override readonly name = "16";
+  // Method 16 is computed like method 06 over positions 1-9; only method 15 is
+  // restricted to positions 6-9.
   override readonly positions: Positions = {
-    start: 6,
+    start: 1,
     end: 9,
     checkDigit: 10,
   };
@@ -690,6 +722,13 @@ class Algorithm63 extends WeightedMod10 {
     }
     return super.validate(components, expected);
   }
+
+  override solve(components: string[]): string[] | null {
+    // The method only accepts account codes with a leading zero, which the check
+    // digit alone cannot supply, so set it before solving for the check digit.
+    const [accountCode] = components;
+    return super.solve([`0${accountCode.slice(1)}`]);
+  }
 }
 register("DE")(new Algorithm63());
 
@@ -733,10 +772,23 @@ class Algorithm68 extends WeightedMod10 {
     }
     return true;
   }
+
+  override solve(components: string[]): string[] | null {
+    // A 10-significant-digit account code (no leading zero) requires the 7th
+    // position — index 3 — to be 9, otherwise `getDigits` rejects it. Set it so
+    // the leading digit stays free, then solve for the check digit.
+    const [accountCode] = components;
+    if (accountCode.startsWith("0")) {
+      return super.solve([accountCode]);
+    }
+    return super.solve([`${accountCode.slice(0, 3)}9${accountCode.slice(4)}`]);
+  }
 }
 register("DE")(new Algorithm68());
 
 // Algorithm 76
+const ALLOWED_LEADING_DIGITS_76 = new Set([0, 4, 6, 7, 8, 9]);
+
 class Algorithm76 extends WeightedMod11 {
   override readonly name = "76";
   override readonly minuend = null;
@@ -755,11 +807,20 @@ class Algorithm76 extends WeightedMod11 {
 
   override validate(components: string[], expected: string): boolean {
     const [accountCode] = components;
-    const firstDigit = Number(accountCode[0]);
-    if (![0, 4, 6, 7, 8, 9].includes(firstDigit)) {
+    if (!ALLOWED_LEADING_DIGITS_76.has(Number(accountCode[0]))) {
       return false;
     }
     return super.validate(components, expected);
+  }
+
+  override solve(components: string[]): string[] | null {
+    // The method only accepts certain leading digits, which the check digit alone
+    // cannot supply, so coerce it into the allowed set before solving.
+    const [accountCode] = components;
+    if (ALLOWED_LEADING_DIGITS_76.has(Number(accountCode[0]))) {
+      return super.solve([accountCode]);
+    }
+    return super.solve([`0${accountCode.slice(1)}`]);
   }
 }
 register("DE")(new Algorithm76());
@@ -823,18 +884,26 @@ class Algorithm91 extends Algorithm {
   }
 
   override validate(components: string[], expected: string): boolean {
-    const variants = [
-      new Algorithm91Variant1(),
-      new Algorithm91Variant2(),
-      new Algorithm91Variant3(),
-      new Algorithm91Variant4(),
-    ];
-    for (const variant of variants) {
+    for (const variant of Algorithm91._variants()) {
       if (variant.validate(components, expected)) {
         return true;
       }
     }
     return false;
+  }
+
+  override solve(components: string[]): string[] | null {
+    for (const variant of Algorithm91._variants()) {
+      const solved = variant.solve(components);
+      if (solved !== null && this.validate(solved, "")) {
+        return solved;
+      }
+    }
+    return null;
+  }
+
+  private static _variants(): WeightedModulus[] {
+    return [new Algorithm91Variant1(), new Algorithm91Variant2(), new Algorithm91Variant3(), new Algorithm91Variant4()];
   }
 }
 register("DE")(new Algorithm91());

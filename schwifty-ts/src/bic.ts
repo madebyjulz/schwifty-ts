@@ -2,7 +2,6 @@ import { Base } from "./common.ts";
 import { getCountry } from "./countries.ts";
 import * as exceptions from "./exceptions.ts";
 import * as registry from "./registry.ts";
-import type { BankEntry } from "./types.ts";
 
 const _bicIso9362Re = /^[A-Z0-9]{4}[A-Z]{2}[A-Z0-9]{2}(?:[A-Z0-9]{3})?$/u;
 const _bicSwiftRe = /^[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}(?:[A-Z0-9]{3})?$/u;
@@ -16,18 +15,13 @@ export class BIC extends Base {
   }
 
   static candidatesFromBankCode(countryCode: string, bankCode: string): BIC[] {
-    try {
-      const index = registry.get("bank_code");
-      const key = `${countryCode}\0${bankCode}`;
-      const entries = index[key];
-      if (!entries) {
-        throw new Error("not found");
-      }
-      const sorted = [...entries].toSorted((a, b) => (b.primary ? 1 : 0) - (a.primary ? 1 : 0));
-      return sorted.filter((entry) => entry.bic).map((entry) => new BIC(entry.bic));
-    } catch {
+    const banks = registry
+      .getBanksByCode(countryCode, bankCode)
+      .toSorted((a, b) => (b.primary ? 1 : 0) - (a.primary ? 1 : 0));
+    if (banks.length === 0) {
       throw new exceptions.InvalidBankCode(`Unknown bank code '${bankCode}' for country '${countryCode}'`);
     }
+    return banks.filter((entry) => entry.bic).map((entry) => new BIC(entry.bic));
   }
 
   static fromBankCode(countryCode: string, bankCode: string): BIC {
@@ -94,14 +88,12 @@ export class BIC extends Base {
     return formatted;
   }
 
-  private _lookupValues(key: keyof BankEntry): string[] {
-    const spec = registry.get("bic");
-    const entries = spec[this._value] || [];
+  private _lookupValues(key: "bank_code" | "name" | "short_name"): string[] {
     const values = new Set<string>();
-    for (const entry of entries) {
-      const val = entry[key];
-      if (val) {
-        values.add(String(val));
+    for (const entry of registry.getBanksByBic(this._value)) {
+      const value = entry[key];
+      if (value) {
+        values.add(value);
       }
     }
     return [...values].toSorted();
@@ -120,8 +112,7 @@ export class BIC extends Base {
   }
 
   get exists(): boolean {
-    const spec = registry.get("bic");
-    return Boolean(spec[this._value]);
+    return registry.getBanksByBic(this._value).length > 0;
   }
 
   get type(): string {
@@ -158,7 +149,3 @@ export class BIC extends Base {
     return this._getSlice(8, 11);
   }
 }
-
-// Build indexes on first import
-registry.buildIndex("bic", "bic");
-registry.buildIndex("bank_code", ["country_code", "bank_code"]);

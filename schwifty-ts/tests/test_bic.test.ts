@@ -71,11 +71,36 @@ describe(BIC, () => {
     ["AAAA", InvalidLength],
     ["AAAADEM1GLSX", InvalidLength],
     ["GENOD1M1GLS", InvalidStructure],
+    ["GENODEM1@#%", InvalidStructure],
     ["GENOXXM1GLS", InvalidCountryCode],
   ];
 
   it.each(invalidCases)("rejects invalid BIC %s", (code, exc) => {
     expect(() => new BIC(code)).toThrow(exc);
+  });
+
+  // An 11-character BIC whose branch code (positions 9-11) contains
+  // non-alphanumeric characters must be rejected. When the structure check only
+  // anchors the start of the string, the branch-code group being optional lets
+  // the trailing garbage slip through and even exposes it via `BIC.branchCode`.
+  const invalidBranchCodes = [
+    "GENODEM1@#%", // symbols in the branch code
+    "GENODEM1G-S", // dash in the branch code
+    "GENODEM1GL*", // star in the branch code
+    "MARKDEF1$$$", // dollar signs in the branch code
+    "GENODEM1..X", // dots in the branch code
+  ];
+
+  it.each(invalidBranchCodes)("rejects non-alphanumeric branch code in %s", (code) => {
+    expect(() => new BIC(code)).toThrow(InvalidStructure);
+    expect(() => new BIC(code, { enforceSwiftCompliance: true })).toThrow(InvalidStructure);
+    expect(new BIC(code, { allowInvalid: true }).isValid).toBeFalsy();
+  });
+
+  // Regression guard for the full-string structure validation: genuinely valid
+  // 8- and 11-character BICs must keep validating.
+  it.each(["GENODEM1", "GENODEM1GLS", "MARKDEF1100", "1234DEWWXXX"])("validates %s over the full string", (code) => {
+    expect(new BIC(code).validate()).toBeTruthy();
   });
 
   const fromBankCodeCases: [string, string, string][] = [
