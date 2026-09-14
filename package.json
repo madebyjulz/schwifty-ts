@@ -1,40 +1,56 @@
 {
   "name": "schwifty-ts",
-  "version": "0.1.0",
-  "description": "",
-  "keywords": [],
+  "version": "2026.7.300",
+  "description": "IBAN and BIC validation, generation and bank lookup. A 1:1 TypeScript port of the Python schwifty package.",
+  "keywords": [
+    "bank",
+    "bban",
+    "bic",
+    "iban",
+    "iso13616",
+    "iso9362",
+    "schwifty",
+    "sepa",
+    "swift",
+    "validation"
+  ],
   "homepage": "https://github.com/madebyjulz/schwifty-ts#readme",
   "bugs": {
     "url": "https://github.com/madebyjulz/schwifty-ts/issues"
   },
   "license": "MIT",
-  "author": "",
+  "author": "Julius von Egloffstein",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/madebyjulz/schwifty-ts.git"
-  },
-  "directories": {
-    "test": "tests"
   },
   "files": [
     "dist"
   ],
   "type": "module",
+  "sideEffects": [
+    "./dist/index.mjs"
+  ],
   "main": "./dist/index.mjs",
   "types": "./dist/index.d.mts",
   "exports": {
     ".": {
-      "import": "./dist/index.mjs",
-      "types": "./dist/index.d.mts"
+      "types": "./dist/index.d.mts",
+      "import": "./dist/index.mjs"
     }
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "scripts": {
     "prebuild": "node scripts/consolidate-registry.ts",
     "build": "tsdown",
     "test": "vitest run",
     "test:watch": "vitest",
+    "typecheck": "tsc -p tsconfig.json",
     "check": "ultracite check",
     "fix": "ultracite fix",
+    "sync:upstream": "node scripts/sync-upstream.ts",
     "git-publish": "git-publish",
     "prepack": "pnpm run build"
   },
@@ -48,5 +64,12 @@
     "typescript": "^7.0.2",
     "ultracite": "7.9.4",
     "vitest": "^4.1.10"
+  },
+  "engines": {
+    "node": ">=22.6"
+  },
+  "schwifty": {
+    "upstream": "394bdfb889b704fb1e5d96e51c7ca1e65120693f",
+    "upstreamTag": "2026.07.3-5-g394bdfb"
   }
 }

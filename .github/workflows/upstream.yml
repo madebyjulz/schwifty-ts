@@ -1,0 +1,52 @@
+name: Upstream check
+
+# Opens an issue when the Python schwifty package publishes a release that
+# has not been ported yet. The ported revision is recorded in package.json
+# under `schwifty.upstreamTag` by scripts/sync-upstream.ts.
+
+on:
+  schedule:
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compare latest upstream tag with the ported one
+        id: compare
+        run: |
+          latest=$(git ls-remote --tags --refs https://github.com/mdomke/schwifty.git \
+            | awk -F/ '{print $NF}' | sort -V | tail -n1)
+          ported=$(node -p "require('./package.json').schwifty.upstreamTag")
+          echo "latest=$latest" >> "$GITHUB_OUTPUT"
+          echo "ported=$ported" >> "$GITHUB_OUTPUT"
+          if [ "$latest" != "$ported" ] && [ "$(printf '%s\n%s' "$ported" "$latest" | sort -V | tail -n1)" = "$latest" ]; then
+            echo "outdated=true" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Open an issue if none exists
+        if: steps.compare.outputs.outdated == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          LATEST: ${{ steps.compare.outputs.latest }}
+          PORTED: ${{ steps.compare.outputs.ported }}
+        run: |
+          title="Port upstream schwifty $LATEST"
+          if gh issue list --state open --search "\"$title\" in:title" --json title --jq '.[].title' | grep -qx "$title"; then
+            echo "Issue already open."; exit 0
+          fi
+          gh issue create --title "$title" --body "$(cat <<EOT
+          Upstream released [\`$LATEST\`](https://github.com/mdomke/schwifty/releases/tag/$LATEST); this package is at \`$PORTED\`.
+
+          \`\`\`
+          node scripts/sync-upstream.ts
+          \`\`\`
+
+          then port the printed diff and add a changelog entry.
+          EOT
+          )"
