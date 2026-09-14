@@ -10,6 +10,36 @@ Versions follow the upstream `schwifty <https://github.com/mdomke/schwifty>`_ Py
 For the full upstream changelog see the
 `schwifty changelog <https://github.com/mdomke/schwifty/blob/main/CHANGELOG.rst>`_.
 
+Unreleased
+----------
+
+Ports upstream commits through ``394bdfb`` (2026/09/04, unreleased upstream).
+
+Added
+~~~~~
+* E-money institutions and banks that were missing from the bank registries: OpenPayd
+  (MT — first Maltese registry), ClearBank and Bilderlings Pay (GB), Score and Secure Payment
+  and Deblock (FR), bunq, Pecunia Cards and Financière des Paiements Électroniques (ES),
+  Unlimit (CY), MyFin (BG), Revolut Bank (PT), Enpara Bank (TR), United Bank and Allied Bank
+  (PK — first Pakistani registry), and the BIC for PrivatBank (UA).
+* ``BIC.domesticBankCodes``, ``bankNames`` and ``bankShortNames`` fall back to the
+  8-character institution BIC when the registry has no entry for the 11-character branch BIC.
+
+Changed
+~~~~~~~
+* Simplified internal character lookups, checksum helpers and validation routines while
+  preserving exact behaviour (``numerify`` lookup map, Italian and Norwegian checksums,
+  German ``digitSum`` fast path, ``Base._getSlice``).
+* Simplified the IBAN checksum validation. The redundant ``numeric % 97n === 1n`` test has
+  been dropped in favour of the stricter canonical ``ISO7064Mod97_10`` comparison, which it
+  always implied. Behaviour is unchanged.
+
+Fixed
+~~~~~
+* ``BIC.fromBankCode`` returned ``undefined`` (typed as ``BIC``) and ``IBAN.bic`` returned
+  ``undefined`` instead of ``null`` when every registry entry for a bank code lacks a BIC
+  (e.g. ``BE`` ``102``). It now throws ``InvalidBankCode`` like the Python implementation.
+
 ``2026.07.3`` - 2026/07/23
 --------------------------
 

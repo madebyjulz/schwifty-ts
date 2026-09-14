@@ -7,6 +7,9 @@ import type { Bank, IBANSpec } from "./domain.ts";
 import * as exceptions from "./exceptions.ts";
 import * as registry from "./registry.ts";
 
+const _IBAN_STRUCTURE_RE = /^[A-Z]{2}\d{2}[A-Z0-9]+$/u;
+const _iso7064Mod97_10 = new ISO7064Mod97_10();
+
 export class IBAN extends Base {
   readonly bban: BBAN;
 
@@ -24,8 +27,7 @@ export class IBAN extends Base {
     options?: { allowInvalid?: boolean; validateBban?: boolean },
   ): IBAN {
     const bbanStr = typeof bban === "string" ? bban : bban.compact;
-    const checksumAlgo = new ISO7064Mod97_10();
-    const checkDigits = checksumAlgo.compute([bbanStr, countryCode]);
+    const checkDigits = _iso7064Mod97_10.compute([bbanStr, countryCode]);
     return new IBAN(countryCode + checkDigits + bbanStr, options);
   }
 
@@ -70,7 +72,7 @@ export class IBAN extends Base {
     // Anchored at both ends over the alphanumeric BBAN: matching only the
     // country/check-digit prefix (and excluding digits from the BBAN) used to
     // let invalid characters further along the string slip through.
-    if (!/^[A-Z]{2}\d{2}[A-Z0-9]+$/u.test(this._value)) {
+    if (!_IBAN_STRUCTURE_RE.test(this._value)) {
       throw new exceptions.InvalidStructure(`Invalid characters in IBAN ${this._value}`);
     }
   }
@@ -91,11 +93,12 @@ export class IBAN extends Base {
   }
 
   private _validateIbanChecksum(): void {
-    const checksumAlgo = new ISO7064Mod97_10();
-    if (
-      this.numeric % 97n !== 1n ||
-      !checksumAlgo.validate([this.bban.compact, this.countryCode], this.checksumDigits)
-    ) {
+    // Validating against the canonically computed check digits is stricter than a bare
+    // `numeric % 97 === 1` test: the ISO 7064 mod-97-10 algorithm only ever yields check
+    // digits in the range 02..98, whereas the raw mod-97 test additionally accepts the
+    // aliases 00, 01 and 99 (which no genuine IBAN carries). A passing `validate` always
+    // implies `numeric % 97 === 1`, so the latter check is redundant.
+    if (!_iso7064Mod97_10.validate([this.bban.compact, this.countryCode], this.checksumDigits)) {
       throw new exceptions.InvalidChecksumDigits("Invalid checksum digits");
     }
   }

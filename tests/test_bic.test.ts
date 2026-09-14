@@ -63,6 +63,33 @@ describe(BIC, () => {
     expect(new BIC(code).type).toBe(type);
   });
 
+  it("falls back to the institution when a BIC with branch code has no entry", () => {
+    // Some registries only list the 8-character institution BIC. An extended
+    // 11-character BIC denotes a branch of that same institution, so it should
+    // still resolve to the institution's data rather than returning nothing.
+    const institution = new BIC("BSABESBB");
+    expect(institution.domesticBankCodes.length).toBeGreaterThan(0);
+    for (const extended of ["BSABESBBXXX", "BSABESBB001"]) {
+      const bic = new BIC(extended);
+      expect(bic.branchCode).toBeTruthy();
+      expect(bic.domesticBankCodes).toStrictEqual(institution.domesticBankCodes);
+      expect(bic.bankNames).toStrictEqual(institution.bankNames);
+      expect(bic.bankShortNames).toStrictEqual(institution.bankShortNames);
+    }
+  });
+
+  it("prefers a branch-specific registry entry over the institution fallback", () => {
+    expect(new BIC("MARKDEF1100").domesticBankCodes).toStrictEqual(["10000000"]);
+    expect(new BIC("GENODEM1GLS").domesticBankCodes).toStrictEqual(["43060967", "43060988"]);
+  });
+
+  it("raises when every registry entry for a bank code lacks a BIC", () => {
+    // BE 102 is listed in the registry but carries no BIC; Python surfaces this
+    // as InvalidBankCode via the IndexError on the empty candidate list.
+    expect(BIC.candidatesFromBankCode("BE", "102")).toStrictEqual([]);
+    expect(() => BIC.fromBankCode("BE", "102")).toThrow(InvalidBankCode);
+  });
+
   it("enforces SWIFT compliance", () => {
     expect(() => new BIC("1234DEWWXXX", { enforceSwiftCompliance: true })).toThrow(InvalidStructure);
   });

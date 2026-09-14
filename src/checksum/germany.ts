@@ -12,7 +12,16 @@ interface Positions {
   start: number;
 }
 
+const DECIMAL_BASE = 10;
+const TWO_DIGIT_LIMIT = 100;
+
 function digitSum(n: number): number {
+  if (n < DECIMAL_BASE) {
+    return n;
+  }
+  if (n < TWO_DIGIT_LIMIT) {
+    return Math.floor(n / DECIMAL_BASE) + (n % DECIMAL_BASE);
+  }
   return [...String(n)].reduce((s, d) => s + Number(d), 0);
 }
 
@@ -28,7 +37,6 @@ abstract class WeightedModulus extends Algorithm {
   readonly minuend: number | null = null;
   readonly reverse: boolean = true;
 
-  protected weightedSum = 0;
   protected _remainder = 0;
 
   compute(components: string[]): string {
@@ -884,12 +892,7 @@ class Algorithm91 extends Algorithm {
   }
 
   override validate(components: string[], expected: string): boolean {
-    for (const variant of Algorithm91._variants()) {
-      if (variant.validate(components, expected)) {
-        return true;
-      }
-    }
-    return false;
+    return Algorithm91._variants().some((variant) => variant.validate(components, expected));
   }
 
   override solve(components: string[]): string[] | null {

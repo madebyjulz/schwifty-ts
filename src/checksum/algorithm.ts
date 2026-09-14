@@ -4,9 +4,10 @@ export const DIGITS = "0123456789";
 export const UPPERCASE = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
 const _alphabet = DIGITS + UPPERCASE;
+const _NUMERIFY_MAP: Record<string, string> = Object.fromEntries([..._alphabet].map((c, i) => [c, String(i)]));
 
 export function numerify(value: string): bigint {
-  return BigInt([...value].map((c) => _alphabet.indexOf(c).toString()).join(""));
+  return BigInt([...value].map((c) => _NUMERIFY_MAP[c]).join(""));
 }
 
 export function iso7064(n: bigint, mod: bigint, postProcess: (r: bigint) => bigint, nDigits = 2): string {
@@ -26,7 +27,7 @@ export function weighted(value: Iterable<string>, mod: number, weights: Iterable
 }
 
 export function luhn(value: string): string {
-  const numerical = [...value].map((n) => _alphabet.indexOf(n).toString()).join("");
+  const numerical = [...value].map((n) => _NUMERIFY_MAP[n]).join("");
   const reversed = [...numerical].toReversed();
   const processed = reversed.map((n, i) => ((2 - (i % 2)) * Number(n)).toString()).join("");
   const digitSum = [...processed].reduce((sum, n) => sum + Number(n), 0);

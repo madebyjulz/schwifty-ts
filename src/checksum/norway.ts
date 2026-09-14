@@ -1,6 +1,6 @@
 import { Component } from "../domain.ts";
 import { InvalidAccountCode } from "../exceptions.ts";
-import { Algorithm, register } from "./algorithm.ts";
+import { Algorithm, register, weighted } from "./algorithm.ts";
 
 class DefaultAlgorithm extends Algorithm {
   override readonly name = "default";
@@ -11,12 +11,7 @@ class DefaultAlgorithm extends Algorithm {
     const value = accountCode.startsWith("00") ? accountCode.slice(2) : bankCode + accountCode;
 
     const weights = [5, 4, 3, 2, 7, 6, 5, 4, 3, 2];
-    let total = 0;
-    for (let i = 0; i < Math.min(weights.length, value.length); i++) {
-      total += weights[i] * Number(value[i]);
-    }
-
-    const checkDigit = 11 - (total % 11);
+    const checkDigit = 11 - weighted(value, 11, weights);
     if (checkDigit === 10) {
       throw new InvalidAccountCode("Check digit does not compute: Invalid account code.");
     }
