@@ -6,6 +6,14 @@ export type { Bank, IBANSpec } from "./domain.ts";
 export { Component, Range } from "./domain.ts";
 export * from "./exceptions.ts";
 export { IBAN } from "./iban.ts";
+export type {
+  StandardSchemaFailure,
+  StandardSchemaIssue,
+  StandardSchemaResult,
+  StandardSchemaSuccess,
+  StandardSchemaV1,
+} from "./schema.ts";
+export { bicSchema, ibanSchema } from "./schema.ts";
 export {
   convertBbanSpecToRegex,
   getAllBanks,
