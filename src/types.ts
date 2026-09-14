@@ -7,15 +7,21 @@
  * parsing.
  */
 
-export interface RawBank {
-  bank_code?: string;
-  bic?: string;
-  checksum_algo?: string;
-  country_code?: string;
-  name?: string;
-  primary?: boolean;
-  short_name?: string | null;
-}
+/**
+ * One bank as stored in the generated `data/bank.ts`, as a positional tuple:
+ * `[country_code, bank_code, bic, name, short_name, primary, checksum_algo]`.
+ * `primary` is `1`/`0` and a trailing default `checksum_algo` is omitted.
+ * Keep in sync with `BANK_ROW_FIELDS` in `scripts/consolidate-registry.ts`.
+ */
+export type BankRow = [
+  countryCode: string,
+  bankCode: string,
+  bic: string,
+  name: string,
+  shortName: string | null,
+  primary: 0 | 1,
+  checksumAlgo?: string,
+];
 
 export interface RawIbanSpec {
   bban_length: number;

@@ -47,9 +47,9 @@ function numerifyFR(value: string): bigint {
 class DefaultAlgorithm extends ISO7064Mod97_10 {
   override readonly name = "default";
 
-  override preProcess(components: string[]): bigint {
+  override remainder(components: string[]): bigint {
     const [bankCode, branchCode, accountCode] = components;
-    return 89n * numerifyFR(bankCode) + 15n * numerifyFR(branchCode) + 3n * numerifyFR(accountCode);
+    return (89n * numerifyFR(bankCode) + 15n * numerifyFR(branchCode) + 3n * numerifyFR(accountCode)) % 97n;
   }
 
   override postProcess(r: bigint): bigint {

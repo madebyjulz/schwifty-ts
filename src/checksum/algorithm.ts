@@ -10,6 +10,27 @@ export function numerify(value: string): bigint {
   return BigInt([...value].map((c) => _NUMERIFY_MAP[c]).join(""));
 }
 
+const MOD97 = 97;
+const LETTER_OFFSET = 10;
+
+/**
+ * `numerify(value) % 97` without materialising the number.
+ *
+ * Python computes the ISO 7064 checksum on an arbitrary-precision `int`; the
+ * `bigint` equivalent is an order of magnitude slower than plain integer
+ * arithmetic in JavaScript. Feeding the digits through a running remainder is
+ * exact (every intermediate stays below 97 * 100 + 35) and is the hot path of
+ * every IBAN validation, so it is worth the deviation from upstream.
+ */
+export function mod97(value: string): number {
+  let remainder = 0;
+  for (const char of value) {
+    const n = Number(_NUMERIFY_MAP[char]);
+    remainder = (remainder * (n < LETTER_OFFSET ? 10 : 100) + n) % MOD97;
+  }
+  return remainder;
+}
+
 export function iso7064(n: bigint, mod: bigint, postProcess: (r: bigint) => bigint, nDigits = 2): string {
   const result = postProcess(n % mod);
   return result.toString().padStart(nDigits, "0");
@@ -66,12 +87,20 @@ export class ISO7064Mod97_10 extends Algorithm {
     return 98n - r;
   }
 
-  preProcess(components: string[]): bigint {
-    return numerify(components.join("")) * 100n;
+  /**
+   * The remainder of the pre-processed input modulo 97.
+   *
+   * Upstream exposes a `pre_process` hook returning the full integer; here the
+   * hook returns the remainder instead so that the default can use the
+   * integer-only `mod97` fast path. Subclasses with a different input mapping
+   * (Belgium, France) override this and may fall back to `numerify`.
+   */
+  remainder(components: string[]): bigint {
+    return BigInt(mod97(`${components.join("")}00`));
   }
 
   compute(components: string[]): string {
-    return iso7064(this.preProcess(components), 97n, (r) => this.postProcess(r));
+    return iso7064(this.remainder(components), 97n, (r) => this.postProcess(r));
   }
 }
 

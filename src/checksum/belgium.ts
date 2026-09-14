@@ -1,10 +1,12 @@
-import { ISO7064Mod97_10, register } from "./algorithm.ts";
+import { ISO7064Mod97_10, mod97, register } from "./algorithm.ts";
 
 class DefaultAlgorithm extends ISO7064Mod97_10 {
   override readonly name = "default";
 
-  override preProcess(components: string[]): bigint {
-    return super.preProcess(components) / 100n;
+  // Upstream divides the pre-processed integer by 100, i.e. it checks the
+  // bare account number without the appended "00".
+  override remainder(components: string[]): bigint {
+    return BigInt(mod97(components.join("")));
   }
 
   override postProcess(r: bigint): bigint {

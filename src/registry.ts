@@ -1,9 +1,9 @@
-import bankData from "./data/bank.json";
+import bankRows from "./data/bank.ts";
 import ibanData from "./data/iban.json";
 import type { Bank, IBANSpec } from "./domain.ts";
 import { Component, componentRecord, Range } from "./domain.ts";
 import * as exceptions from "./exceptions.ts";
-import type { RawBank, RawIbanSpec } from "./types.ts";
+import type { BankRow, RawIbanSpec } from "./types.ts";
 
 const _specToRe: Record<string, string> = {
   n: "\\d",
@@ -22,11 +22,9 @@ export function convertBbanSpecToRegex(spec: string): string {
   return `^${converted}$`;
 }
 
-// The bundled JSON widens to plain array/object types on import, so these two
-// assertions are where the hand-maintained contract about the file layout gets
-// applied. Everything downstream works off the parsed domain objects instead.
-// oxlint-disable-next-line typescript/no-unsafe-type-assertion
-const _rawBanks = bankData as RawBank[];
+// The bundled JSON widens to a plain object type on import, so this assertion
+// is where the hand-maintained contract about the file layout gets applied.
+// Everything downstream works off the parsed domain objects instead.
 // oxlint-disable-next-line typescript/no-unsafe-type-assertion
 const _rawIbanSpecs = ibanData as Record<string, RawIbanSpec>;
 
@@ -69,15 +67,16 @@ function parseIbanSpec(countryCode: string, data: RawIbanSpec): IBANSpec {
   };
 }
 
-function parseBank(data: RawBank): Bank {
+function parseBank(row: BankRow): Bank {
+  const [country_code, bank_code, bic, name, short_name, primary, checksum_algo] = row;
   return {
-    country_code: data.country_code ?? "",
-    bic: data.bic ?? "",
-    bank_code: data.bank_code ?? "",
-    name: data.name ?? "",
-    short_name: data.short_name ?? null,
-    primary: data.primary ?? false,
-    checksum_algo: data.checksum_algo ?? "default",
+    country_code,
+    bic,
+    bank_code,
+    name,
+    short_name,
+    primary: primary === 1,
+    checksum_algo: checksum_algo || "default",
   };
 }
 
@@ -98,7 +97,7 @@ function bankCodeKey(countryCode: string, bankCode: string): string {
 }
 
 function allBanks(): Bank[] {
-  _banks ??= _rawBanks.map(parseBank);
+  _banks ??= bankRows.map(parseBank);
   return _banks;
 }
 

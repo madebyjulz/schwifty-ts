@@ -20,6 +20,7 @@ export {
   ISO7064Mod97_10,
   iso7064,
   luhn,
+  mod97,
   numerify,
   register,
   weighted,
