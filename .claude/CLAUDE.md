@@ -1,4 +1,4 @@
-# schwifty-ts
+# @madebyjulz/schwifty-ts
 
 A 1:1 TypeScript port of the Python `schwifty` package (vendored as the `schwifty-py` submodule).
 Read `README.md` for the API and the porting workflow.
@@ -20,12 +20,19 @@ Read `README.md` for the API and the porting workflow.
 
 ## Versioning
 
-Upstream CalVer `2026.07.3` maps to npm `2026.7.300`; TypeScript-only fixes bump the last digits
-(`2026.7.301`). See `README.md`.
+Release-month CalVer of this package (`2026.9.0`, `2026.9.1`, ...), independent of the upstream
+version. Record the ported upstream revision in `package.json` (`schwifty.upstream`) and name it
+in the changelog entry. See `README.md`.
+
+## Git hygiene
+
+Stage files explicitly (`git add <paths>`), never `git add -A`. Tooling occasionally drops files
+such as `.env` into the tree.
 
 ## Tooling
 
-This project uses **Ultracite** on top of **oxlint** and **oxfmt** (not Biome).
+This project uses **pnpm** (never npm or yarn; the version is pinned via `packageManager`) and
+**Ultracite** on top of **oxlint** and **oxfmt** (not Biome).
 
 - Format: `pnpm fix`
 - Lint and format check: `pnpm check`

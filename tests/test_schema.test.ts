@@ -7,7 +7,7 @@ describe(ibanSchema, () => {
   it("implements the Standard Schema interface", () => {
     const { "~standard": props } = ibanSchema();
     expect(props.version).toBe(1);
-    expect(props.vendor).toBe("schwifty-ts");
+    expect(props.vendor).toBe("@madebyjulz/schwifty-ts");
   });
 
   it("parses a valid IBAN into an instance", () => {

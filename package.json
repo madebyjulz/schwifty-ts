@@ -1,6 +1,6 @@
 {
-  "name": "schwifty-ts",
-  "version": "2026.7.300",
+  "name": "@madebyjulz/schwifty-ts",
+  "version": "2026.9.0-rc1",
   "description": "IBAN and BIC validation, generation and bank lookup. A 1:1 TypeScript port of the Python schwifty package.",
   "keywords": [
     "bank",
@@ -37,7 +37,8 @@
     ".": {
       "types": "./dist/index.d.mts",
       "import": "./dist/index.mjs"
-    }
+    },
+    "./package.json": "./package.json"
   },
   "publishConfig": {
     "access": "public"
@@ -66,8 +67,10 @@
     "vitest": "^4.1.10"
   },
   "engines": {
-    "node": ">=22.6"
+    "node": ">=22.6",
+    "pnpm": ">=10"
   },
+  "packageManager": "pnpm@11.10.0",
   "schwifty": {
     "upstream": "394bdfb889b704fb1e5d96e51c7ca1e65120693f",
     "upstreamTag": "2026.07.3-5-g394bdfb"

@@ -1,10 +1,8 @@
 # Changelog
 
-Versions follow the upstream [schwifty](https://github.com/mdomke/schwifty) Python package, which uses [CalVer](https://calver.org/) with the scheme `YYYY.0M.Micro`. npm requires semver, so upstream `2026.07.3` is published as `2026.7.300`; TypeScript-only fixes increment the last two digits (`2026.7.301`, ...).
+Releases use [CalVer](https://calver.org/) in semver form, `YYYY.M.Patch`, keyed to the month the TypeScript package is released. Each entry names the upstream [schwifty](https://github.com/mdomke/schwifty) revision it was ported from; for the full upstream changelog see the [schwifty changelog](https://github.com/mdomke/schwifty/blob/main/CHANGELOG.rst).
 
-For the full upstream changelog see the [schwifty changelog](https://github.com/mdomke/schwifty/blob/main/CHANGELOG.rst).
-
-## 2026.7.300 - 2026-09-14
+## 2026.9.0-rc1 - 2026-09-14
 
 Ports upstream `2026.07.3` plus the unreleased upstream commits through [`394bdfb`](https://github.com/mdomke/schwifty/commit/394bdfb) (2026-09-04).
 
@@ -24,8 +22,10 @@ Ports upstream `2026.07.3` plus the unreleased upstream commits through [`394bdf
 - `ISO7064Mod97_10` computes the remainder with integer arithmetic instead of `bigint`, which makes IBAN validation about twice as fast. The `preProcess` hook is replaced by `remainder`, which Belgium and France override. `IBAN.numeric` still returns a `bigint`.
 - The bank registry is bundled as a positional tuple per bank inside one `JSON.parse` string instead of an inlined array of objects. The published bundle shrinks from 6.2 MB to 3.6 MB (300 KB gzipped) and imports faster. `getAllBanks()` and friends are unchanged.
 - Source maps no longer embed the registry source (23 KB instead of 4.4 MB).
-- `package.json`: CalVer-derived version, `types` condition listed first, `engines.node >= 22.6`, `sideEffects` declared for the checksum registration.
+- Versions are the package's own release-month CalVer (`2026.9.0`) instead of mirroring the upstream version; the ported upstream revision is recorded in `package.json`.
+- `package.json`: `types` condition listed first, `engines.node >= 22.6`, `sideEffects` declared for the checksum registration.
 - README and changelog are Markdown so npm renders them.
+- Published under the `@madebyjulz` scope as `@madebyjulz/schwifty-ts`.
 
 ### Fixed
 
@@ -33,7 +33,7 @@ Ports upstream `2026.07.3` plus the unreleased upstream commits through [`394bdf
 
 ## 2026.07.3 - 2026-07-23
 
-Ports upstream `2026.07.0` through `2026.07.3`.
+Pre-npm release; the version mirrored upstream. Ports upstream `2026.07.0` through `2026.07.3`.
 
 ### Added
 

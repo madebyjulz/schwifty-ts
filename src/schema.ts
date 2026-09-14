@@ -47,7 +47,7 @@ export interface StandardSchemaTypes<Input = unknown, Output = Input> {
   readonly output: Output;
 }
 
-const VENDOR = "schwifty-ts";
+const VENDOR = "@madebyjulz/schwifty-ts";
 
 function schema<Output>(parse: (value: string) => Output): StandardSchemaV1<string, Output> {
   return {

@@ -1,4 +1,4 @@
-# schwifty-ts
+# @madebyjulz/schwifty-ts
 
 A pure TypeScript port of [schwifty](https://github.com/mdomke/schwifty), the Python library for working with IBANs and BICs as specified by ISO 13616 and ISO 9362.
 
@@ -6,7 +6,7 @@ This is a **1:1 port** of the Python package. All IBAN/BIC validation logic, che
 
 ## Features
 
-`schwifty-ts` lets you
+`@madebyjulz/schwifty-ts` lets you
 
 - validate check digits and the country specific format of IBANs
 - validate the national (BBAN) checksum where a country defines one
@@ -21,15 +21,15 @@ This is a **1:1 port** of the Python package. All IBAN/BIC validation logic, che
 ## Installation
 
 ```bash
-npm install schwifty-ts
+pnpm add @madebyjulz/schwifty-ts
 ```
 
-Requires Node.js 22.6 or newer (or any modern bundler). The package is ESM only.
+Requires Node.js 22.6 or newer (or any modern bundler). The package is ESM only. Any package manager works; pnpm is what the project itself uses.
 
 ## Usage
 
 ```ts
-import { BIC, IBAN } from "schwifty-ts";
+import { BIC, IBAN } from "@madebyjulz/schwifty-ts";
 
 // Validate an IBAN. The constructor throws a SchwiftyException subclass on
 // invalid input; pass { allowInvalid: true } to defer to `isValid`/`validate()`.
@@ -71,7 +71,7 @@ Every validation failure throws a subclass of `SchwiftyException`: `InvalidLengt
 `ibanSchema()` and `bicSchema()` return [Standard Schema](https://standardschema.dev) objects that parse a string into an `IBAN`/`BIC` instance. They work with every library that accepts the spec (Zod, Valibot, ArkType, tRPC, TanStack Form, ...). This is the TypeScript counterpart of the pydantic integration upstream ships.
 
 ```ts
-import { ibanSchema } from "schwifty-ts";
+import { ibanSchema } from "@madebyjulz/schwifty-ts";
 
 const result = ibanSchema({ validateBban: true })["~standard"].validate(input);
 if (result.issues) {
@@ -87,22 +87,15 @@ The bank and IBAN registries are exposed through typed queries: `getIbanSpec`, `
 
 ## Versioning
 
-Versions follow the upstream Python package, which uses [CalVer](https://calver.org/) with the scheme `YYYY.0M.Micro`. npm requires semver, so the scheme is mapped as
+Releases use [CalVer](https://calver.org/) in semver-compatible form, `YYYY.M.Patch`, keyed to the month the **TypeScript package** is released: `2026.9.0` is the first release of September 2026, `2026.9.1` the second, and so on. Ports of upstream changes and TypeScript-only fixes both bump the patch number.
 
-```
-upstream 2026.07.3  ->  2026.7.300
-```
-
-The patch number is the upstream micro version times 100. TypeScript-only fixes increment it: `2026.7.301`, `2026.7.302`, ... This keeps every version comparable and ensures that the next upstream micro release (`2026.7.400`) sorts after all TypeScript-only fixes of the previous one.
-
-The exact upstream revision a release was ported from is recorded in `package.json` under `schwifty.upstream`.
+The version therefore does not encode the upstream version. The exact upstream revision (and tag, if any) a release was ported from is recorded in `package.json` under `schwifty.upstream` and named at the top of every changelog entry.
 
 ## Porting upstream changes
 
 The Python source is vendored as the `schwifty-py` git submodule and is the source of truth for the registry data.
 
 ```bash
-git submodule update --init   # once, after cloning
 pnpm sync:upstream            # latest upstream tag
 pnpm sync:upstream main       # tip of upstream main
 ```
@@ -120,7 +113,10 @@ This package is a direct port of the Python library. Please file issues in the c
 
 ## Development
 
+The project uses [pnpm](https://pnpm.io). Enable it with `corepack enable` if it is not installed; the pinned version is read from `packageManager` in `package.json`.
+
 ```bash
+git submodule update --init
 pnpm install
 pnpm test        # vitest
 pnpm check       # oxlint + oxfmt via ultracite
@@ -130,4 +126,4 @@ pnpm build       # tsdown, regenerates src/data first when the submodule is pres
 
 ## License
 
-`schwifty-ts` is released under the [MIT](https://choosealicense.com/licenses/mit/) license. The code is maintained on [GitHub](https://github.com/madebyjulz/schwifty-ts) and packages are distributed on [npm](https://www.npmjs.com/package/schwifty-ts).
+`@madebyjulz/schwifty-ts` is released under the [MIT](https://choosealicense.com/licenses/mit/) license. The code is maintained on [GitHub](https://github.com/madebyjulz/schwifty-ts) and packages are distributed on [npm](https://www.npmjs.com/package/@madebyjulz/schwifty-ts).
