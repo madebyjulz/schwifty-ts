@@ -68,9 +68,9 @@
   },
   "engines": {
     "node": ">=22.6",
-    "pnpm": ">=10"
+    "pnpm": ">=11"
   },
-  "packageManager": "pnpm@11.10.0",
+  "packageManager": "pnpm@11.27.0",
   "schwifty": {
     "upstream": "394bdfb889b704fb1e5d96e51c7ca1e65120693f",
     "upstreamTag": "2026.07.3-5-g394bdfb"
