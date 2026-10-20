@@ -1,5 +1,6 @@
 import { BIC } from "./bic.ts";
 import { IBAN } from "./iban.ts";
+import type { IBANOptions } from "./iban.ts";
 
 /**
  * The parts of the Standard Schema specification (https://standardschema.dev)
@@ -73,9 +74,16 @@ function schema<Output>(parse: (value: string) => Output): StandardSchemaV1<stri
  * A Standard Schema that validates a string into an `IBAN`.
  *
  * @param options.validateBban Also validate the country specific BBAN checksum.
+ * @param options.unverifiedChecksum What `validateBban` does with check digits no registered
+ *   algorithm can verify; `"error"` turns them into an issue.
  */
-export function ibanSchema(options?: { validateBban?: boolean }): StandardSchemaV1<string, IBAN> {
-  return schema((value) => new IBAN(value, { validateBban: options?.validateBban }));
+export function ibanSchema(
+  options?: Pick<IBANOptions, "validateBban" | "unverifiedChecksum">,
+): StandardSchemaV1<string, IBAN> {
+  return schema(
+    (value) =>
+      new IBAN(value, { validateBban: options?.validateBban, unverifiedChecksum: options?.unverifiedChecksum }),
+  );
 }
 
 /**

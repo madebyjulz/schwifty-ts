@@ -1,9 +1,8 @@
-import { afterAll, beforeAll, describe, it, expect } from "vitest";
+import { describe, it, expect } from "vitest";
 import { getCountry } from "../src/countries.ts";
-import { NationalChecksumNotVerified, SchwiftyException } from "../src/exceptions.ts";
+import { SchwiftyException } from "../src/exceptions.ts";
 import { IBAN } from "../src/iban.ts";
 import { convertBbanSpecToRegex } from "../src/registry.ts";
-import * as warnings from "../src/warnings.ts";
 
 const valid = [
   "AL47 2121 1009 0000 0002 3569 8741",
@@ -145,14 +144,6 @@ const sepaCountries = new Set([
 ]);
 
 describe("IBAN parsing", () => {
-  beforeAll(() => {
-    warnings.simplefilter("ignore", NationalChecksumNotVerified);
-  });
-
-  afterAll(() => {
-    warnings.resetwarnings();
-  });
-
   it.each(valid)("parses valid IBAN %s", (value) => {
     const iban = new IBAN(value, { validateBban: true });
     expect(iban.formatted).toBe(value);

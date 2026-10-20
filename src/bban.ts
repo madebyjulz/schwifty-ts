@@ -6,7 +6,6 @@ import type { Bank, IBANSpec } from "./domain.ts";
 import { Component, componentEntries, componentRecord, hasPositions, Range } from "./domain.ts";
 import * as exceptions from "./exceptions.ts";
 import * as registry from "./registry.ts";
-import * as warnings from "./warnings.ts";
 
 /**
  * The national checksum is constructed rather than guessed, so a valid BBAN is
@@ -39,6 +38,29 @@ function computeNationalChecksum(countryCode: string, components: Record<Compone
     return "";
   }
   return algo.compute(algo.accepts.map((key) => components[key]));
+}
+
+/**
+ * What `validateNationalChecksum` does with check digits it cannot verify.
+ *
+ * - `"ignore"` accepts them silently (the default),
+ * - `"warn"` accepts them and reports a `NationalChecksumNotVerified` warning,
+ * - `"error"` rejects them by throwing `NationalChecksumNotVerified`.
+ *
+ * Deviation: upstream always emits a Python `UserWarning` here and leaves it to
+ * the process-wide `warnings` filters to silence it or turn it into an error.
+ * JavaScript has no such machinery, so the choice is made per call instead.
+ */
+export type UnverifiedChecksumAction = "ignore" | "warn" | "error";
+
+/** Report a non-fatal warning through the runtime's warning channel. */
+function emitWarning(warning: Error): void {
+  if (typeof process !== "undefined" && typeof process.emitWarning === "function") {
+    process.emitWarning(warning);
+    return;
+  }
+  // oxlint-disable-next-line no-console -- browsers have no other channel for a non-fatal warning
+  console.warn(`${warning.name}: ${warning.message}`);
 }
 
 function pickRandom<T>(items: T[]): T {
@@ -282,24 +304,27 @@ export class BBAN extends Base {
    * Validate the national checksum digits.
    *
    * Where the country's BBAN specification declares national check digits but
-   * no algorithm is registered to verify them, the digits are accepted
-   * unchecked and a `NationalChecksumNotVerified` warning is emitted, since a
-   * missing algorithm must not reject an otherwise valid BBAN. Turn the warning
-   * into an error with `warnings.simplefilter("error", NationalChecksumNotVerified)`
-   * to fail instead of passing.
+   * no algorithm is registered to verify them (see
+   * `hasUnverifiableNationalChecksum`), the digits are accepted unchecked by
+   * default, since a missing algorithm must not reject an otherwise valid BBAN.
+   * Pass `unverifiedChecksum: "warn"` to report it or `"error"` to fail instead.
    *
    * @throws {InvalidBBANChecksum} If the country specific BBAN checksum is invalid.
+   * @throws {NationalChecksumNotVerified} If the check digits cannot be verified
+   *   and `unverifiedChecksum` is `"error"`.
    */
-  validateNationalChecksum(): boolean {
+  validateNationalChecksum(options?: { unverifiedChecksum?: UnverifiedChecksumAction }): boolean {
     const algo = getNationalChecksumAlgorithm(this.countryCode, this.bank);
     if (!algo) {
-      const position = this.spec.positions[Component.NATIONAL_CHECKSUM_DIGITS] ?? new Range();
-      if (!position.isEmpty) {
-        warnings.warn(
-          new exceptions.NationalChecksumNotVerified(
-            `No national checksum algorithm is registered for ${this.countryCode}: the national check digits were not verified`,
-          ),
+      const action = options?.unverifiedChecksum ?? "ignore";
+      if (action !== "ignore" && this._declaresNationalChecksumDigits()) {
+        const unverified = new exceptions.NationalChecksumNotVerified(
+          `No national checksum algorithm is registered for ${this.countryCode}: the national check digits were not verified`,
         );
+        if (action === "error") {
+          throw unverified;
+        }
+        emitWarning(unverified);
       }
       return true;
     }
@@ -308,6 +333,24 @@ export class BBAN extends Base {
       throw new exceptions.InvalidBBANChecksum("Invalid national checksum");
     }
     return true;
+  }
+
+  /**
+   * Whether the country declares national check digits that no registered
+   * algorithm can verify (e.g. `HU`, `SE`). `validateNationalChecksum` accepts
+   * such digits unchecked unless asked to warn or fail.
+   *
+   * Not in upstream, which only reports this case through a warning.
+   */
+  get hasUnverifiableNationalChecksum(): boolean {
+    return (
+      getNationalChecksumAlgorithm(this.countryCode, this.bank) === undefined && this._declaresNationalChecksumDigits()
+    );
+  }
+
+  private _declaresNationalChecksumDigits(): boolean {
+    const position = this.spec.positions[Component.NATIONAL_CHECKSUM_DIGITS] ?? new Range();
+    return !position.isEmpty;
   }
 
   private _getComponent(componentType: Component): string {

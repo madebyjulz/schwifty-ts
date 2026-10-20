@@ -9,7 +9,6 @@ import {
 } from "../src/exceptions.ts";
 import { IBAN } from "../src/iban.ts";
 import * as registry from "../src/registry.ts";
-import * as warnings from "../src/warnings.ts";
 
 describe("BBAN national checksum", () => {
   // A valid national checksum returns true (consistent with the "no checksum
@@ -70,66 +69,72 @@ describe("BBAN national checksum", () => {
 
 describe("BBAN national checksum without a registered algorithm", () => {
   afterEach(() => {
-    warnings.resetwarnings();
     vi.restoreAllMocks();
   });
 
   // Both countries declare a national check-digit field (HU: 23-24, SE: 19-20) but have no
-  // algorithm registered for it, so their check digits were accepted without being looked
-  // at. A missing algorithm must not reject an otherwise valid BBAN, but the pass is no
-  // longer silent.
-  it.each(["HU", "SE"])("reports the unverified check digits of %s", (countryCode) => {
+  // algorithm registered for it, so their check digits are accepted without being looked at.
+  // A missing algorithm must not reject an otherwise valid BBAN, but callers can now tell.
+  it.each(["HU", "SE"])("exposes the unverifiable check digits of %s", (countryCode) => {
     const iban = IBAN.random(countryCode, { useRegistry: false });
-    const emitWarning = vi.spyOn(process, "emitWarning").mockReturnValue();
-    warnings.simplefilter("always", NationalChecksumNotVerified);
+    expect(iban.bban.hasUnverifiableNationalChecksum).toBeTruthy();
+    expect(iban.hasUnverifiableNationalChecksum).toBeTruthy();
+  });
+
+  it.each(["HU", "SE"])("accepts the check digits of %s silently by default", (countryCode) => {
+    const iban = IBAN.random(countryCode, { useRegistry: false });
+    const emitWarning = vi.spyOn(process, "emitWarning").mockReturnValue(null);
 
     expect(iban.bban.validateNationalChecksum()).toBeTruthy();
     expect(iban.validate(true)).toBeTruthy();
     expect(() => new IBAN(iban.compact, { validateBban: true })).not.toThrow();
+    expect(emitWarning).not.toHaveBeenCalled();
+  });
+
+  it.each(["HU", "SE"])("reports the unverified check digits of %s on request", (countryCode) => {
+    const iban = IBAN.random(countryCode, { useRegistry: false });
+    const emitWarning = vi.spyOn(process, "emitWarning").mockReturnValue(null);
+    const options = { unverifiedChecksum: "warn" } as const;
+
+    expect(iban.bban.validateNationalChecksum(options)).toBeTruthy();
+    expect(iban.validate(true, options)).toBeTruthy();
+    expect(() => new IBAN(iban.compact, { validateBban: true, ...options })).not.toThrow();
     expect(emitWarning).toHaveBeenCalledTimes(3);
     const [[warning]] = emitWarning.mock.calls;
     expect(warning).toBeInstanceOf(NationalChecksumNotVerified);
     expect(String(warning)).toContain(countryCode);
   });
 
-  it.each(["HU", "SE"])("turns the warning for %s into an error on request", (countryCode) => {
+  it.each(["HU", "SE"])("rejects the check digits of %s on request", (countryCode) => {
     const iban = IBAN.random(countryCode, { useRegistry: false });
-    warnings.simplefilter("error", NationalChecksumNotVerified);
+    const options = { unverifiedChecksum: "error" } as const;
 
-    expect(() => iban.bban.validateNationalChecksum()).toThrow(NationalChecksumNotVerified);
-    expect(() => new IBAN(iban.compact, { validateBban: true })).toThrow(NationalChecksumNotVerified);
-    expect(new IBAN(iban.compact).isValid).toBeTruthy();
-  });
-
-  // Mirrors Python's default filter: one report per distinct warning.
-  it("reports each country once by default", () => {
-    const emitWarning = vi.spyOn(process, "emitWarning").mockReturnValue();
-    warnings.resetwarnings();
-    const iban = IBAN.random("HU", { useRegistry: false });
-    iban.bban.validateNationalChecksum();
-    iban.bban.validateNationalChecksum();
-    expect(emitWarning).toHaveBeenCalledOnce();
-  });
-
-  it("silences the warning on request", () => {
-    const emitWarning = vi.spyOn(process, "emitWarning").mockReturnValue();
-    warnings.simplefilter("ignore", NationalChecksumNotVerified);
-    IBAN.random("SE", { useRegistry: false }).bban.validateNationalChecksum();
-    expect(emitWarning).not.toHaveBeenCalled();
+    expect(() => iban.bban.validateNationalChecksum(options)).toThrow(NationalChecksumNotVerified);
+    expect(() => iban.validate(true, options)).toThrow(NationalChecksumNotVerified);
+    expect(() => new IBAN(iban.compact, { validateBban: true, ...options })).toThrow(SchwiftyException);
+    // Without `validateBban` the national checksum is not looked at at all.
+    expect(() => new IBAN(iban.compact, options)).not.toThrow();
   });
 
   // Countries that declare no national check digits have nothing to verify, so there is
   // nothing to report either.
-  it("is silent without declared check digits", () => {
-    warnings.simplefilter("error");
-    expect(new BBAN("GB", "WEST12345698765432").validateNationalChecksum()).toBeTruthy();
+  it("has nothing to report without declared check digits", () => {
+    const bban = new BBAN("GB", "WEST12345698765432");
+    expect(bban.hasUnverifiableNationalChecksum).toBeFalsy();
+    expect(bban.validateNationalChecksum({ unverifiedChecksum: "error" })).toBeTruthy();
+  });
+
+  // A registered algorithm verifies the digits, so they are not unverifiable.
+  it("is not unverifiable with a registered algorithm", () => {
+    expect(new BBAN("BE", "539007547034").hasUnverifiableNationalChecksum).toBeFalsy();
   });
 
   // Generating a random BBAN is not a validation request: it neither reports a checksum it
   // cannot verify nor exhausts its retries over it.
   it("is not reported by random()", () => {
-    warnings.simplefilter("error");
+    const emitWarning = vi.spyOn(process, "emitWarning").mockReturnValue(null);
     expect(BBAN.random("HU").countryCode).toBe("HU");
+    expect(emitWarning).not.toHaveBeenCalled();
   });
 });
 

@@ -10,12 +10,13 @@ Ports upstream [`2026.10.0`](https://github.com/mdomke/schwifty/commit/810930b) 
 
 - German checksum method `95` (UniCredit Bank - HypoVereinsbank, bank code `70020270`): computed like method `06`, with the account ranges the Bundesbank exempts from the check digit treated as valid. Account codes for this bank were not checked before.
 - German checksum methods `A2` and `A3` (e.g. Nassauische Sparkasse, Sparkasse Hannover): method `00` first, falling back to `04` (`A2`) or `10` (`A3`). Their check digits were previously accepted unverified.
-- `NationalChecksumNotVerified` warning and a `warnings` export (`simplefilter`, `resetwarnings`, `warn`) mirroring the Python `warnings` filters upstream relies on.
+- `NationalChecksumNotVerified` and the `unverifiedChecksum` option (`"ignore"`, `"warn"`, `"error"`) on `IBAN`, `IBAN.fromBban`, `IBAN.validate`, `BBAN.validateNationalChecksum` and `ibanSchema()`.
+- `IBAN.hasUnverifiableNationalChecksum` and `BBAN.hasUnverifiableNationalChecksum`: whether the country declares national check digits that no registered algorithm can verify.
 - ORO PAY LTD (`OROACY2LXXX`) to the Cypriot registry.
 
 ### Changed
 
-- `validateBban: true` emits a `NationalChecksumNotVerified` warning when the country declares national check digits but no algorithm is registered to verify them (35 of the 54 countries that declare check digits, e.g. `HU` and `SE`). The digits are still accepted. `warnings.simplefilter("error", NationalChecksumNotVerified)` makes the check fail instead. `BBAN.random` does not emit it.
+- `validateBban: true` can now report or reject national check digits that no registered algorithm can verify (35 of the 54 countries that declare check digits, e.g. `HU` and `SE`). They are still accepted by default; `unverifiedChecksum: "warn"` reports a `NationalChecksumNotVerified` warning and `"error"` throws it. `BBAN.random` never reports it.
 - Updated the bank registries for Germany, Austria, Belgium, Poland, Switzerland and Slovenia. Retired Swiss IIDs of merged institutes (e.g. former Credit Suisse codes, now UBS) and the retired Slovenian SKB banka and Abanka codes are kept as aliases of their successors.
 
 ### Fixed
@@ -30,7 +31,7 @@ Ports upstream [`2026.10.0`](https://github.com/mdomke/schwifty/commit/810930b) 
 
 ### Deviations from upstream
 
-- Python's `warnings` module has no JavaScript counterpart. `warnings.ts` reimplements the parts upstream needs with the same names: the `"default"` action reports each distinct message once (Python deduplicates per message and call site), output goes through `process.emitWarning` or `console.warn`, and `NationalChecksumNotVerified` extends `Error` rather than `UserWarning`.
+- Unverifiable national checksums: upstream always emits a Python `UserWarning` and leaves silencing or escalating it to the process-wide `warnings` filters. JavaScript has no such machinery and a global filter would be shared mutable state, so this port is silent by default and takes a per-call `unverifiedChecksum` option instead, adds the `hasUnverifiableNationalChecksum` getter, and makes `NationalChecksumNotVerified` a `SchwiftyException`. See [Deviations from upstream](README.md#deviations-from-upstream).
 - `IBANSpec.has_positions` is the existing `hasPositions(spec)` function, since `IBANSpec` is a plain interface.
 - Not applicable: deep-copy support for `allowInvalid` instances (no `__deepcopy__` in JavaScript), the pydantic non-string `BIC` fix (`bicSchema()` already reports non-strings as an issue), dropping Python 3.10, and the `httpx2` registry scripts.
 - Resolved: upstream now generates random BBANs for countries without component positions from the regex, so the `2026.07.3` deviation below no longer applies.

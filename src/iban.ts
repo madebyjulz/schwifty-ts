@@ -1,4 +1,5 @@
 import { BBAN } from "./bban.ts";
+import type { UnverifiedChecksumAction } from "./bban.ts";
 import type { BIC } from "./bic.ts";
 import { ISO7064Mod97_10, numerify } from "./checksum/index.ts";
 import { Base, clean } from "./common.ts";
@@ -10,22 +11,27 @@ import * as registry from "./registry.ts";
 const _IBAN_STRUCTURE_RE = /^[A-Z]{2}\d{2}[A-Z0-9]+$/u;
 const _iso7064Mod97_10 = new ISO7064Mod97_10();
 
+export interface IBANOptions {
+  /** Skip validation on instantiation. */
+  allowInvalid?: boolean;
+  /** Also check the country specific checksum of the BBAN. */
+  validateBban?: boolean;
+  /** What `validateBban` does with check digits no registered algorithm can verify. */
+  unverifiedChecksum?: UnverifiedChecksumAction;
+}
+
 export class IBAN extends Base {
   readonly bban: BBAN;
 
-  constructor(iban: string, options?: { allowInvalid?: boolean; validateBban?: boolean }) {
+  constructor(iban: string, options?: IBANOptions) {
     super(iban);
     this.bban = new BBAN(this.countryCode, this._getSlice(4));
     if (!options?.allowInvalid) {
-      this.validate(options?.validateBban ?? false);
+      this.validate(options?.validateBban ?? false, { unverifiedChecksum: options?.unverifiedChecksum });
     }
   }
 
-  static fromBban(
-    countryCode: string,
-    bban: string | BBAN,
-    options?: { allowInvalid?: boolean; validateBban?: boolean },
-  ): IBAN {
+  static fromBban(countryCode: string, bban: string | BBAN, options?: IBANOptions): IBAN {
     const cleanCountryCode = clean(countryCode);
     const cleanBban = clean(typeof bban === "string" ? bban : bban.compact);
     const checkDigits = _iso7064Mod97_10.compute([cleanBban, cleanCountryCode]);
@@ -64,16 +70,16 @@ export class IBAN extends Base {
    * Verifies the country specific format as well as the check digits in the 3rd and 4th position.
    * If `validateBban` is `true` it also verifies the country specific checksum within the BBAN; for
    * German banks the appropriate algorithm is picked based on the bank code. Countries for which no
-   * algorithm is registered cannot be verified: their check digits are accepted as they are and a
-   * `NationalChecksumNotVerified` warning reports that they were not checked.
+   * algorithm is registered cannot be verified: their check digits are accepted as they are unless
+   * `unverifiedChecksum` asks to warn (`"warn"`) or fail (`"error"`).
    */
-  validate(validateBban = false): boolean {
+  validate(validateBban = false, options?: { unverifiedChecksum?: UnverifiedChecksumAction }): boolean {
     this._validateCharacters();
     this._validateLength();
     this._validateFormat();
     this._validateIbanChecksum();
     if (validateBban) {
-      this.bban.validateNationalChecksum();
+      this.bban.validateNationalChecksum(options);
     }
     return true;
   }
@@ -159,6 +165,10 @@ export class IBAN extends Base {
 
   get nationalChecksumDigits(): string {
     return this.bban.nationalChecksumDigits;
+  }
+
+  get hasUnverifiableNationalChecksum(): boolean {
+    return this.bban.hasUnverifiableNationalChecksum;
   }
 
   get bankCode(): string {

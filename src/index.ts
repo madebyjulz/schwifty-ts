@@ -1,4 +1,5 @@
 export { BBAN } from "./bban.ts";
+export type { UnverifiedChecksumAction } from "./bban.ts";
 export { BIC } from "./bic.ts";
 export { algorithms, getAlgorithm } from "./checksum/index.ts";
 export { clean, toAscii } from "./common.ts";
@@ -6,6 +7,7 @@ export type { Bank, IBANSpec } from "./domain.ts";
 export { Component, Range } from "./domain.ts";
 export * from "./exceptions.ts";
 export { IBAN } from "./iban.ts";
+export type { IBANOptions } from "./iban.ts";
 export type {
   StandardSchemaFailure,
   StandardSchemaIssue,
@@ -23,4 +25,3 @@ export {
   getCountries,
   getIbanSpec,
 } from "./registry.ts";
-export * as warnings from "./warnings.ts";

@@ -64,18 +64,22 @@ BIC.fromBankCode("DE", "37040044").compact; // "COBADEFFXXX"
 
 ### Errors
 
-Every validation failure throws a subclass of `SchwiftyException`: `InvalidLength`, `InvalidStructure`, `InvalidCountryCode`, `InvalidBankCode`, `InvalidBranchCode`, `InvalidAccountCode`, `InvalidChecksumDigits`, `InvalidBBANChecksum` and `GenerateRandomOverflowError`.
+Every validation failure throws a subclass of `SchwiftyException`: `InvalidLength`, `InvalidStructure`, `InvalidCountryCode`, `InvalidBankCode`, `InvalidBranchCode`, `InvalidAccountCode`, `InvalidChecksumDigits`, `InvalidBBANChecksum`, `NationalChecksumNotVerified` (only with `unverifiedChecksum: "error"`) and `GenerateRandomOverflowError`.
 
 ### Unverified national checksums
 
-With `validateBban: true`, countries whose BBAN declares national check digits but have no registered algorithm (e.g. `HU`, `SE`) pass with a `NationalChecksumNotVerified` warning, reported once per country through `process.emitWarning` (or `console.warn` in browsers). The `warnings` export mirrors the Python `warnings` filters upstream documents:
+Some countries declare national check digits in their BBAN but have no algorithm registered to verify them (e.g. `HU`, `SE`). With `validateBban: true` their digits are accepted unchecked, since a missing algorithm must not reject an otherwise valid IBAN. `unverifiedChecksum` decides what happens instead, and `hasUnverifiableNationalChecksum` tells you whether it applies:
 
 ```ts
-import { NationalChecksumNotVerified, warnings } from "@madebyjulz/schwifty-ts";
+const iban = new IBAN("HU42 1177 3016 1111 1018 0000 0000", { validateBban: true });
+iban.hasUnverifiableNationalChecksum; // true
 
-warnings.simplefilter("error", NationalChecksumNotVerified); // throw instead of passing
-warnings.simplefilter("ignore", NationalChecksumNotVerified); // or stay silent
+new IBAN(value, { validateBban: true, unverifiedChecksum: "warn" }); // accept and report a warning
+new IBAN(value, { validateBban: true, unverifiedChecksum: "error" }); // throw NationalChecksumNotVerified
+ibanSchema({ validateBban: true, unverifiedChecksum: "error" }); // same option for the schema
 ```
+
+`"warn"` reports through `process.emitWarning` (Node.js, Bun, Deno) or `console.warn` (browsers). The default is `"ignore"`. This differs from upstream; see [Deviations from upstream](#deviations-from-upstream).
 
 ### Standard Schema
 
@@ -114,6 +118,27 @@ pnpm sync:upstream main       # tip of upstream main
 The script fetches upstream, checks out the requested revision, prints the commits and source diff since the last ported revision, regenerates `src/data` and records the new revision in `package.json`. Porting the printed diff to `src/` and adding a changelog entry remains a manual step. A weekly GitHub Actions workflow opens an issue when upstream publishes a release that has not been ported yet.
 
 To keep the port reviewable, files, classes and helpers mirror their Python counterparts one-to-one, including internal names (`_bank_lookup_key` becomes `_bankLookupKey`). Deviations that JavaScript demands are commented at the point of deviation and listed in the changelog.
+
+## Deviations from upstream
+
+The port follows upstream one-to-one except where JavaScript forces a different shape. The full list, per release, is in the [changelog](CHANGELOG.md).
+
+### Unverifiable national checksums
+
+Upstream (`2026.10.0`) always emits a `NationalChecksumNotVerified` Python warning when `validate_bban=True` meets check digits it cannot verify. Callers silence it or turn it into an error through the process-wide `warnings` filters (`warnings.simplefilter("error", NationalChecksumNotVerified)`).
+
+JavaScript has no warnings machinery, and a process-wide filter would be mutable global state shared by every caller in the process. This port therefore makes the choice per call:
+
+| Upstream (Python) | This port |
+| --- | --- |
+| Warning emitted by default | Silent by default (`unverifiedChecksum: "ignore"`) |
+| Default `warnings` filter, reported once per location | `unverifiedChecksum: "warn"`, reported on every call through `process.emitWarning` / `console.warn` |
+| `warnings.simplefilter("error", NationalChecksumNotVerified)` | `unverifiedChecksum: "error"` |
+| `warnings.simplefilter("ignore", NationalChecksumNotVerified)` | Default; nothing to configure |
+| Only observable through the warning | `IBAN.hasUnverifiableNationalChecksum` / `BBAN.hasUnverifiableNationalChecksum` |
+| `NationalChecksumNotVerified(UserWarning)` | `NationalChecksumNotVerified extends SchwiftyException`, so a failure caught as `SchwiftyException` covers it |
+
+The accept-or-reject outcome is the same as upstream: by default the IBAN is valid, and on request it fails.
 
 ## Issues
 

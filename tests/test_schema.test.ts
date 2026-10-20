@@ -36,6 +36,15 @@ describe(ibanSchema, () => {
     expect(ibanSchema()["~standard"].validate(iban)).toHaveProperty("value");
     expect(ibanSchema({ validateBban: true })["~standard"].validate(iban)).toHaveProperty("issues");
   });
+
+  it("forwards the unverifiedChecksum option", () => {
+    // Hungary declares national check digits but has no registered algorithm.
+    const iban = IBAN.random("HU", { useRegistry: false }).compact;
+    expect(ibanSchema({ validateBban: true })["~standard"].validate(iban)).toHaveProperty("value");
+    expect(ibanSchema({ validateBban: true, unverifiedChecksum: "error" })["~standard"].validate(iban)).toHaveProperty(
+      "issues",
+    );
+  });
 });
 
 describe(bicSchema, () => {

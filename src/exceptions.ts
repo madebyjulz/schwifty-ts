@@ -62,17 +62,17 @@ export class InvalidBBANChecksum extends SchwiftyException {
 }
 
 /**
- * Indicates that national check digits were accepted without being verified.
+ * Indicates that national check digits could not be verified.
  *
  * The country's BBAN specification declares a national check-digit field, but no algorithm is
- * registered to verify it. A missing algorithm must not reject an otherwise valid BBAN, so the
- * digits are taken as they are. Callers that require the check to fail instead can turn the
- * warning into an error with `warnings.simplefilter("error", NationalChecksumNotVerified)`.
+ * registered to verify it. Reported with `unverifiedChecksum: "warn"` and thrown with
+ * `unverifiedChecksum: "error"`.
  *
- * Upstream derives this from Python's `UserWarning`; JavaScript has no warning hierarchy, so it
- * extends `Error` directly. It is deliberately not a `SchwiftyException`.
+ * Deviation: upstream derives this from Python's `UserWarning` and raises it only through the
+ * `warnings` filters. Here it is thrown as a validation failure on request, so it extends
+ * `SchwiftyException` like every other one.
  */
-export class NationalChecksumNotVerified extends Error {
+export class NationalChecksumNotVerified extends SchwiftyException {
   constructor(message?: string) {
     super(message);
     this.name = "NationalChecksumNotVerified";
