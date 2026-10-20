@@ -56,21 +56,21 @@
     "prepack": "pnpm run build"
   },
   "devDependencies": {
-    "@types/node": "^24.13.3",
+    "@types/node": "^26.6.5",
     "git-publish": "^2.4.3",
-    "oxfmt": "^0.60.0",
-    "oxlint": "^1.75.0",
-    "oxlint-tsgolint": "^7.0.2001",
-    "tsdown": "^0.22.13",
+    "oxfmt": "^0.73.0",
+    "oxlint": "^1.88.0",
+    "oxlint-tsgolint": "^7.0.2004",
+    "tsdown": "^0.23.1",
     "typescript": "^7.0.2",
-    "ultracite": "7.9.4",
-    "vitest": "^4.1.10"
+    "ultracite": "8.0.1",
+    "vitest": "^5.0.5"
   },
   "engines": {
     "node": ">=22.6",
     "pnpm": ">=11"
   },
-  "packageManager": "pnpm@11.27.0",
+  "packageManager": "pnpm@12.14.0",
   "schwifty": {
     "upstream": "810930b432d9bc032e629b23cf1f8f1d25cf305f",
     "upstreamTag": "2026.10.0"

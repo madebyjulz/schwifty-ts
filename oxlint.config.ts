@@ -28,6 +28,9 @@ export default defineConfig({
     "max-classes-per-file": "off",
     "no-console": "error",
     "no-plusplus": "off",
+    // The base rule flags `const Component` + `type Component` (enum stand-ins); tsc already
+    // rejects real redeclarations.
+    "no-redeclare": "off",
     "sort-keys": "off",
     // Inputs are folded to ASCII by `clean()`, so spreading a string is safe.
     "typescript/no-misused-spread": "off",
