@@ -48,6 +48,13 @@ describe(bicSchema, () => {
     expect(result.value.compact).toBe("GENODEM1GLS");
   });
 
+  // Upstream: validating a pydantic model whose BIC field is not a string reports a field
+  // error instead of letting the TypeError escape.
+  it.each([null, 123, 12.5, true, ["GENODEM1GLS"]])("rejects the non-string %j", (value) => {
+    const result = bicSchema()["~standard"].validate(value);
+    expect(result).toHaveProperty("issues");
+  });
+
   it("forwards the enforceSwiftCompliance option", () => {
     expect(bicSchema()["~standard"].validate("1234DEWWXXX")).toHaveProperty("value");
     expect(bicSchema({ enforceSwiftCompliance: true })["~standard"].validate("1234DEWWXXX")).toHaveProperty("issues");

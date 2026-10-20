@@ -66,6 +66,17 @@ BIC.fromBankCode("DE", "37040044").compact; // "COBADEFFXXX"
 
 Every validation failure throws a subclass of `SchwiftyException`: `InvalidLength`, `InvalidStructure`, `InvalidCountryCode`, `InvalidBankCode`, `InvalidBranchCode`, `InvalidAccountCode`, `InvalidChecksumDigits`, `InvalidBBANChecksum` and `GenerateRandomOverflowError`.
 
+### Unverified national checksums
+
+With `validateBban: true`, countries whose BBAN declares national check digits but have no registered algorithm (e.g. `HU`, `SE`) pass with a `NationalChecksumNotVerified` warning, reported once per country through `process.emitWarning` (or `console.warn` in browsers). The `warnings` export mirrors the Python `warnings` filters upstream documents:
+
+```ts
+import { NationalChecksumNotVerified, warnings } from "@madebyjulz/schwifty-ts";
+
+warnings.simplefilter("error", NationalChecksumNotVerified); // throw instead of passing
+warnings.simplefilter("ignore", NationalChecksumNotVerified); // or stay silent
+```
+
 ### Standard Schema
 
 `ibanSchema()` and `bicSchema()` return [Standard Schema](https://standardschema.dev) objects that parse a string into an `IBAN`/`BIC` instance. They work with every library that accepts the spec (Zod, Valibot, ArkType, tRPC, TanStack Form, ...). This is the TypeScript counterpart of the pydantic integration upstream ships.

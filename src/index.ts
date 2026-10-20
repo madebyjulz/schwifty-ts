@@ -23,3 +23,4 @@ export {
   getCountries,
   getIbanSpec,
 } from "./registry.ts";
+export * as warnings from "./warnings.ts";

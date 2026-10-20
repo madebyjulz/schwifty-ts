@@ -6,6 +6,7 @@ import type { Bank, IBANSpec } from "./domain.ts";
 import { Component, componentEntries, componentRecord, hasPositions, Range } from "./domain.ts";
 import * as exceptions from "./exceptions.ts";
 import * as registry from "./registry.ts";
+import * as warnings from "./warnings.ts";
 
 /**
  * The national checksum is constructed rather than guessed, so a valid BBAN is
@@ -260,7 +261,12 @@ export class BBAN extends Base {
 
       try {
         const bban = BBAN.fromComponents(country, Object.fromEntries(componentEntries(components)));
-        bban.validateNationalChecksum();
+        // Generating a value is not a validation request: where the national
+        // checksum cannot be verified there is nothing to retry for and nothing to
+        // report, so the check (and the warning it would emit) is left out.
+        if (getNationalChecksumAlgorithm(bban.countryCode, bban.bank) !== undefined) {
+          bban.validateNationalChecksum();
+        }
         return bban;
       } catch (error) {
         if (error instanceof exceptions.SchwiftyException) {
@@ -275,11 +281,26 @@ export class BBAN extends Base {
   /**
    * Validate the national checksum digits.
    *
+   * Where the country's BBAN specification declares national check digits but
+   * no algorithm is registered to verify them, the digits are accepted
+   * unchecked and a `NationalChecksumNotVerified` warning is emitted, since a
+   * missing algorithm must not reject an otherwise valid BBAN. Turn the warning
+   * into an error with `warnings.simplefilter("error", NationalChecksumNotVerified)`
+   * to fail instead of passing.
+   *
    * @throws {InvalidBBANChecksum} If the country specific BBAN checksum is invalid.
    */
   validateNationalChecksum(): boolean {
     const algo = getNationalChecksumAlgorithm(this.countryCode, this.bank);
     if (!algo) {
+      const position = this.spec.positions[Component.NATIONAL_CHECKSUM_DIGITS] ?? new Range();
+      if (!position.isEmpty) {
+        warnings.warn(
+          new exceptions.NationalChecksumNotVerified(
+            `No national checksum algorithm is registered for ${this.countryCode}: the national check digits were not verified`,
+          ),
+        );
+      }
       return true;
     }
     const components = algo.accepts.map((component) => this._getComponent(component));
@@ -350,7 +371,13 @@ export class BBAN extends Base {
     if (banks.length === 0) {
       return null;
     }
-    return banks[0];
+    // A national registry lists one record per branch, so a bank code can map to
+    // several entries. The registry flags the institution's own record with
+    // `primary`; prefer it so that `bank` and `bic` describe the same
+    // institution, the way `BIC.candidatesFromBankCode` already does. Like
+    // Python's `max(banks, key=...)`, the first primary entry wins and the
+    // first entry is the fallback.
+    return banks.find((bank) => bank.primary) ?? banks[0];
   }
 
   get bankName(): string | null {

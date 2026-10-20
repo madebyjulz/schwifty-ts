@@ -1,7 +1,7 @@
 import { BBAN } from "./bban.ts";
 import type { BIC } from "./bic.ts";
 import { ISO7064Mod97_10, numerify } from "./checksum/index.ts";
-import { Base } from "./common.ts";
+import { Base, clean } from "./common.ts";
 import { getCountry } from "./countries.ts";
 import type { Bank, IBANSpec } from "./domain.ts";
 import * as exceptions from "./exceptions.ts";
@@ -26,9 +26,10 @@ export class IBAN extends Base {
     bban: string | BBAN,
     options?: { allowInvalid?: boolean; validateBban?: boolean },
   ): IBAN {
-    const bbanStr = typeof bban === "string" ? bban : bban.compact;
-    const checkDigits = _iso7064Mod97_10.compute([bbanStr, countryCode]);
-    return new IBAN(countryCode + checkDigits + bbanStr, options);
+    const cleanCountryCode = clean(countryCode);
+    const cleanBban = clean(typeof bban === "string" ? bban : bban.compact);
+    const checkDigits = _iso7064Mod97_10.compute([cleanBban, cleanCountryCode]);
+    return new IBAN(`${cleanCountryCode}${checkDigits}${cleanBban}`, options);
   }
 
   static generate(
@@ -57,6 +58,15 @@ export class IBAN extends Base {
     return IBAN.fromBban(bban.countryCode, bban);
   }
 
+  /**
+   * Validate the structural integrity of this IBAN.
+   *
+   * Verifies the country specific format as well as the check digits in the 3rd and 4th position.
+   * If `validateBban` is `true` it also verifies the country specific checksum within the BBAN; for
+   * German banks the appropriate algorithm is picked based on the bank code. Countries for which no
+   * algorithm is registered cannot be verified: their check digits are accepted as they are and a
+   * `NationalChecksumNotVerified` warning reports that they were not checked.
+   */
   validate(validateBban = false): boolean {
     this._validateCharacters();
     this._validateLength();

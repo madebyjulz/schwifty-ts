@@ -1,8 +1,8 @@
 import { Component } from "../domain.ts";
-import { InvalidBBANChecksum } from "../exceptions.ts";
+import { InvalidAccountCode, InvalidBBANChecksum } from "../exceptions.ts";
 import { Algorithm, DIGITS, register } from "./algorithm.ts";
 
-// const ACCOUNT_CODE_LENGTH = 10;
+const ACCOUNT_CODE_LENGTH = 10;
 const ZERO_PLUS_START_REGEX = /^0+/u;
 const ZERO_PLUS_REGEX = /0+$/u;
 
@@ -15,7 +15,7 @@ interface Positions {
 const DECIMAL_BASE = 10;
 const TWO_DIGIT_LIMIT = 100;
 
-function digitSum(n: number): number {
+export function digitSum(n: number): number {
   if (n < DECIMAL_BASE) {
     return n;
   }
@@ -25,11 +25,26 @@ function digitSum(n: number): number {
   return [...String(n)].reduce((s, d) => s + Number(d), 0);
 }
 
+/**
+ * Return `accountCode` if it has the length all German methods expect.
+ *
+ * Methods that look at the account code themselves, before the shared check in
+ * `WeightedModulus.getDigits` runs, have to call this first. Otherwise a BBAN
+ * that is too short to carry an account code is checked against a truncated
+ * value instead of raising `InvalidAccountCode`.
+ */
+function validateAccountCode(accountCode: string): string {
+  if (accountCode.length !== ACCOUNT_CODE_LENGTH) {
+    throw new InvalidAccountCode(`Account code must be ${ACCOUNT_CODE_LENGTH} digits long, got ${accountCode.length}`);
+  }
+  return accountCode;
+}
+
 function cycle<T>(arr: T[], index: number): T {
   return arr[index % arr.length];
 }
 
-abstract class WeightedModulus extends Algorithm {
+export abstract class WeightedModulus extends Algorithm {
   override readonly accepts = [Component.ACCOUNT_CODE];
   abstract readonly modulus: number;
   abstract readonly positions: Positions;
@@ -52,6 +67,7 @@ abstract class WeightedModulus extends Algorithm {
   }
 
   getDigits(accountCode: string): string {
+    validateAccountCode(accountCode);
     const positions = this.getPositions(accountCode);
     const start = positions.start - 1;
     const { end } = positions;
@@ -101,7 +117,7 @@ abstract class WeightedModulus extends Algorithm {
     // ranges, special-case reconciliations) are honoured without duplicating
     // their logic. `null` signals that this random account body cannot be
     // made valid (e.g. methods that reject a whole class of inputs).
-    const [accountCode] = components;
+    const accountCode = validateAccountCode(components[0]);
     const index = this.getPositions(accountCode).checkDigit - 1;
     for (const digit of DIGITS) {
       const candidate = accountCode.slice(0, index) + digit + accountCode.slice(index + 1);
@@ -278,7 +294,7 @@ class Algorithm08 extends WeightedMod10 {
   }
 
   override compute(components: string[]): string {
-    const [accountCode] = components;
+    const accountCode = validateAccountCode(components[0]);
     if (Number(accountCode) < this.minAccountCode) {
       return "";
     }
@@ -286,7 +302,7 @@ class Algorithm08 extends WeightedMod10 {
   }
 
   override validate(components: string[], expected: string): boolean {
-    const [accountCode] = components;
+    const accountCode = validateAccountCode(components[0]);
     if (Number(accountCode) < this.minAccountCode) {
       return true;
     }
@@ -724,17 +740,26 @@ class Algorithm63 extends WeightedMod10 {
   }
 
   override validate(components: string[], expected: string): boolean {
-    const [accountCode] = components;
+    const accountCode = validateAccountCode(components[0]);
     if (!accountCode.startsWith("0")) {
       return false;
     }
-    return super.validate(components, expected);
+    if (super.validate(components, expected)) {
+      return true;
+    }
+    // The sub-account number "00" may be omitted and the account code padded with
+    // leading zeros instead. The check digit then sits at position 10, so shift the
+    // account code back into place and check it again.
+    if (accountCode.startsWith("000")) {
+      return super.validate([`${accountCode.slice(2)}00`], expected);
+    }
+    return false;
   }
 
   override solve(components: string[]): string[] | null {
     // The method only accepts account codes with a leading zero, which the check
     // digit alone cannot supply, so set it before solving for the check digit.
-    const [accountCode] = components;
+    const accountCode = validateAccountCode(components[0]);
     return super.solve([`0${accountCode.slice(1)}`]);
   }
 }
@@ -768,7 +793,7 @@ class Algorithm68 extends WeightedMod10 {
   }
 
   override validate(components: string[], expected: string): boolean {
-    const [accountCode] = components;
+    const accountCode = validateAccountCode(components[0]);
     const acNum = Number(accountCode);
     if (acNum >= 400_000_000 && acNum <= 499_999_999) {
       return true;
@@ -785,7 +810,7 @@ class Algorithm68 extends WeightedMod10 {
     // A 10-significant-digit account code (no leading zero) requires the 7th
     // position — index 3 — to be 9, otherwise `getDigits` rejects it. Set it so
     // the leading digit stays free, then solve for the check digit.
-    const [accountCode] = components;
+    const accountCode = validateAccountCode(components[0]);
     if (accountCode.startsWith("0")) {
       return super.solve([accountCode]);
     }
@@ -814,7 +839,7 @@ class Algorithm76 extends WeightedMod11 {
   }
 
   override validate(components: string[], expected: string): boolean {
-    const [accountCode] = components;
+    const accountCode = validateAccountCode(components[0]);
     if (!ALLOWED_LEADING_DIGITS_76.has(Number(accountCode[0]))) {
       return false;
     }
@@ -824,7 +849,7 @@ class Algorithm76 extends WeightedMod11 {
   override solve(components: string[]): string[] | null {
     // The method only accepts certain leading digits, which the check digit alone
     // cannot supply, so coerce it into the allowed set before solving.
-    const [accountCode] = components;
+    const accountCode = validateAccountCode(components[0]);
     if (ALLOWED_LEADING_DIGITS_76.has(Number(accountCode[0]))) {
       return super.solve([accountCode]);
     }
@@ -853,7 +878,7 @@ class Algorithm88 extends WeightedMod11 {
 register("DE")(new Algorithm88());
 
 // Algorithm 91
-class Algorithm91Variant1 extends WeightedMod11 {
+export class Algorithm91Variant1 extends WeightedMod11 {
   override readonly name: string = "91v1";
   override readonly positions: Positions = {
     start: 1,
@@ -863,12 +888,12 @@ class Algorithm91Variant1 extends WeightedMod11 {
   override readonly weights = [2, 3, 4, 5, 6, 7];
 }
 
-class Algorithm91Variant2 extends Algorithm91Variant1 {
+export class Algorithm91Variant2 extends Algorithm91Variant1 {
   override readonly name: string = "91v2";
   override readonly weights = [7, 6, 5, 4, 3, 2];
 }
 
-class Algorithm91Variant3 extends Algorithm91Variant1 {
+export class Algorithm91Variant3 extends Algorithm91Variant1 {
   override readonly name: string = "91v3";
   override readonly positions: Positions = {
     start: 1,
@@ -878,7 +903,7 @@ class Algorithm91Variant3 extends Algorithm91Variant1 {
   override readonly weights = [2, 3, 4, 0, 5, 6, 7, 8, 9, 10];
 }
 
-class Algorithm91Variant4 extends Algorithm91Variant1 {
+export class Algorithm91Variant4 extends Algorithm91Variant1 {
   override readonly name: string = "91v4";
   override readonly weights = [2, 4, 8, 5, 10, 9];
 }
@@ -911,6 +936,36 @@ class Algorithm91 extends Algorithm {
 }
 register("DE")(new Algorithm91());
 
+// Algorithm 95
+class Algorithm95 extends WeightedMod11 {
+  override readonly name = "95";
+  override readonly positions: Positions = {
+    start: 1,
+    end: 9,
+    checkDigit: 10,
+  };
+  override readonly weights = [2, 3, 4, 5, 6, 7];
+
+  override validate(components: string[], expected: string): boolean {
+    const [accountCode] = components;
+    if (!accountCode) {
+      return false;
+    }
+    const number = Number(accountCode);
+    if (
+      (number >= 1 && number <= 1_999_999) ||
+      (number >= 9_000_000 && number <= 25_999_999) ||
+      (number >= 396_000_000 && number <= 499_999_999) ||
+      (number >= 700_000_000 && number <= 799_999_999) ||
+      (number >= 910_000_000 && number <= 989_999_999)
+    ) {
+      return true;
+    }
+    return super.validate(components, expected);
+  }
+}
+register("DE")(new Algorithm95());
+
 // Algorithm 99
 class Algorithm99 extends WeightedMod11 {
   override readonly name = "99";
@@ -922,11 +977,50 @@ class Algorithm99 extends WeightedMod11 {
   override readonly weights = [2, 3, 4, 5, 6, 7];
 
   override validate(components: string[], expected: string): boolean {
-    const [accountCode] = components;
-    if (accountCode === "0499999999" || accountCode === "0396000000") {
+    const accountCode = validateAccountCode(components[0]);
+    const acNum = Number(accountCode);
+    if (acNum >= 396_000_000 && acNum <= 499_999_999) {
       return true;
     }
     return super.validate(components, expected);
   }
 }
 register("DE")(new Algorithm99());
+
+/** Check the account code with the second variant if the first one rejects it. */
+abstract class FallbackVariants extends Algorithm {
+  override readonly accepts = [Component.ACCOUNT_CODE];
+  abstract readonly variants: readonly [new () => WeightedModulus, new () => WeightedModulus];
+
+  compute(components: string[]): string {
+    return new this.variants[0]().compute(components);
+  }
+
+  override validate(components: string[], expected: string): boolean {
+    return this.variants.some((AlgoCls) => new AlgoCls().validate(components, expected));
+  }
+
+  override solve(components: string[]): string[] | null {
+    return new this.variants[0]().solve(components);
+  }
+}
+
+// Algorithm A2
+class AlgorithmA2 extends FallbackVariants {
+  override readonly name = "A2";
+  override readonly variants: readonly [new () => WeightedModulus, new () => WeightedModulus] = [
+    Algorithm00,
+    Algorithm04,
+  ];
+}
+register("DE")(new AlgorithmA2());
+
+// Algorithm A3
+class AlgorithmA3 extends FallbackVariants {
+  override readonly name = "A3";
+  override readonly variants: readonly [new () => WeightedModulus, new () => WeightedModulus] = [
+    Algorithm00,
+    Algorithm10,
+  ];
+}
+register("DE")(new AlgorithmA3());

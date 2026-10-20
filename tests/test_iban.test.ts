@@ -1,8 +1,9 @@
-import { describe, it, expect } from "vitest";
+import { afterAll, beforeAll, describe, it, expect } from "vitest";
 import { getCountry } from "../src/countries.ts";
-import { SchwiftyException } from "../src/exceptions.ts";
+import { NationalChecksumNotVerified, SchwiftyException } from "../src/exceptions.ts";
 import { IBAN } from "../src/iban.ts";
 import { convertBbanSpecToRegex } from "../src/registry.ts";
+import * as warnings from "../src/warnings.ts";
 
 const valid = [
   "AL47 2121 1009 0000 0002 3569 8741",
@@ -144,6 +145,14 @@ const sepaCountries = new Set([
 ]);
 
 describe("IBAN parsing", () => {
+  beforeAll(() => {
+    warnings.simplefilter("ignore", NationalChecksumNotVerified);
+  });
+
+  afterAll(() => {
+    warnings.resetwarnings();
+  });
+
   it.each(valid)("parses valid IBAN %s", (value) => {
     const iban = new IBAN(value, { validateBban: true });
     expect(iban.formatted).toBe(value);
@@ -292,6 +301,15 @@ describe("IBAN generation", () => {
     const [cc, bank, account, branch] = components;
     expect(() => IBAN.generate(cc, bank, account, branch || "")).toThrow(SchwiftyException);
   });
+
+  it.each([
+    ["DE", "370400440532013000", "DE89370400440532013000"],
+    ["DE", "3704 0044 0532 0130 00", "DE89370400440532013000"],
+    ["de", "370400440532013000", "DE89370400440532013000"],
+    ["BE", "5390 0754 7034", "BE68539007547034"],
+  ])("fromBban(%s, %s) normalizes text input to %s", (countryCode, bban, expected) => {
+    expect(IBAN.fromBban(countryCode, bban).compact).toBe(expected);
+  });
 });
 
 describe("BIC from IBAN", () => {
@@ -303,7 +321,7 @@ describe("BIC from IBAN", () => {
     ["BA393385804800211234", "UNCRBA22XXX"],
     ["BE71096123456769", "GKCCBEBB"],
     ["BG18RZBB91550123456789", "RZBBBGSF"],
-    ["CH5604835012345678009", "CRESCHZZ80A"],
+    ["CH5604835012345678009", "UBSWCHZH80A"],
     ["CR23015108410026012345", "BNCRCRSJXXX"],
     ["CY21002001950000357001234567", "BCYPCY2N"],
     ["CZ5508000000001234567899", "GIBACZPX"],

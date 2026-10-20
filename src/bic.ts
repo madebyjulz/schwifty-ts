@@ -39,16 +39,29 @@ export class BIC extends Base {
   static fromBankCode(countryCode: string, bankCode: string): BIC {
     const candidates = BIC.candidatesFromBankCode(countryCode, bankCode);
     if (candidates.length > 1) {
+      // Among equally generic codes, entries the registry marks as primary win
+      // over the rest before the alphabetical tie-break is applied.
+      const primary = new Set(
+        registry
+          .getBanksByCode(countryCode, bankCode)
+          .filter((entry) => entry.primary && entry.bic)
+          .map((entry) => entry.bic),
+      );
+      const preferPrimary = (codes: BIC[]): BIC[] => {
+        const flagged = codes.filter((c) => primary.has(c.compact));
+        return flagged.length > 0 ? flagged : codes;
+      };
+
       // If we have multiple candidates, we try to pick the one with no branch
       // code which is the most generic one.
       const genericCodes = candidates.filter((c) => !c.branchCode);
       if (genericCodes.length > 0) {
-        return maxBic(genericCodes);
+        return maxBic(preferPrimary(genericCodes));
       }
       // If we don't have one, we try to pick the one with 'XXX' as a branch code.
       const xxxCodes = candidates.filter((c) => c.branchCode === "XXX");
       if (xxxCodes.length > 0) {
-        return maxBic(xxxCodes);
+        return maxBic(preferPrimary(xxxCodes));
       }
     }
     // Every registry entry for this bank code may lack a BIC, in which case
@@ -110,6 +123,9 @@ export class BIC extends Base {
       // entries per branch, so fall back to the institution's BIC when
       // the branch-specific lookup comes up empty.
       entries = registry.getBanksByBic(this._value.slice(0, _INSTITUTION_LENGTH));
+    } else if (entries.length === 0 && this.length === _INSTITUTION_LENGTH) {
+      // Some registries store only the equivalent 11-character XXX form.
+      entries = registry.getBanksByBic(`${this._value}XXX`);
     }
     const values = new Set<string>();
     for (const entry of entries) {

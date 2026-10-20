@@ -96,7 +96,10 @@ export interface Bank {
 }
 
 /**
- * Whether the country declares a positional BBAN layout.
+ * Whether the position of at least one BBAN component is known.
+ *
+ * Upstream's `IBANSpec.has_positions` property; a function here because
+ * `IBANSpec` is a plain interface over the parsed registry data.
  *
  * `IBANSpec.positions` always holds an entry per component, so its mere
  * presence says nothing; a country the registry has no layout for (Angola,

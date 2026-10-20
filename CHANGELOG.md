@@ -2,6 +2,39 @@
 
 Releases use [CalVer](https://calver.org/) in semver form, `YYYY.M.Patch`, keyed to the month the TypeScript package is released. Each entry names the upstream [schwifty](https://github.com/mdomke/schwifty) revision it was ported from; for the full upstream changelog see the [schwifty changelog](https://github.com/mdomke/schwifty/blob/main/CHANGELOG.rst).
 
+## 2026.10.0 - 2026-10-19
+
+Ports upstream [`2026.10.0`](https://github.com/mdomke/schwifty/commit/810930b) (2026-10-19). The registry additions, the 11-character BIC fallback and the internal simplifications of that release were already ported in `2026.9.0-rc1`.
+
+### Added
+
+- German checksum method `95` (UniCredit Bank - HypoVereinsbank, bank code `70020270`): computed like method `06`, with the account ranges the Bundesbank exempts from the check digit treated as valid. Account codes for this bank were not checked before.
+- German checksum methods `A2` and `A3` (e.g. Nassauische Sparkasse, Sparkasse Hannover): method `00` first, falling back to `04` (`A2`) or `10` (`A3`). Their check digits were previously accepted unverified.
+- `NationalChecksumNotVerified` warning and a `warnings` export (`simplefilter`, `resetwarnings`, `warn`) mirroring the Python `warnings` filters upstream relies on.
+- ORO PAY LTD (`OROACY2LXXX`) to the Cypriot registry.
+
+### Changed
+
+- `validateBban: true` emits a `NationalChecksumNotVerified` warning when the country declares national check digits but no algorithm is registered to verify them (35 of the 54 countries that declare check digits, e.g. `HU` and `SE`). The digits are still accepted. `warnings.simplefilter("error", NationalChecksumNotVerified)` makes the check fail instead. `BBAN.random` does not emit it.
+- Updated the bank registries for Germany, Austria, Belgium, Poland, Switzerland and Slovenia. Retired Swiss IIDs of merged institutes (e.g. former Credit Suisse codes, now UBS) and the retired Slovenian SKB banka and Abanka codes are kept as aliases of their successors.
+
+### Fixed
+
+- German method `63` (Deutsche Bank) accepts account numbers whose sub-account `00` was left out and padded with leading zeros instead (e.g. `0001234566`).
+- German method `99` accepts every account number from `0396000000` to `0499999999` without a check, not only the two range boundaries.
+- German methods that inspect the account code themselves (`08`, `63`, `68`, `76`, `88`, `99`) and the shared solver throw `InvalidAccountCode` for a BBAN too short to carry a 10-digit account code. Previously the truncated value was silently checked.
+- `IBAN.fromBban` normalizes whitespace and case before computing the check digits, so grouped BBANs and lowercase country codes work.
+- `IBAN.bank` (and `bankName`/`bankShortName`) resolves a bank code to the registry record flagged `primary` instead of the first one read, so it names the same institution as `IBAN.bic`.
+- `BIC.fromBankCode` prefers BICs the registry marks as primary among equally generic candidates before the alphabetical tie-break: French bank code `18719` resolves to the head office `BFCORERXXXX` instead of the Mayotte branch `BFCOYTYTXXX`, German `48020151` to `HAUKDEFFXXX` instead of `LAMPDEDDXXX`.
+- Eight-character BICs fall back to their `XXX` registry entry for `domesticBankCodes`, `bankNames` and `bankShortNames` when no exact entry exists.
+
+### Deviations from upstream
+
+- Python's `warnings` module has no JavaScript counterpart. `warnings.ts` reimplements the parts upstream needs with the same names: the `"default"` action reports each distinct message once (Python deduplicates per message and call site), output goes through `process.emitWarning` or `console.warn`, and `NationalChecksumNotVerified` extends `Error` rather than `UserWarning`.
+- `IBANSpec.has_positions` is the existing `hasPositions(spec)` function, since `IBANSpec` is a plain interface.
+- Not applicable: deep-copy support for `allowInvalid` instances (no `__deepcopy__` in JavaScript), the pydantic non-string `BIC` fix (`bicSchema()` already reports non-strings as an issue), dropping Python 3.10, and the `httpx2` registry scripts.
+- Resolved: upstream now generates random BBANs for countries without component positions from the regex, so the `2026.07.3` deviation below no longer applies.
+
 ## 2026.9.0-rc1 - 2026-09-14
 
 Ports upstream `2026.07.3` plus the unreleased upstream commits through [`394bdfb`](https://github.com/mdomke/schwifty/commit/394bdfb) (2026-09-04).

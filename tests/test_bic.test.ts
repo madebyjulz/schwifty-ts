@@ -1,8 +1,18 @@
-import { describe, it, expect } from "vitest";
+import { afterEach, describe, it, expect, vi } from "vitest";
 import { BIC } from "../src/bic.ts";
+import type { Bank } from "../src/domain.ts";
 import { InvalidLength, InvalidStructure, InvalidCountryCode, InvalidBankCode } from "../src/exceptions.ts";
+import * as registry from "../src/registry.ts";
+
+function makeBank(fields: Pick<Bank, "bank_code" | "bic" | "name"> & Partial<Bank>): Bank {
+  return { checksum_algo: "", country_code: "DE", primary: false, short_name: null, ...fields };
+}
 
 describe(BIC, () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it("validates a BIC", () => {
     const bic = new BIC("GENODEM1GLS");
     expect(bic.formatted).toBe("GENO DE M1 GLS");
@@ -83,6 +93,49 @@ describe(BIC, () => {
     expect(new BIC("GENODEM1GLS").domesticBankCodes).toStrictEqual(["43060967", "43060988"]);
   });
 
+  it("resolves ORO PAY (CY)", () => {
+    const bic = new BIC("OROACY2LXXX");
+    expect(bic.bankNames).toStrictEqual(["ORO PAY LTD"]);
+    expect(bic.bankShortNames).toStrictEqual(["ORO PAY"]);
+    expect(bic.countryCode).toBe("CY");
+  });
+
+  it.each(["COBADEFF", "DEUTDEFF"])("falls back to the XXX entry for %s", (code) => {
+    const bic = new BIC(code);
+    const xxxEntry = new BIC(`${code}XXX`);
+    expect(xxxEntry.domesticBankCodes.length).toBeGreaterThan(0);
+    expect(xxxEntry.bankNames.length).toBeGreaterThan(0);
+    expect(xxxEntry.bankShortNames.length).toBeGreaterThan(0);
+    expect(bic.domesticBankCodes).toStrictEqual(xxxEntry.domesticBankCodes);
+    expect(bic.bankNames).toStrictEqual(xxxEntry.bankNames);
+    expect(bic.bankShortNames).toStrictEqual(xxxEntry.bankShortNames);
+    expect(bic.exists).toBeFalsy();
+    expect(xxxEntry.exists).toBeTruthy();
+  });
+
+  it("prefers an exact 8-character entry over the XXX fallback", () => {
+    const entries: Record<string, Bank[]> = {
+      TESTDEFF: [makeBank({ bic: "TESTDEFF", bank_code: "10000000", name: "Exact institution" })],
+      TESTDEFFXXX: [makeBank({ bic: "TESTDEFFXXX", bank_code: "20000000", name: "XXX entry", short_name: "XXX" })],
+    };
+    vi.spyOn(registry, "getBanksByBic").mockImplementation((code) => entries[code] ?? []);
+    const bic = new BIC("TESTDEFF");
+    expect(bic.domesticBankCodes).toStrictEqual(["10000000"]);
+    expect(bic.bankNames).toStrictEqual(["Exact institution"]);
+    expect(bic.bankShortNames).toStrictEqual([]);
+  });
+
+  it.each(["MARKDEF1", "ABNAJPJT", "COBADEF"])(
+    "returns nothing without an institution or XXX record for %s",
+    (code) => {
+      const bic = new BIC(code, { allowInvalid: true });
+      expect(bic.domesticBankCodes).toStrictEqual([]);
+      expect(bic.bankNames).toStrictEqual([]);
+      expect(bic.bankShortNames).toStrictEqual([]);
+      expect(bic.exists).toBeFalsy();
+    },
+  );
+
   it("raises when every registry entry for a bank code lacks a BIC", () => {
     // BE 102 is listed in the registry but carries no BIC; Python surfaces this
     // as InvalidBankCode via the IndexError on the empty candidate list.
@@ -143,7 +196,7 @@ describe(BIC, () => {
     ["FR", "30066", "CMCIFRPPXXX"],
     ["FR", "17469", "SOCBPFTXXXX"],
     ["FR", "10096", "CMCIFRPP"],
-    ["FR", "18719", "BFCOYTYTXXX"],
+    ["FR", "18719", "BFCORERXXXX"], // head office, not the Mayotte branch
     ["FR", "30077", "SMCTFR2A"],
     ["FR", "13489", "NORDFRPP"],
     ["HU", "107", "CIBHHUHB"],
@@ -158,6 +211,8 @@ describe(BIC, () => {
     ["RO", "BPOS", "BPOSROBU"],
     ["SE", "500", "ESSESESS"],
     ["SI", "01050", "BSLJSI2XFNB"],
+    ["SI", "02188", "LJBASI2XXXX"],
+    ["SI", "03100", "KBMASI2XXXX"], // retired SKB code, alias of OTP banka
     ["SK", "0900", "GIBASKBX"],
   ];
 
@@ -171,6 +226,18 @@ describe(BIC, () => {
 
   it("picks primary BIC", () => {
     expect(BIC.fromBankCode("DE", "20070024").compact).toBe("DEUTDEDBHAM");
+  });
+
+  // Bank code 18719 has two 'XXX' BICs; the registry marks the head office primary and the
+  // Mayotte branch not. The primary must win over the alphabetical tie-break.
+  it("prefers the registry primary among generic codes", () => {
+    expect(BIC.fromBankCode("FR", "18719").compact).toBe("BFCORERXXXX");
+    expect(BIC.candidatesFromBankCode("FR", "18719").map((b) => b.compact)).toStrictEqual([
+      "BFCORERXXXX",
+      "BFCOYTYTXXX",
+    ]);
+    // The primary record, not the secondary LAMPDEDDXXX.
+    expect(BIC.fromBankCode("DE", "48020151").compact).toBe("HAUKDEFFXXX");
   });
 
   it("magic methods", () => {
