@@ -155,6 +155,15 @@ export class IBAN extends Base {
     return this.spec.in_sepa_zone;
   }
 
+  /**
+   * Whether the country's IBAN format is reserved but not yet in the official
+   * IBAN registry. Aspirational IBANs are syntactically valid, but may be
+   * rejected by banking systems.
+   */
+  get isAspirational(): boolean {
+    return this.spec.aspirational;
+  }
+
   get countryCode(): string {
     return this._getSlice(0, 2);
   }

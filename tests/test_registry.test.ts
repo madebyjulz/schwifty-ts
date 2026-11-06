@@ -77,4 +77,17 @@ describe("bank and IBAN registry", () => {
   it("throws for an unknown country code", () => {
     expect(() => registry.getIbanSpec("XX")).toThrow("Unknown country-code 'XX'");
   });
+
+  // The Swiss registry lists foreign-based banks such as Commerzbank, but their BICs are
+  // only resolved through the registry of the country the BIC belongs to.
+  it("limits a BIC lookup to its country", () => {
+    expect(registry.getBanksByCountry("CH").some((bank) => (bank.bic ?? "").startsWith("COBADE"))).toBeTruthy();
+    expect(registry.getBanksByBic("COBADEFFXXX").every((bank) => bank.country_code === "DE")).toBeTruthy();
+  });
+
+  // The NBB list marks unassigned identification numbers as "VRIJ" or "Onbeschikbaar"
+  // with a BIC of "N/A"; those are not banks.
+  it.each(["138", "154", "529", "539", "900"])("skips the unassigned Belgian bank code %s", (bankCode) => {
+    expect(registry.getBanksByCode("BE", bankCode)).toStrictEqual([]);
+  });
 });

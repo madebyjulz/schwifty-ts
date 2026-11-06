@@ -1,9 +1,12 @@
 import bankRows from "./data/bank.ts";
 import ibanData from "./data/iban.json";
 import type { Bank, IBANSpec } from "./domain.ts";
-import { Component, componentRecord, Range } from "./domain.ts";
+import { BankStatus, canonicalBic, Component, componentRecord, Range } from "./domain.ts";
 import * as exceptions from "./exceptions.ts";
 import type { BankRow, RawIbanSpec } from "./types.ts";
+
+const BIC_COUNTRY_START = 4;
+const BIC_COUNTRY_END = 6;
 
 const _specToRe: Record<string, string> = {
   n: "\\d",
@@ -54,6 +57,7 @@ function parseIbanSpec(countryCode: string, data: RawIbanSpec): IBANSpec {
   }
 
   return {
+    aspirational: data.aspirational ?? false,
     country: countryCode,
     bban_spec: data.bban_spec,
     bban_length: data.bban_length,
@@ -67,59 +71,104 @@ function parseIbanSpec(countryCode: string, data: RawIbanSpec): IBANSpec {
   };
 }
 
-function parseBank(row: BankRow): Bank {
-  const [country_code, bank_code, bic, name, short_name, primary, checksum_algo] = row;
+export function parseBank(row: BankRow): Bank {
+  const [
+    country_code,
+    bank_code,
+    bic,
+    name,
+    short_name,
+    primary,
+    checksum_algo,
+    status,
+    successor_bank_code,
+    legacy_name,
+    legacy_bic,
+  ] = row;
   return {
     country_code,
-    bic,
+    // Registries store the BIC of a primary office with or without the branch code "XXX",
+    // which ISO 9362 treats as identical. Banks carry the canonical 8-character form.
+    bic: bic ? canonicalBic(bic) : bic,
     bank_code,
     name,
     short_name,
     primary: primary === 1,
     checksum_algo: checksum_algo || "default",
+    status: status || BankStatus.ACTIVE,
+    successor_bank_code: successor_bank_code || null,
+    legacy_name: legacy_name || null,
+    legacy_bic: legacy_bic ? canonicalBic(legacy_bic) : null,
   };
 }
 
+/** The bank records of one country and its lookup indexes, which share the same `Bank` objects. */
+interface CountryBanks {
+  banks: Bank[];
+  byBankCode: Map<string, Bank[]>;
+  byBic: Map<string, Bank[]>;
+}
+
+function addToIndex(index: Map<string, Bank[]>, key: string, bank: Bank): void {
+  const bucket = index.get(key);
+  if (bucket === undefined) {
+    index.set(key, [bank]);
+  } else {
+    bucket.push(bank);
+  }
+}
+
 const _ibanSpecs = new Map<string, IBANSpec>();
-let _banks: Bank[] | null = null;
-let _byCountry: Map<string, Bank[]> | null = null;
-let _byBankCode: Map<string, Bank[]> | null = null;
-let _byBic: Map<string, Bank[]> | null = null;
+const _banks = new Map<string, CountryBanks>();
+let _bankRowIndex: Map<string, BankRow[]> | null = null;
 
 /**
- * Compound key for the `(country_code, bank_code)` index.
+ * The rows of every country.
  *
- * NUL separates the parts so that no pair of codes can collide, whatever
- * characters a national bank code turns out to use.
+ * Deviation: upstream's `_bank_files` maps a country to its registry files and
+ * reads them on first use. The registry is bundled here, so there are no files
+ * to defer and the country's rows take their place. Parsing still happens per
+ * country in `_getCountryBanks`, which keeps the lookups structured like upstream.
  */
-function bankCodeKey(countryCode: string, bankCode: string): string {
-  return `${countryCode}\u0000${bankCode}`;
-}
-
-function allBanks(): Bank[] {
-  _banks ??= bankRows.map(parseBank);
-  return _banks;
-}
-
-/**
- * Group the banks into an index keyed by `keyOf`. Entries the key is blank for
- * are skipped, since they could not be looked up unambiguously anyway.
- */
-function buildIndex(keyOf: (bank: Bank) => string): Map<string, Bank[]> {
-  const index = new Map<string, Bank[]>();
-  for (const bank of allBanks()) {
-    const key = keyOf(bank);
-    if (!key) {
-      continue;
-    }
-    const bucket = index.get(key);
-    if (bucket === undefined) {
-      index.set(key, [bank]);
-    } else {
-      bucket.push(bank);
+function _bankRows(): Map<string, BankRow[]> {
+  if (_bankRowIndex === null) {
+    _bankRowIndex = new Map();
+    for (const row of bankRows) {
+      const [countryCode] = row;
+      const rows = _bankRowIndex.get(countryCode);
+      if (rows === undefined) {
+        _bankRowIndex.set(countryCode, [row]);
+      } else {
+        rows.push(row);
+      }
     }
   }
-  return index;
+  return _bankRowIndex;
+}
+
+function _getCountryBanks(countryCode: string): CountryBanks {
+  const cached = _banks.get(countryCode);
+  if (cached !== undefined) {
+    return cached;
+  }
+
+  const banks: CountryBanks = { banks: [], byBankCode: new Map(), byBic: new Map() };
+  for (const row of _bankRows().get(countryCode) ?? []) {
+    const bank = parseBank(row);
+    banks.banks.push(bank);
+    if (bank.bank_code) {
+      addToIndex(banks.byBankCode, bank.bank_code, bank);
+    }
+    if (bank.bic) {
+      addToIndex(banks.byBic, bank.bic, bank);
+    }
+    if (bank.legacy_bic && bank.legacy_bic !== bank.bic) {
+      // The BIC of a merged bank still resolves to its retired bank code.
+      addToIndex(banks.byBic, bank.legacy_bic, bank);
+    }
+  }
+  _banks.set(countryCode, banks);
+  return banks;
 }
 
 /**
@@ -142,27 +191,25 @@ export function getIbanSpec(countryCode: string): IBANSpec {
 }
 
 export function getBanksByCountry(countryCode: string): Bank[] {
-  _byCountry ??= buildIndex((bank) => bank.country_code);
-  return _byCountry.get(countryCode) ?? [];
+  return _getCountryBanks(countryCode).banks;
 }
 
 export function getBanksByCode(countryCode: string, bankCode: string): Bank[] {
-  _byBankCode ??= buildIndex((bank) =>
-    bank.country_code && bank.bank_code ? bankCodeKey(bank.country_code, bank.bank_code) : "",
-  );
-  return _byBankCode.get(bankCodeKey(countryCode, bankCode)) ?? [];
+  return _getCountryBanks(countryCode).byBankCode.get(bankCode) ?? [];
 }
 
 export function getBanksByBic(bic: string): Bank[] {
-  _byBic ??= buildIndex((bank) => bank.bic ?? "");
-  return _byBic.get(bic) ?? [];
+  // Only the registry of the BIC's own country is searched. Banks are indexed by the canonical
+  // form of their BIC, so that e.g. REVOGB21 and REVOGB21XXX find the same banks.
+  return (
+    _getCountryBanks(bic.slice(BIC_COUNTRY_START, BIC_COUNTRY_END).toUpperCase()).byBic.get(canonicalBic(bic)) ?? []
+  );
 }
 
 export function getCountries(): string[] {
-  _byCountry ??= buildIndex((bank) => bank.country_code);
-  return [..._byCountry.keys()];
+  return [..._bankRows().keys()];
 }
 
 export function getAllBanks(): Bank[] {
-  return allBanks();
+  return getCountries().flatMap((countryCode) => getBanksByCountry(countryCode));
 }

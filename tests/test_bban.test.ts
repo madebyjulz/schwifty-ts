@@ -1,5 +1,8 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { BBAN } from "../src/bban.ts";
+import { BIC } from "../src/bic.ts";
+import type { Bank } from "../src/domain.ts";
+import { compareLookupRank } from "../src/domain.ts";
 import {
   GenerateRandomOverflowError,
   InvalidAccountCode,
@@ -45,6 +48,20 @@ describe("BBAN national checksum", () => {
     "10080000", // Commerzbank vorm. Dresdner Bank, method 76
     "70090100", // Hausbank München, method 88
     "10020890", // UniCredit Bank - HypoVereinsbank, method 99
+    "50010517", // ING-DiBa, method C1
+    "13051042", // Sparkasse Vorpommern auf Rügen, method C0
+    "50324000", // ABN AMRO Bank, Frankfurt Branch, method 31
+    "35060386", // Volksbank Rhein-Ruhr, method 40
+    "25020600", // Openbank Deutschland, method 41
+    "66661454", // VR Bank im Enzkreis -alt-, method 42
+    "66690000", // Volksbank Pforzheim -alt-, method 43
+    "30060010", // DZ BANK, method 44
+    "50310400", // Barclays Bank Ireland Frankfurt Branch, method 46
+    "27290087", // Volksbank Weserbergland -alt-, method 47
+    "20190109", // Volksbank Raiffeisenbank, method 48
+    "40351060", // Kreissparkasse Steinfurt, method 49
+    "20090700", // Edekabank, method 50
+    "21352240", // Sparkasse Holstein, method A7
   ])("rejects a truncated BBAN for bank code %s", (bankCode) => {
     expect(() => new BBAN("DE", `${bankCode}05320`).validateNationalChecksum()).toThrow(InvalidAccountCode);
   });
@@ -64,6 +81,21 @@ describe("BBAN national checksum", () => {
       }
     }
     expect(escaped).toStrictEqual([]);
+  });
+});
+
+describe("BBAN national checksum for Kosovo", () => {
+  // The last two digits of a Kosovo BBAN are check digits computed with ISO 7064 mod 97-10,
+  // like in the other former Yugoslav countries. Example taken from the Central Bank of Kosovo.
+  it("validates the national check digits", () => {
+    const bban = new BBAN("XK", "1212012345678906");
+    expect(bban.bankCode).toBe("12");
+    expect(bban.branchCode).toBe("12");
+    expect(bban.accountCode).toBe("0123456789");
+    expect(bban.nationalChecksumDigits).toBe("06");
+    expect(bban.validateNationalChecksum()).toBeTruthy();
+    expect(() => new BBAN("XK", "1212012345678907").validateNationalChecksum()).toThrow(InvalidBBANChecksum);
+    expect(() => IBAN.fromBban("XK", "1212012345678907", { validateBban: true })).toThrow(InvalidBBANChecksum);
   });
 });
 
@@ -144,31 +176,66 @@ describe("BBAN bank", () => {
   // the branch record is listed before the institution's own record.
   it("prefers the primary registry record", () => {
     const iban = IBAN.generate("DE", "29050000", "0000000000");
-    expect(iban.bic?.compact).toBe("BRLADE22XXX");
+    expect(iban.bic?.compact).toBe("BRLADE22");
     expect(iban.bank).not.toBeNull();
     expect(iban.bank?.bic).toBe(iban.bic?.compact);
     expect(iban.bank?.primary).toBeTruthy();
     expect(iban.bankShortName).toBe("Nord LB Bremen");
   });
 
-  // Whenever the registry marks a record of a bank code as the primary one, that is the
-  // record the bank code has to resolve to.
-  it("prefers the primary record of every registered bank code", () => {
-    const notPrimary: [string, string, string][] = [];
+  // Banco di Sicilia was absorbed by UniCredito Italiano (03135), which continued as UniCredit
+  // under the bank code 02008. The register links the two codes only by their common tax code.
+  it("resolves a merged bank to its successor under a new bank code", () => {
+    const bban = BBAN.fromComponents("IT", {
+      bank_code: "01020",
+      branch_code: "00000",
+      account_code: "0".repeat(12),
+    });
+    expect(bban.bank?.status).toBe("merged");
+    expect(bban.bank?.successor_bank_code).toBe("03135");
+    expect(bban.bank?.legacy_name).toBe("BANCO DI SICILIA S.P.A.");
+    expect(bban.bank?.name).toBe("UNICREDIT, SOCIETA' PER AZIONI");
+    expect(bban.bic?.compact).toBe("UNCRITMM");
+  });
+
+  // `BBAN.bank` and `BBAN.bic` used to pick their record differently, so that e.g. the
+  // name of Revolut Bank UK came with the BIC of Revolut Ltd.
+  it("describes the same record with bank and bic for every registered bank code", () => {
+    const disagree: unknown[] = [];
     for (const countryCode of registry.getCountries()) {
       const bankCodes = new Set(registry.getBanksByCountry(countryCode).map((bank) => bank.bank_code));
       for (const bankCode of bankCodes) {
-        const entries = registry.getBanksByCode(countryCode, bankCode);
-        if (!bankCode || !entries.some((bank) => bank.primary)) {
+        if (!bankCode) {
           continue;
         }
-        const { bank } = BBAN.fromComponents(countryCode, { bank_code: bankCode });
-        if (bank !== null && !bank.primary) {
-          notPrimary.push([countryCode, bankCode, bank.bic]);
+        const bban = BBAN.fromComponents(countryCode, { bank_code: bankCode });
+        const { bank, bic } = bban;
+        if (bank?.bic && bic?.canonical.compact !== new BIC(bank.bic).canonical.compact) {
+          disagree.push([countryCode, bankCode, bank.bic, bic?.compact]);
         }
       }
     }
-    expect(notPrimary).toStrictEqual([]);
+    expect(disagree).toStrictEqual([]);
+  });
+
+  // A bank code has to resolve to its best ranked record: an active one before a retired
+  // one, and the primary one among those.
+  it("prefers the best ranked record of every registered bank code", () => {
+    const notBest: unknown[] = [];
+    for (const countryCode of registry.getCountries()) {
+      const bankCodes = new Set(registry.getBanksByCountry(countryCode).map((bank) => bank.bank_code));
+      for (const bankCode of bankCodes) {
+        if (!bankCode) {
+          continue;
+        }
+        const entries = registry.getBanksByCode(countryCode, bankCode);
+        const { bank } = BBAN.fromComponents(countryCode, { bank_code: bankCode });
+        if (bank !== null && entries.some((entry) => compareLookupRank(entry, bank) > 0)) {
+          notBest.push([countryCode, bankCode, bank.bic]);
+        }
+      }
+    }
+    expect(notBest).toStrictEqual([]);
   });
 });
 
@@ -213,7 +280,7 @@ describe("BBAN random", () => {
   // straight from the BBAN regex. Deriving "has a layout" from the mere presence
   // of a `positions` map — which is now always populated, one empty range per
   // component — degrades these to an all-zero BBAN.
-  it.each(["AO", "GW", "HN", "IR", "KM", "MG", "MZ"])("generates a non-empty BBAN for %s", (countryCode) => {
+  it.each(["AO", "GW", "IR", "KM", "MG", "MZ"])("generates a non-empty BBAN for %s", (countryCode) => {
     const bbans = Array.from({ length: 20 }, () => BBAN.random(countryCode).compact);
     for (const bban of bbans) {
       expect(bban).not.toMatch(/^0+$/u);
@@ -228,8 +295,8 @@ describe("BBAN random", () => {
   // raises the explicit "not supported" error rather than the misleading "Bank code
   // exceeds maximum size 0".
   it("rejects fromComponents for a country without positions", () => {
-    expect(() => BBAN.fromComponents("HN", { bank_code: "BGAH", account_code: "12345678901234567890" })).toThrow(
-      "BBAN generation for HN not supported",
+    expect(() => BBAN.fromComponents("AO", { bank_code: "1234", account_code: "12345678901234567" })).toThrow(
+      "BBAN generation for AO not supported",
     );
   });
 
@@ -237,6 +304,60 @@ describe("BBAN random", () => {
     vi.spyOn(BBAN.prototype, "validateNationalChecksum").mockImplementation(() => {
       throw new InvalidBBANChecksum("Invalid national checksum");
     });
+    // Pin the bank `random` picks to one whose checksum method is implemented. The
+    // validator is only consulted for those, and a bank with an unimplemented method
+    // leaves nothing to retry and no overflow to raise.
+    const deutscheBank: Bank[] = registry.getBanksByCode("DE", "10070000");
+    expect(deutscheBank.map((bank) => bank.checksum_algo)).toStrictEqual(["63"]);
+    vi.spyOn(registry, "getBanksByCountry").mockReturnValue(deutscheBank);
     expect(() => BBAN.random("DE")).toThrow(GenerateRandomOverflowError);
+  });
+  // The result is validated against the checksum method of the requested bank, so the
+  // check digit has to be solved for that method too.
+  describe.each([true, false])("with a pinned bank code and useRegistry %s", (useRegistry) => {
+    it.each([
+      ["10070000", "63"], // Deutsche Bank
+      ["10110600", "17"], // Quirin Privatbank
+      ["50010517", "C1"], // ING-DiBa
+      ["13051042", "C0"], // Sparkasse Vorpommern auf Rügen
+      ["50324000", "31"], // ABN AMRO Bank, Frankfurt Branch
+      ["35060386", "40"], // Volksbank Rhein-Ruhr
+      ["25020600", "41"], // Openbank Deutschland
+      ["66661454", "42"], // VR Bank im Enzkreis -alt-
+      ["66690000", "43"], // Volksbank Pforzheim -alt-
+      ["30060010", "44"], // DZ BANK
+      ["50310400", "46"], // Barclays Bank Ireland Frankfurt Branch
+      ["27290087", "47"], // Volksbank Weserbergland -alt-
+      ["20190109", "48"], // Volksbank Raiffeisenbank
+      ["40351060", "49"], // Kreissparkasse Steinfurt
+      ["20090700", "50"], // Edekabank
+      ["21352240", "A7"], // Sparkasse Holstein
+    ])("uses the checksum method of bank %s", (bankCode, checksumAlgo) => {
+      const methods = new Set(registry.getBanksByCode("DE", bankCode).map((bank) => bank.checksum_algo));
+      expect([...methods]).toStrictEqual([checksumAlgo]);
+      for (let attempt = 0; attempt < 50; attempt++) {
+        const bban = BBAN.random("DE", { useRegistry, values: { bank_code: bankCode } });
+        expect(bban.bankCode).toBe(bankCode);
+        expect(bban.validateNationalChecksum()).toBeTruthy();
+      }
+    });
+
+    // The check digit has to be solved for the bank the result is validated against, so
+    // random() has to look the bank up with the same key validation uses later.
+    it.each([
+      // Cut to the eight digits of the bank code field, so the result belongs to
+      // Deutsche Bank (method 63).
+      ["DE", { bank_code: "100700001" }, "10070000"],
+      // Slovenian banks are looked up by bank and branch code together.
+      ["SI", { bank_code: "01", branch_code: "000" }, "01000"],
+    ])("looks up the bank of %s like validation", (countryCode, values, lookupKey) => {
+      const lookup = vi.spyOn(registry, "getBanksByCode");
+      for (let attempt = 0; attempt < 20; attempt++) {
+        const bban = BBAN.random(countryCode, { useRegistry, values });
+        expect(bban.bank).not.toBeNull();
+        expect(bban.validateNationalChecksum()).toBeTruthy();
+      }
+      expect(new Set(lookup.mock.calls.map(([, bankCode]) => bankCode))).toStrictEqual(new Set([lookupKey]));
+    });
   });
 });

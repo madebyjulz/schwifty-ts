@@ -3,7 +3,15 @@ import type { Algorithm } from "./checksum/index.ts";
 import { getAlgorithm } from "./checksum/index.ts";
 import { Base, clean } from "./common.ts";
 import type { Bank, IBANSpec } from "./domain.ts";
-import { Component, componentEntries, componentRecord, hasPositions, Range } from "./domain.ts";
+import {
+  BankStatus,
+  compareLookupRank,
+  Component,
+  componentEntries,
+  componentRecord,
+  hasPositions,
+  Range,
+} from "./domain.ts";
 import * as exceptions from "./exceptions.ts";
 import * as registry from "./registry.ts";
 
@@ -22,6 +30,22 @@ function getBbanSpec(countryCode: string): IBANSpec {
   return registry.getIbanSpec(countryCode);
 }
 
+function _getBank(countryCode: string, bankCode: string): Bank | null {
+  const banks = registry.getBanksByCode(countryCode, bankCode);
+  // A national registry lists one record per branch, so a bank code can map to
+  // several entries. Prefer the record that ranks highest, i.e. an active one and the
+  // institution's own record among those, so that `bank` and `bic` describe the same
+  // institution, the way `BIC.candidatesFromBankCode` already does. Like Python's
+  // `max(banks, key=...)`, the first of equally ranked records wins.
+  let best: Bank | null = null;
+  for (const bank of banks) {
+    if (best === null || compareLookupRank(bank, best) > 0) {
+      best = bank;
+    }
+  }
+  return best;
+}
+
 function getNationalChecksumAlgorithm(countryCode: string, bank: Bank | null): Algorithm | undefined {
   const algoName = bank === null ? "default" : bank.checksum_algo;
   return getAlgorithm(`${countryCode}:${algoName}`);
@@ -32,7 +56,7 @@ function getBankValue(bank: Bank | null, component: Component): string | undefin
   return bank !== null && component === Component.BANK_CODE ? bank.bank_code : undefined;
 }
 
-function computeNationalChecksum(countryCode: string, components: Record<Component, string>): string {
+export function computeNationalChecksum(countryCode: string, components: Record<Component, string>): string {
   const algo = getAlgorithm(`${countryCode}:default`);
   if (!algo) {
     return "";
@@ -65,6 +89,12 @@ function emitWarning(warning: Error): void {
 
 function pickRandom<T>(items: T[]): T {
   return items[Math.floor(Math.random() * items.length)];
+}
+
+function _getRandomBank(countryCode: string): Bank | null {
+  // Random BBANs should look like current ones, so retired bank codes are never picked.
+  const banks = registry.getBanksByCountry(countryCode).filter((bank) => bank.status === BankStatus.ACTIVE);
+  return banks.length > 0 ? pickRandom(banks) : null;
 }
 
 /** Expand a character-class body such as `A-Z0-9` into every character it matches. */
@@ -216,6 +246,7 @@ export class BBAN extends Base {
     return new BBAN(countryCode, bban);
   }
 
+  // oxlint-disable-next-line complexity -- mirrors BBAN.random upstream step by step
   static random(
     countryCode = "",
     options?: {
@@ -229,8 +260,18 @@ export class BBAN extends Base {
     const country = countryCode || pickRandom(registry.getCountries());
     const spec = getBbanSpec(country);
 
-    const banks = registry.getBanksByCountry(country);
-    const bank: Bank | null = banks.length > 0 && useRegistry ? pickRandom(banks) : null;
+    let bank: Bank | null;
+    const lookupBy = spec.bic_lookup_components.length > 0 ? spec.bic_lookup_components : [Component.BANK_CODE];
+    if (hasPositions(spec) && lookupBy.every((component) => component in values)) {
+      // Resolve the bank the way validation does: from the pinned lookup components, cut
+      // to their length in the BBAN, so the check digit is solved for that bank's method.
+      const lookupKey = lookupBy
+        .map((component) => values[component].slice(0, spec.positions[component].length))
+        .join("");
+      bank = _getBank(country, lookupKey);
+    } else {
+      bank = useRegistry ? _getRandomBank(country) : null;
+    }
 
     if (!hasPositions(spec)) {
       return new BBAN(country, generateFromRegex(spec.regex.source));
@@ -362,6 +403,15 @@ export class BBAN extends Base {
     return getBbanSpec(this.countryCode);
   }
 
+  /**
+   * Whether the country's IBAN format is reserved but not yet in the official
+   * IBAN registry. Aspirational IBANs are syntactically valid, but may be
+   * rejected by banking systems.
+   */
+  get isAspirational(): boolean {
+    return this.spec.aspirational;
+  }
+
   get bic(): BIC | null {
     const key = this._bankLookupKey();
     try {
@@ -410,17 +460,7 @@ export class BBAN extends Base {
   }
 
   get bank(): Bank | null {
-    const banks = registry.getBanksByCode(this.countryCode, this._bankLookupKey());
-    if (banks.length === 0) {
-      return null;
-    }
-    // A national registry lists one record per branch, so a bank code can map to
-    // several entries. The registry flags the institution's own record with
-    // `primary`; prefer it so that `bank` and `bic` describe the same
-    // institution, the way `BIC.candidatesFromBankCode` already does. Like
-    // Python's `max(banks, key=...)`, the first primary entry wins and the
-    // first entry is the fallback.
-    return banks.find((bank) => bank.primary) ?? banks[0];
+    return _getBank(this.countryCode, this._bankLookupKey());
   }
 
   get bankName(): string | null {

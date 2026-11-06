@@ -7,10 +7,14 @@
  * parsing.
  */
 
+import type { BankStatus } from "./domain.ts";
+
 /**
  * One bank as stored in the generated `data/bank.ts`, as a positional tuple:
- * `[country_code, bank_code, bic, name, short_name, primary, checksum_algo]`.
- * `primary` is `1`/`0` and a trailing default `checksum_algo` is omitted.
+ * `[country_code, bank_code, bic, name, short_name, primary, checksum_algo,
+ * status, successor_bank_code, legacy_name, legacy_bic]`.
+ * `primary` is `1`/`0`. The fields from `checksum_algo` on are optional: `""`
+ * stands for the default, and trailing defaults are omitted.
  * Keep in sync with `BANK_ROW_FIELDS` in `scripts/consolidate-registry.ts`.
  */
 export type BankRow = [
@@ -21,9 +25,14 @@ export type BankRow = [
   shortName: string | null,
   primary: 0 | 1,
   checksumAlgo?: string,
+  status?: BankStatus | "",
+  successorBankCode?: string,
+  legacyName?: string,
+  legacyBic?: string,
 ];
 
 export interface RawIbanSpec {
+  aspirational?: boolean;
   bban_length: number;
   bban_spec: string;
   bic_lookup_components?: string[];

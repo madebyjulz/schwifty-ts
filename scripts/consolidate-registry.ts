@@ -155,7 +155,19 @@ function loadRegistry(name: string): JsonObject[] | JsonObject {
 const REGISTRIES = ["bank", "iban"];
 
 /** The positional layout of one bank row. Keep in sync with `BankRow` in `src/types.ts`. */
-const BANK_ROW_FIELDS = ["country_code", "bank_code", "bic", "name", "short_name", "primary", "checksum_algo"] as const;
+const BANK_ROW_FIELDS = [
+  "country_code",
+  "bank_code",
+  "bic",
+  "name",
+  "short_name",
+  "primary",
+  "checksum_algo",
+  "status",
+  "successor_bank_code",
+  "legacy_name",
+  "legacy_bic",
+] as const;
 
 /**
  * `asBankRow` keeps only `BANK_ROW_FIELDS`, so a field upstream adds would vanish
@@ -184,7 +196,7 @@ function asBankRow(entry: JsonObject): JsonValue[] {
       row.push(value);
     }
   }
-  // Trailing "" is the default `checksum_algo`; leave it out to save bytes.
+  // Trailing "" are the defaults of the optional fields; leave them out to save bytes.
   while (row.length > 0 && row.at(-1) === "") {
     row.pop();
   }

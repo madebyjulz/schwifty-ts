@@ -68,6 +68,8 @@ export function componentEntries<T>(record: Record<Component, T>): [Component, T
 
 /** The country specific IBAN/BBAN specification, as parsed from the registry. */
 export interface IBANSpec {
+  /** The format is only reserved and not yet part of the official IBAN registry. */
+  aspirational: boolean;
   bban_length: number;
   bban_spec: string;
   /** Components whose concatenation keys the bank lookup. Never empty. */
@@ -83,7 +85,35 @@ export interface IBANSpec {
   regex: RegExp;
 }
 
-/** A bank as listed in the registry. */
+/**
+ * The status of a bank code in the registry.
+ *
+ * - `ACTIVE`: the bank code is listed by the official source.
+ * - `MERGED`: the bank was taken over or the code was replaced, so the code
+ *   still leads to a successor.
+ * - `CLOSED`: the bank was closed and has no successor.
+ * - `DELISTED`: the bank code is no longer listed by the official source, which
+ *   doesn't say why.
+ */
+export const BankStatus = {
+  ACTIVE: "active",
+  MERGED: "merged",
+  CLOSED: "closed",
+  DELISTED: "delisted",
+} as const;
+
+export type BankStatus = (typeof BankStatus)[keyof typeof BankStatus];
+
+/**
+ * A bank record of the registry.
+ *
+ * A retired bank code is no longer listed by the national registry, but kept so
+ * that IBANs carrying it can still be identified. `status` tells what became of
+ * it. If the bank was merged, `successor_bank_code` names the bank code of its
+ * successor, where it is known, and `name` and `bic` describe the bank that
+ * services the code today, while `legacy_name` and `legacy_bic` hold the merged
+ * bank's own name and BIC.
+ */
 export interface Bank {
   bank_code: string;
   /** `null` for banks without a BIC, e.g. some Swiss institutes. */
@@ -91,9 +121,68 @@ export interface Bank {
   /** Selects the national checksum method, e.g. the German `"13"`. */
   checksum_algo: string;
   country_code: string;
+  legacy_bic: string | null;
+  legacy_name: string | null;
   name: string;
   primary: boolean;
   short_name: string | null;
+  status: BankStatus;
+  successor_bank_code: string | null;
+}
+
+const _STATUS_RANK: Record<BankStatus, number> = {
+  [BankStatus.ACTIVE]: 2,
+  // Merged codes still lead to a successor, so they rank above closed and delisted ones.
+  [BankStatus.MERGED]: 1,
+  [BankStatus.CLOSED]: 0,
+  [BankStatus.DELISTED]: 0,
+};
+
+const _INSTITUTION_BIC_LENGTH = 8;
+
+/** Return the canonical form of `bic`, see `BIC.canonical`. */
+export function canonicalBic(bic: string): string {
+  const branchCode = bic.slice(_INSTITUTION_BIC_LENGTH);
+  return branchCode === "" || branchCode === "XXX" ? bic.slice(0, _INSTITUTION_BIC_LENGTH) : bic;
+}
+
+/**
+ * Rank the records of a bank code for lookups, the best one being the highest.
+ *
+ * All lookups by bank code (`IBAN.bank`, `IBAN.bic`, `BIC.fromBankCode` and the
+ * order of `BIC.candidatesFromBankCode`) pick the highest ranked record, so that
+ * they always describe the same institution. Records are ranked by
+ *
+ * 1. their status, so that an active branch is preferred over a retired head office,
+ * 2. whether they have a BIC at all,
+ * 3. whether their BIC is the one of the institution's primary office, i.e. has
+ *    no branch code or the branch code "XXX", which ISO 9362 treats as identical,
+ * 4. `primary`, and
+ * 5. the canonical form of their BIC, as a stable tie-break.
+ */
+export function lookupRank(bank: Bank): [number, boolean, boolean, boolean, string] {
+  const bic = bank.bic ? canonicalBic(bank.bic) : "";
+  return [_STATUS_RANK[bank.status], Boolean(bic), bic.length === _INSTITUTION_BIC_LENGTH, bank.primary, bic];
+}
+
+/**
+ * Compare two records by `lookupRank`.
+ *
+ * Deviation: Python orders the tuples `lookup_rank` returns natively, while
+ * JavaScript needs the comparison spelled out.
+ */
+export function compareLookupRank(left: Bank, right: Bank): number {
+  const [leftStatus, leftHasBic, leftIsOffice, leftPrimary, leftBic] = lookupRank(left);
+  const [rightStatus, rightHasBic, rightIsOffice, rightPrimary, rightBic] = lookupRank(right);
+  const rank =
+    leftStatus - rightStatus ||
+    Number(leftHasBic) - Number(rightHasBic) ||
+    Number(leftIsOffice) - Number(rightIsOffice) ||
+    Number(leftPrimary) - Number(rightPrimary);
+  if (rank !== 0 || leftBic === rightBic) {
+    return rank;
+  }
+  return leftBic < rightBic ? -1 : 1;
 }
 
 /**

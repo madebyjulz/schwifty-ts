@@ -5,7 +5,17 @@ import { InvalidLength, InvalidStructure, InvalidCountryCode, InvalidBankCode } 
 import * as registry from "../src/registry.ts";
 
 function makeBank(fields: Pick<Bank, "bank_code" | "bic" | "name"> & Partial<Bank>): Bank {
-  return { checksum_algo: "", country_code: "DE", primary: false, short_name: null, ...fields };
+  return {
+    checksum_algo: "",
+    country_code: "DE",
+    legacy_bic: null,
+    legacy_name: null,
+    primary: false,
+    short_name: null,
+    status: "active",
+    successor_bank_code: null,
+    ...fields,
+  };
 }
 
 describe(BIC, () => {
@@ -100,7 +110,7 @@ describe(BIC, () => {
     expect(bic.countryCode).toBe("CY");
   });
 
-  it.each(["COBADEFF", "DEUTDEFF"])("falls back to the XXX entry for %s", (code) => {
+  it.each(["COBADEFF", "DEUTDEFF"])("treats %s and its XXX form as the same BIC", (code) => {
     const bic = new BIC(code);
     const xxxEntry = new BIC(`${code}XXX`);
     expect(xxxEntry.domesticBankCodes.length).toBeGreaterThan(0);
@@ -109,8 +119,39 @@ describe(BIC, () => {
     expect(bic.domesticBankCodes).toStrictEqual(xxxEntry.domesticBankCodes);
     expect(bic.bankNames).toStrictEqual(xxxEntry.bankNames);
     expect(bic.bankShortNames).toStrictEqual(xxxEntry.bankShortNames);
-    expect(bic.exists).toBeFalsy();
+    // ISO 9362 treats both forms as identical, so both exist.
+    expect(bic.exists).toBeTruthy();
     expect(xxxEntry.exists).toBeTruthy();
+  });
+
+  // Both are also listed in the Lithuanian registry under a Lithuanian bank code.
+  it.each([
+    ["REVOFRP2XXX", ["28233"]],
+    ["TRWIGB22XXX", ["TRWI"]],
+  ])("does not shadow the domestic bank codes of %s with a foreign registry", (code, bankCodes) => {
+    expect(new BIC(code).domesticBankCodes).toStrictEqual(bankCodes);
+    expect(new BIC(code.slice(0, 8)).domesticBankCodes).toStrictEqual(bankCodes);
+  });
+
+  // Kosovo has no ISO 3166-1 entry, but SWIFT issues its BICs with the code XK.
+  it.each(["RBKOXKPR", "RBKOXKPRXXX"])("accepts the Kosovo BIC %s", (value) => {
+    const bic = new BIC(value);
+    expect(bic.countryCode).toBe("XK");
+    expect(bic.country).toBeUndefined();
+    expect(bic.validate()).toBeTruthy();
+  });
+
+  it.each([
+    ["REVOGB21XXX", "REVOGB21"],
+    ["REVOGB21", "REVOGB21"],
+    ["DEUTDEDBHAM", "DEUTDEDBHAM"],
+  ])("returns the canonical form of %s", (value, canonical) => {
+    expect(new BIC(value).canonical.compact).toBe(canonical);
+  });
+
+  it("lists the bank records of a BIC", () => {
+    expect(new BIC("MARKDEF1100").banks.map((bank) => bank.bank_code)).toStrictEqual(["10000000"]);
+    expect(new BIC("REVOGB21XXX").banks).toStrictEqual(new BIC("REVOGB21").banks);
   });
 
   it("prefers an exact 8-character entry over the XXX fallback", () => {
@@ -186,33 +227,37 @@ describe(BIC, () => {
   const fromBankCodeCases: [string, string, string][] = [
     ["AT", "36274", "RZTIAT22274"],
     ["BE", "002", "GEBABEBB"],
-    ["CH", "00777", "KBSZCH22XXX"],
-    ["CH", "08390", "ABSOCH22XXX"],
+    ["CH", "00777", "KBSZCH22"],
+    ["CH", "08390", "ABSOCH22"],
     ["CZ", "0600", "AGBACZPP"],
     ["DE", "43060967", "GENODEM1GLS"],
     ["ES", "0209", "BSABESBB"],
     ["FI", "101", "NDEAFIHH"],
     ["FR", "30004", "BNPAFRPP"],
-    ["FR", "30066", "CMCIFRPPXXX"],
-    ["FR", "17469", "SOCBPFTXXXX"],
+    ["FR", "30066", "CMCIFRPP"],
+    ["FR", "17469", "SOCBPFTX"],
     ["FR", "10096", "CMCIFRPP"],
-    ["FR", "18719", "BFCORERXXXX"], // head office, not the Mayotte branch
+    ["FR", "18719", "BFCORERX"], // head office, not the Mayotte branch
     ["FR", "30077", "SMCTFR2A"],
     ["FR", "13489", "NORDFRPP"],
+    ["GE", "BG", "BAGAGE22"],
     ["HU", "107", "CIBHHUHB"],
     ["HR", "2485003", "CROAHR2X"],
     ["IT", "01015", "SARDIT31"],
     ["IT", "01030", "PASCITMM"],
-    ["LV", "RIKO", "RIKOLV2XXXX"],
+    ["LV", "RIKO", "RIKOLV2X"],
     ["MC", "30003", "SOGEMCM1"],
+    ["ME", "907", "CBCGMEPG"],
+    ["MT", "CFTE", "CFTEMTM1"],
     ["NL", "ADYB", "ADYBNL2A"],
-    ["PL", "10100055", "NBPLPLPWXXX"],
-    ["PL", "10900004", "WBKPPLPPXXX"],
-    ["RO", "BPOS", "BPOSROBU"],
+    ["PK", "UNIL", "UNILPKKA"],
+    ["PL", "10100055", "NBPLPLPW"],
+    ["PL", "10900004", "WBKPPLPP"],
+    ["RO", "BTRL", "BTRLRO22"],
     ["SE", "500", "ESSESESS"],
     ["SI", "01050", "BSLJSI2XFNB"],
-    ["SI", "02188", "LJBASI2XXXX"],
-    ["SI", "03100", "KBMASI2XXXX"], // retired SKB code, alias of OTP banka
+    ["SI", "02188", "LJBASI2X"],
+    ["SI", "03100", "KBMASI2X"], // retired SKB code, alias of OTP banka
     ["SK", "0900", "GIBASKBX"],
   ];
 
@@ -228,16 +273,13 @@ describe(BIC, () => {
     expect(BIC.fromBankCode("DE", "20070024").compact).toBe("DEUTDEDBHAM");
   });
 
-  // Bank code 18719 has two 'XXX' BICs; the registry marks the head office primary and the
+  // Bank code 18719 has two head office BICs; the registry marks the head office primary and the
   // Mayotte branch not. The primary must win over the alphabetical tie-break.
   it("prefers the registry primary among generic codes", () => {
-    expect(BIC.fromBankCode("FR", "18719").compact).toBe("BFCORERXXXX");
-    expect(BIC.candidatesFromBankCode("FR", "18719").map((b) => b.compact)).toStrictEqual([
-      "BFCORERXXXX",
-      "BFCOYTYTXXX",
-    ]);
+    expect(BIC.fromBankCode("FR", "18719").compact).toBe("BFCORERX");
+    expect(BIC.candidatesFromBankCode("FR", "18719").map((b) => b.compact)).toStrictEqual(["BFCORERX", "BFCOYTYT"]);
     // The primary record, not the secondary LAMPDEDDXXX.
-    expect(BIC.fromBankCode("DE", "48020151").compact).toBe("HAUKDEFFXXX");
+    expect(BIC.fromBankCode("DE", "48020151").compact).toBe("HAUKDEFF");
   });
 
   it("magic methods", () => {
