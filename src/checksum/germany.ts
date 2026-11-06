@@ -372,6 +372,18 @@ class Algorithm13 extends WeightedMod10 {
   override computeSummand(digit: number, weight: number): number {
     return digitSum(digit * weight);
   }
+
+  override validate(components: string[], expected: string): boolean {
+    const accountCode = validateAccountCode(components[0]);
+    if (super.validate(components, expected)) {
+      return true;
+    }
+    // The sub-account number "00" may be omitted, which moves the check digit to position 10.
+    if (accountCode.startsWith("00")) {
+      return super.validate([`${accountCode.slice(2)}00`], expected);
+    }
+    return false;
+  }
 }
 register("DE")(new Algorithm13());
 
@@ -634,6 +646,27 @@ class Algorithm28 extends WeightedMod11 {
 }
 register("DE")(new Algorithm28());
 
+// Algorithm 31
+class Algorithm31 extends WeightedMod11 {
+  override readonly name = "31";
+  override readonly minuend = null;
+  override readonly positions: Positions = {
+    start: 1,
+    end: 9,
+    checkDigit: 10,
+  };
+  override readonly weights = [9, 8, 7, 6, 5, 4, 3, 2, 1];
+
+  override reconcile(checksum: number): number {
+    // The remainder is the check digit, so there is none for a remainder of 10.
+    if (this._remainder === 10) {
+      throw new InvalidBBANChecksum(`Invalid remainder: ${this._remainder}`);
+    }
+    return checksum;
+  }
+}
+register("DE")(new Algorithm31());
+
 // Algorithm 32
 class Algorithm32 extends WeightedMod11 {
   override readonly name = "32";
@@ -681,6 +714,140 @@ class Algorithm38 extends WeightedMod11 {
   override readonly weights = [2, 4, 8, 5, 10, 9];
 }
 register("DE")(new Algorithm38());
+
+// Algorithm 40
+class Algorithm40 extends WeightedMod11 {
+  override readonly name = "40";
+  override readonly positions: Positions = {
+    start: 1,
+    end: 9,
+    checkDigit: 10,
+  };
+  override readonly weights = [2, 4, 8, 5, 10, 9, 7, 3, 6];
+}
+register("DE")(new Algorithm40());
+
+// Algorithm 41
+class Algorithm41 extends WeightedMod10 {
+  override readonly name = "41";
+  override readonly positions: Positions = {
+    start: 1,
+    end: 9,
+    checkDigit: 10,
+  };
+  override readonly weights = [2, 1];
+
+  override computeSummand(digit: number, weight: number): number {
+    return digitSum(super.computeSummand(digit, weight));
+  }
+
+  override getPositions(accountCode: string): Positions {
+    // Positions 1 to 3 are not part of the calculation if position 4 is a 9.
+    if (accountCode[3] === "9") {
+      return { start: 4, end: 9, checkDigit: 10 };
+    }
+    return super.getPositions(accountCode);
+  }
+}
+register("DE")(new Algorithm41());
+
+// Algorithm 42
+class Algorithm42 extends WeightedMod11 {
+  override readonly name = "42";
+  override readonly positions: Positions = {
+    start: 2,
+    end: 9,
+    checkDigit: 10,
+  };
+  override readonly weights = [2, 3, 4, 5, 6, 7, 8, 9];
+}
+register("DE")(new Algorithm42());
+
+// Algorithm 43
+class Algorithm43 extends WeightedMod10 {
+  override readonly name = "43";
+  override readonly positions: Positions = {
+    start: 1,
+    end: 9,
+    checkDigit: 10,
+  };
+  override readonly weights = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+}
+register("DE")(new Algorithm43());
+
+// Algorithm 44
+class Algorithm44 extends WeightedMod11 {
+  override readonly name = "44";
+  override readonly positions: Positions = {
+    start: 5,
+    end: 9,
+    checkDigit: 10,
+  };
+  override readonly weights = [2, 4, 8, 5, 10];
+}
+register("DE")(new Algorithm44());
+
+// Algorithm 46
+class Algorithm46 extends WeightedMod11 {
+  override readonly name = "46";
+  override readonly positions: Positions = {
+    start: 3,
+    end: 7,
+    checkDigit: 8,
+  };
+  override readonly weights = [2, 3, 4, 5, 6];
+}
+register("DE")(new Algorithm46());
+
+// Algorithm 47
+class Algorithm47 extends WeightedMod11 {
+  override readonly name = "47";
+  override readonly positions: Positions = {
+    start: 4,
+    end: 8,
+    checkDigit: 9,
+  };
+  override readonly weights = [2, 3, 4, 5, 6];
+}
+register("DE")(new Algorithm47());
+
+// Algorithm 48
+class Algorithm48 extends WeightedMod11 {
+  override readonly name = "48";
+  override readonly positions: Positions = {
+    start: 3,
+    end: 8,
+    checkDigit: 9,
+  };
+  override readonly weights = [2, 3, 4, 5, 6, 7];
+}
+register("DE")(new Algorithm48());
+
+// Algorithm 50
+class Algorithm50 extends WeightedMod11 {
+  override readonly name = "50";
+  override readonly positions: Positions = {
+    start: 1,
+    end: 6,
+    checkDigit: 7,
+  };
+  override readonly weights = [2, 3, 4, 5, 6, 7];
+
+  override validate(components: string[], expected: string): boolean {
+    const accountCode = validateAccountCode(components[0]);
+    if (super.validate(components, expected)) {
+      return true;
+    }
+    // The sub-account number "000" may be omitted and the account code padded with
+    // leading zeros instead. Shift the account code three positions to the left and
+    // check it again.
+    if (accountCode.startsWith("000")) {
+      return super.validate([`${accountCode.slice(3)}000`], expected);
+    }
+    return false;
+  }
+}
+register("DE")(new Algorithm50());
 
 // Algorithm 60
 class Algorithm60 extends WeightedMod10 {
@@ -838,12 +1005,36 @@ class Algorithm76 extends WeightedMod11 {
     return digits;
   }
 
+  override reconcile(checksum: number): number {
+    // The remainder is the check digit, so there is none for a remainder of 10.
+    if (this._remainder === 10) {
+      throw new InvalidBBANChecksum(`Invalid remainder: ${this._remainder}`);
+    }
+    return checksum;
+  }
+
   override validate(components: string[], expected: string): boolean {
     const accountCode = validateAccountCode(components[0]);
     if (!ALLOWED_LEADING_DIGITS_76.has(Number(accountCode[0]))) {
       return false;
     }
-    return super.validate(components, expected);
+    // A remainder of 10 only rules out a check digit at position 8, so the account
+    // code is still checked without the sub-account below.
+    try {
+      if (super.validate(components, expected)) {
+        return true;
+      }
+    } catch (error) {
+      if (!(error instanceof InvalidBBANChecksum)) {
+        throw error;
+      }
+    }
+    // The sub-account number "00" may be omitted and the account code padded with
+    // leading zeros instead, which moves the check digit to position 10.
+    if (accountCode.startsWith("00") && ALLOWED_LEADING_DIGITS_76.has(Number(accountCode[2]))) {
+      return super.validate([`${accountCode.slice(2)}00`], expected);
+    }
+    return false;
   }
 
   override solve(components: string[]): string[] | null {
@@ -1005,6 +1196,16 @@ abstract class FallbackVariants extends Algorithm {
   }
 }
 
+// Algorithm 49
+class Algorithm49 extends FallbackVariants {
+  override readonly name = "49";
+  override readonly variants: readonly [new () => WeightedModulus, new () => WeightedModulus] = [
+    Algorithm00,
+    Algorithm01,
+  ];
+}
+register("DE")(new Algorithm49());
+
 // Algorithm A2
 class AlgorithmA2 extends FallbackVariants {
   override readonly name = "A2";
@@ -1024,3 +1225,117 @@ class AlgorithmA3 extends FallbackVariants {
   ];
 }
 register("DE")(new AlgorithmA3());
+
+// Algorithm A7
+class AlgorithmA7 extends FallbackVariants {
+  override readonly name = "A7";
+  override readonly variants: readonly [new () => WeightedModulus, new () => WeightedModulus] = [
+    Algorithm00,
+    Algorithm03,
+  ];
+}
+register("DE")(new AlgorithmA7());
+
+/** Method 17 over positions 1 to 9, the variant of method C1 for account codes starting with 5. */
+class AlgorithmC1Variant2 extends Algorithm17 {
+  override readonly positions: Positions = {
+    start: 1,
+    end: 9,
+    checkDigit: 10,
+  };
+}
+
+/**
+ * Method 17, or a variant of it over positions 1-9 for account codes starting with 5.
+ *
+ * Unlike `FallbackVariants`, the leading digit selects the variant, so an account
+ * code rejected by that variant is invalid and the other one is not tried.
+ */
+class AlgorithmC1 extends Algorithm {
+  override readonly name = "C1";
+  override readonly accepts = [Component.ACCOUNT_CODE];
+
+  getVariant(accountCode: string): WeightedModulus {
+    if (validateAccountCode(accountCode).startsWith("5")) {
+      return new AlgorithmC1Variant2();
+    }
+    return new Algorithm17();
+  }
+
+  compute(components: string[]): string {
+    return this.getVariant(components[0]).compute(components);
+  }
+
+  override validate(components: string[], expected: string): boolean {
+    return this.getVariant(components[0]).validate(components, expected);
+  }
+
+  override solve(components: string[]): string[] | null {
+    return this.getVariant(components[0]).solve(components);
+  }
+}
+register("DE")(new AlgorithmC1());
+
+/**
+ * Method 52 for account codes with exactly two leading zeros, otherwise method 20.
+ *
+ * Method 52 checks the account number of the former ESER system, which is built from the
+ * bank code and the account code, so unlike the other German methods this one needs the
+ * bank code too. An account code rejected by method 52 is checked with method 20 as well.
+ */
+class AlgorithmC0 extends Algorithm {
+  override readonly name = "C0";
+  override readonly accepts = [Component.BANK_CODE, Component.ACCOUNT_CODE];
+  readonly eserWeights = [2, 4, 8, 5, 10, 9, 7, 3, 6, 1, 2, 4];
+
+  static hasTwoLeadingZeros(accountCode: string): boolean {
+    return accountCode.startsWith("00") && accountCode[2] !== "0";
+  }
+
+  /** Return the method 52 check digit, or an empty string if there is none. */
+  computeEser(bankCode: string, accountCode: string): string {
+    // Bank code XXX5XXXX and account code 00XPXXXXXX give the ESER account number
+    // XXXX-XP-XXXXXX, with the leading zeros of the last part dropped.
+    const tail = accountCode.slice(4).replace(ZERO_PLUS_START_REGEX, "");
+    const digits = [...`${bankCode.slice(4, 8)}${accountCode[2]}0${tail}`].toReversed();
+    let sum = 0;
+    for (const [index, weight] of this.eserWeights.entries()) {
+      sum += Number(digits[index] ?? 0) * weight;
+    }
+    const remainder = sum % 11;
+    const weight = this.eserWeights[tail.length];
+    for (const checkDigit of DIGITS) {
+      if ((remainder + Number(checkDigit) * weight) % 11 === 10) {
+        return checkDigit;
+      }
+    }
+    return "";
+  }
+
+  compute(components: string[]): string {
+    const [bankCode, accountCode] = components;
+    if (AlgorithmC0.hasTwoLeadingZeros(validateAccountCode(accountCode))) {
+      return this.computeEser(bankCode, accountCode);
+    }
+    return new Algorithm20().compute([accountCode]);
+  }
+
+  override validate(components: string[], expected: string): boolean {
+    const [bankCode, accountCode] = components;
+    if (
+      AlgorithmC0.hasTwoLeadingZeros(validateAccountCode(accountCode)) &&
+      this.computeEser(bankCode, accountCode) === accountCode[3]
+    ) {
+      return true;
+    }
+    return new Algorithm20().validate([accountCode], expected);
+  }
+
+  override solve(components: string[]): string[] | null {
+    // Method 20 applies to every account code and always yields a check digit.
+    const [bankCode, accountCode] = components;
+    const solved = new Algorithm20().solve([accountCode]);
+    return solved === null ? null : [bankCode, ...solved];
+  }
+}
+register("DE")(new AlgorithmC0());

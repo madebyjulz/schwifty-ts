@@ -121,6 +121,125 @@ describe("German checksum algorithms", () => {
     // account in [6000, 60000) is valid regardless of its check digit.
     ["0000006000", "DE:08"],
     ["0000059999", "DE:08"],
+    ["0123456600", "DE:13"],
+    ["0001234566", "DE:13"],
+    // Method 31 test account numbers. Positions 1 to 9 are weighted 1 to 9 from left to
+    // right and the remainder of the sum divided by 11 is the check digit at position 10.
+    ["1000000524", "DE:31"],
+    ["1000000583", "DE:31"],
+    // The example from the document: 0*1 + 2*2 + 6*3 + 3*4 + 1*5 + 6*6 + 0*7 + 1*8 + 6*9
+    // = 137, 137 % 11 = 5.
+    ["0263160165", "DE:31"],
+    // Remainder 1 is check digit 1, nothing is subtracted from 11 like in method 06.
+    ["1000000001", "DE:31"],
+    // 1*2 + 1*9 = 11, remainder 0 gives check digit 0.
+    ["0100000010", "DE:31"],
+    // Method 40 test account numbers. Positions 1 to 9 are weighted 6, 3, 7, 9, 10, 5, 8,
+    // 4, 2 and the check digit is at position 10.
+    ["0001258345", "DE:40"],
+    ["0003231963", "DE:40"],
+    // 1*6 + 2*3 + 3*7 + 4*9 + 5*10 + 6*5 + 7*8 + 8*4 + 9*2 = 255, 255 % 11 = 2, 11 - 2 = 9.
+    ["1234567899", "DE:40"],
+    // Method 41 test account numbers. They are computed like method 00.
+    ["4013410024", "DE:41"],
+    ["4016660195", "DE:41"],
+    ["0166805317", "DE:41"],
+    ["4019310079", "DE:41"],
+    ["4019340829", "DE:41"],
+    ["4019151002", "DE:41"],
+    // If position 4 is a 9, positions 1 to 3 are not part of the calculation. This is
+    // the example from the document: 9*1 + 1*2 + 1*1 = 12, 10 - 2 = 8.
+    ["4019110008", "DE:41"],
+    // Method 00 would expect check digit 1 here.
+    ["9999110008", "DE:41"],
+    // Method 42 test account numbers. Positions 2 to 9 are weighted 9, 8, 7, 6, 5, 4, 3,
+    // 2 and the check digit is at position 10.
+    ["0000059498", "DE:42"],
+    // 1*2 + 5*3 + 9*4 + 5*5 = 78, remainder 1 gives check digit 0 as in method 06.
+    ["0000059510", "DE:42"],
+    // 2*9 + 3*8 + 4*7 + 5*6 + 6*5 + 7*4 + 8*3 + 9*2 = 200, 200 % 11 = 2, 11 - 2 = 9.
+    ["1234567899", "DE:42"],
+    // Position 1 is not part of the calculation.
+    ["9000059498", "DE:42"],
+    // Method 43 test account numbers. Positions 1 to 9 are weighted 9, 8, 7, 6, 5, 4, 3,
+    // 2, 1 and the check digit is 10 minus the remainder of the sum divided by 10.
+    ["0006135244", "DE:43"],
+    ["9516893476", "DE:43"],
+    // 9*9 + 5*8 + 1*7 + 6*6 + 8*5 + 9*4 + 3*3 + 4*2 + 3*1 = 260, a difference of 10 gives
+    // check digit 0.
+    ["9516893430", "DE:43"],
+    // Method 44 test account numbers. Only positions 5 to 9 are weighted, with 10, 5, 8,
+    // 4, 2, and the check digit is at position 10.
+    ["0000889006", "DE:44"],
+    ["2618040504", "DE:44"],
+    // Positions 1 to 4 are not part of the calculation.
+    ["9999889006", "DE:44"],
+    // The Bundesbank document has no test account numbers for method 48. Positions
+    // 3 to 8 are weighted 7, 6, 5, 4, 3, 2 and the check digit is at position 9:
+    // 3*7 + 4*6 + 5*5 + 6*4 + 7*3 + 8*2 = 131, 131 % 11 = 10, 11 - 10 = 1.
+    ["1234567810", "DE:48"],
+    // Positions 1, 2 and 10 are not part of the calculation.
+    ["9934567817", "DE:48"],
+    // 2*5 + 5*4 + 4*3 + 1*2 = 44, remainder 0 gives check digit 0.
+    ["0000254100", "DE:48"],
+    // 9*7 + 9*6 + 9*5 + 9*4 + 9*3 + 9*2 = 243, remainder 1 gives check digit 0 too.
+    ["0099999900", "DE:48"],
+    // Method 46 test account numbers. Only positions 3 to 7 are weighted and the check
+    // digit is at position 8.
+    ["0235468612", "DE:46"],
+    ["0837890901", "DE:46"],
+    ["1041447600", "DE:46"],
+    // Positions 1, 2, 9 and 10 are not part of the calculation.
+    ["9935468699", "DE:46"],
+    // Method 47 test account numbers. Only positions 4 to 8 are weighted and the check
+    // digit is at position 9.
+    ["0001018000", "DE:47"],
+    ["1003554450", "DE:47"],
+    // Positions 1 to 3 and 10 are not part of the calculation.
+    ["9993554459", "DE:47"],
+    // The Bundesbank document has no test account numbers for method 49. It checks with
+    // method 00 first, so the method 00 test account numbers are valid, also those that
+    // method 01 rejects.
+    ["0009290701", "DE:49"],
+    ["0539290858", "DE:49"],
+    ["0001501824", "DE:49"],
+    // Method 00 expects check digit 7 here, but method 01 accepts it:
+    // 9*3 + 8*7 + 7*1 + 6*3 + 5*7 + 4*1 + 3*3 + 2*7 + 1*1 = 171, 10 - 1 = 9.
+    ["1234567899", "DE:49"],
+    // Method 50 test account numbers. The sub-account at positions 8 to 10 is not part
+    // of the calculation.
+    ["4000005001", "DE:50"],
+    ["4444442001", "DE:50"],
+    ["4000005999", "DE:50"],
+    // Without the sub-account "000" the account code is shifted three positions left.
+    ["0004000005", "DE:50"],
+    ["0004444442", "DE:50"],
+    ["0000123456", "DE:76"],
+    ["0012345600", "DE:76"],
+    // A remainder of 10 leaves no check digit at position 8, but the sub-account
+    // may still be omitted, with check digit 9 at position 10.
+    ["0000005009", "DE:76"],
+    // Method A7 test account numbers. Variant 1 is method 00, and the account codes it
+    // rejects are checked with method 03, which adds the products without their digit
+    // sums. For 0019010660, method 00 counts 6*2 = 12 as 1 + 2 and expects check digit 9,
+    // method 03 adds 12 and expects 0.
+    ["0019010008", "DE:A7"],
+    ["0019010438", "DE:A7"],
+    ["0019010660", "DE:A7"],
+    ["0019010876", "DE:A7"],
+    ["0209010892", "DE:A7"],
+    // Method C1, variant 1 (method 17) for account codes not starting with 5.
+    ["0446786040", "DE:C1"],
+    ["0478046940", "DE:C1"],
+    ["0701625830", "DE:C1"],
+    ["0701625840", "DE:C1"],
+    ["0882095630", "DE:C1"],
+    // Method C1, variant 2 for account codes starting with 5.
+    ["5432112349", "DE:C1"],
+    ["5543223456", "DE:C1"],
+    ["5654334563", "DE:C1"],
+    ["5765445670", "DE:C1"],
+    ["5876556788", "DE:C1"],
   ];
 
   it.each(successCases)("validates %s with algorithm %s", (accountCode, algoName) => {
@@ -171,6 +290,48 @@ describe("German checksum algorithms", () => {
     ["0800000000", "DE:95"],
     ["0909999999", "DE:95"],
     ["0990000001", "DE:95"],
+    ["0001234567", "DE:13"],
+    // Method 48 with a wrong check digit at position 9.
+    ["1234567890", "DE:48"],
+    ["0099999910", "DE:48"],
+    // Valid for method 06, but method 48 expects check digit 7 at position 9.
+    ["0094012341", "DE:48"],
+    // Method 31 with a wrong check digit.
+    ["1000000525", "DE:31"],
+    // Method 40 with a wrong check digit.
+    ["0001258346", "DE:40"],
+    // Method 41 with a wrong check digit.
+    ["4013410025", "DE:41"],
+    // Valid for method 00, but position 4 is a 9, so method 41 expects check digit 8.
+    ["9999110001", "DE:41"],
+    // Method 42 with a wrong check digit.
+    ["0000059499", "DE:42"],
+    // Method 43 with a wrong check digit.
+    ["9516893475", "DE:43"],
+    // Method 44 with a wrong check digit.
+    ["2618040505", "DE:44"],
+    // Valid for method 33, but method 44 expects check digit 6.
+    ["0000889008", "DE:44"],
+    // Method 46 with a wrong check digit at position 8.
+    ["0235468712", "DE:46"],
+    // Method 47 with a wrong check digit at position 9.
+    ["1003554460", "DE:47"],
+    // Neither method 00 (check digit 7) nor method 01 (check digit 9) accepts it.
+    ["1234567890", "DE:49"],
+    // Method 50 with a wrong check digit at position 7, with and without sub-account.
+    ["4000006001", "DE:50"],
+    ["0004000006", "DE:50"],
+    // Shifting only applies to three leading zeros, it would drop the 1 here.
+    ["0014444442", "DE:50"],
+    ["0000123457", "DE:76"],
+    // Method 76 test account numbers with a wrong check digit.
+    ["0006543300", "DE:76"],
+    ["9012345700", "DE:76"],
+    // A remainder of 10 leaves no check digit at position 8, so 0 is not accepted.
+    ["9012347000", "DE:76"],
+    ["0000005000", "DE:76"],
+    // Method A7 test account number that neither method 00 nor method 03 accepts.
+    ["0209010893", "DE:A7"],
   ];
 
   it.each(failureCases)("rejects %s with algorithm %s", (accountCode, algoName) => {
@@ -226,6 +387,22 @@ describe("German checksum helpers", () => {
     expect(() => algorithms["DE:02"].validate(["0000000060"], "")).toThrow(InvalidBBANChecksum);
   });
 
+  // 1*1 + 1*9 = 10, and a remainder of 10 makes the account code invalid whatever the
+  // check digit is.
+  it("rejects an invalid remainder with method 31", () => {
+    const algo = algorithms["DE:31"];
+    expect(() => algo.validate(["1000000010"], "")).toThrow("Invalid remainder");
+    expect(algo.solve(["1000000010"])).toBeNull();
+  });
+
+  // 1*6 + 2*5 + 3*4 + 4*3 + 7*2 = 54 leaves a remainder of 10 for the Stammnummer
+  // 012347, so there is no check digit for it, whether the sub-account is left out or not.
+  it("rejects an invalid remainder with method 76", () => {
+    const algo = algorithms["DE:76"];
+    expect(() => algo.validate(["0000123470"], "")).toThrow("Invalid remainder");
+    expect(algo.solve(["9012347000"])).toBeNull();
+  });
+
   it("skips small accounts with method 08", () => {
     expect(algorithms["DE:08"].compute(["0000001000"])).toBe("");
   });
@@ -249,10 +426,58 @@ describe("German checksum helpers", () => {
   });
 
   // Variant 1 (method 00) can always place a check digit, so it is used for both.
-  it.each(["DE:A2", "DE:A3"])("computes and solves the fallback variants of %s", (algorithmName) => {
+  it.each(["DE:49", "DE:A2", "DE:A3", "DE:A7"])("computes and solves the fallback variants of %s", (algorithmName) => {
     const algo = algorithms[algorithmName];
     expect(algo.compute(["3456789010"])).toBe("9");
     expect(algo.solve(["3456789010"])).toStrictEqual(["3456789019"]);
+  });
+
+  it.each([
+    ["DE:48", "1234567890", "1", "1234567810"],
+    ["DE:31", "0263160160", "5", "0263160165"],
+    ["DE:40", "0003231960", "3", "0003231963"],
+    ["DE:41", "4019110000", "8", "4019110008"],
+    ["DE:42", "0000059490", "8", "0000059498"],
+    ["DE:43", "9516893470", "6", "9516893476"],
+    ["DE:44", "2618040500", "4", "2618040504"],
+    ["DE:46", "0235468012", "6", "0235468612"],
+    ["DE:47", "1003554400", "5", "1003554450"],
+    ["DE:50", "4444440001", "2", "4444442001"],
+    ["DE:C1", "0446786940", "0", "0446786040"],
+    ["DE:C1", "5432112340", "9", "5432112349"],
+  ])("computes and solves with %s for %s", (algoName, accountCode, checkDigit, solved) => {
+    const algo = algorithms[algoName];
+    expect(algo.compute([accountCode])).toBe(checkDigit);
+    expect(algo.solve([accountCode])).toStrictEqual([solved]);
+  });
+
+  it.each([
+    // Variant 1 (method 52) builds the ESER account number from the bank code, and
+    // the Bundesbank examples for it are given with bank code 13051172.
+    ["13051172", "0043001500", true],
+    ["13051172", "0048726458", true],
+    ["13051172", "0029837521", false],
+    // This one fails variant 1 but passes variant 2 (method 20).
+    ["13051172", "0082335729", true],
+    // Variant 2 test account numbers.
+    ["13051172", "0734192657", true],
+    ["13051172", "6932875274", true],
+    ["13051172", "0132572975", false],
+    ["13051172", "3038752371", false],
+    // Variant 1 depends on the bank code, and these fail method 20.
+    ["13051042", "0043001500", false],
+    ["13051042", "0048726458", false],
+  ])("checks bank code %s and account code %s with method C0", (bankCode, accountCode, valid) => {
+    expect(algorithms["DE:C0"].validate([bankCode, accountCode], "")).toBe(valid);
+  });
+
+  it("computes and solves with method C0", () => {
+    const algo = algorithms["DE:C0"];
+    // The method 52 example: bank code 13051172 and account code 4P001500 give P = 3.
+    expect(algo.compute(["13051172", "0040001500"])).toBe("3");
+    expect(algo.compute(["13051172", "1234567890"])).toBe("6");
+    // The check digit is solved with method 20, which accepts every account code.
+    expect(algo.solve(["13051172", "1234567890"])).toStrictEqual(["13051172", "1234567896"]);
   });
 
   // Each variant can always place a check digit, so the "none of them worked"
