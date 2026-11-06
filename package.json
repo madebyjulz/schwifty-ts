@@ -53,7 +53,9 @@
     "check": "ultracite check",
     "fix": "ultracite fix",
     "sync:upstream": "node scripts/sync-upstream.ts",
+    "parity": "pnpm run build && node scripts/parity-upstream.ts",
     "git-publish": "git-publish",
+    "prepublishOnly": "pnpm run parity",
     "prepack": "pnpm run build"
   },
   "devDependencies": {
