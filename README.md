@@ -40,7 +40,7 @@ iban.countryCode; // "DE"
 iban.bankCode; // "37040044"
 iban.accountCode; // "0532013000"
 iban.bankName; // "Commerzbank"
-iban.bic?.compact; // "COBADEFFXXX"
+iban.bic?.compact; // "COBADEFF"
 iban.inSepaZone; // true
 
 // Also check the country specific national checksum.
@@ -59,7 +59,7 @@ bic.countryCode; // "DE"
 bic.domesticBankCodes; // ["10000000"]
 
 // Look up a BIC from a domestic bank code.
-BIC.fromBankCode("DE", "37040044").compact; // "COBADEFFXXX"
+BIC.fromBankCode("DE", "37040044").compact; // "COBADEFF"
 ```
 
 ### Errors
@@ -80,6 +80,23 @@ ibanSchema({ validateBban: true, unverifiedChecksum: "error" }); // same option 
 ```
 
 `"warn"` reports through `process.emitWarning` (Node.js, Bun, Deno) or `console.warn` (browsers). The default is `"ignore"`. This differs from upstream; see [Deviations from upstream](#deviations-from-upstream).
+
+### Retired bank codes
+
+Banks merge or close, but IBANs with their bank codes stay in circulation, so the registry keeps retired bank codes. `Bank.status` tells what became of them: `merged`, `closed`, or `delisted` if the source doesn't say why it no longer lists the code. The code of a merged bank resolves to the bank that services it today, and its own name and BIC are kept:
+
+```ts
+const iban = IBAN.generate("DE", "13061088", "1234567");
+iban.bank?.name; // "Volks- und Raiffeisenbank"
+iban.bank?.status; // "merged"
+iban.bank?.successor_bank_code; // "13061078"
+iban.bank?.legacy_name; // "Raiffeisenbank Wismar"
+iban.bank?.legacy_bic; // "GENODEF1HWR"
+iban.bic?.compact; // "GENODEF1HWI"
+new BIC("GENODEF1HWR").domesticBankCodes; // ["13061088"]
+```
+
+Closed and delisted banks are still returned, so that an IBAN can be identified. No payments can be made to them, so check `status` before you initiate one.
 
 ### Standard Schema
 

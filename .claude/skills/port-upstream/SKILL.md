@@ -113,7 +113,7 @@ pnpm parity
 ```
 
 `pnpm parity` also runs as `prepublishOnly`, so differences block the publish later anyway. It
-compares the built package with Python over about 95,000 generated IBANs, BICs and
+compares the built package with Python over about 150,000 generated IBANs, BICs and
 bank codes. `pnpm test` runs against `src`, so only parity sees what bundling does to `dist`; it has
 already caught a bundle with no checksum algorithms while all tests were green.
 

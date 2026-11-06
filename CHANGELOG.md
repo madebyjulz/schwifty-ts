@@ -2,6 +2,57 @@
 
 Releases use [CalVer](https://calver.org/) in semver form, `YYYY.M.Patch`, keyed to the month the TypeScript package is released. Each entry names the upstream [schwifty](https://github.com/mdomke/schwifty) revision it was ported from; for the full upstream changelog see the [schwifty changelog](https://github.com/mdomke/schwifty/blob/main/CHANGELOG.rst).
 
+## 2026.11.0 - 2026-11-06
+
+Ports upstream [`2026.10.1`](https://github.com/mdomke/schwifty/commit/272ce99) (2026-10-25) and [`2026.11.0`](https://github.com/mdomke/schwifty/commit/f536720) (2026-11-05).
+
+**Upgrade notes.** This release changes results that callers may depend on:
+
+- `validateBban: true` now really checks national checksums, and `IBAN.generate` and `IBAN.random` compute them. See the first entry under Fixed.
+- `IBAN.bic` and `BIC.fromBankCode` return the 8-character form of a primary office, e.g. `COBADEFF` instead of `COBADEFFXXX`. Compare BICs through `BIC.canonical`.
+- Bank codes that are no longer in use now resolve instead of returning `null`. Check `Bank.status` before initiating a payment.
+- `Bank.bic` is `string | null`.
+
+### Added
+
+- `BankStatus` and `Bank.status`: `active`, `merged`, `closed` or `delisted`. A merged bank code names its successor as `Bank.successor_bank_code` where it is known and takes on the name and BIC of the bank that services it today, while the merged bank's own name and BIC are kept as `Bank.legacy_name` and `Bank.legacy_bic`. The legacy BIC still resolves, e.g. `new BIC("GENODEF1HWR").domesticBankCodes`. Account codes of retired banks are validated with their own checksum method.
+- `BIC.canonical`: the canonical form of a BIC. ISO 9362 treats a BIC without branch code and the same BIC with the branch code `XXX` as identical, so `new BIC("REVOGB21XXX").canonical` is `REVOGB21`.
+- `BIC.banks`: the bank records of a BIC in the registry.
+- `IBAN.isAspirational` and `BBAN.isAspirational`: whether a country's IBAN format is only reserved and not yet part of the official IBAN registry.
+- German checksum methods `31`, `40`, `41`, `42`, `43`, `44`, `46`, `47`, `48`, `49`, `50`, `A7`, `C0` and `C1`. Account codes of the banks using them were not checked before.
+- `pnpm parity`: compares the build with the Python package over about 150,000 generated IBANs, BICs and bank codes. It runs before every publish.
+- `/port-upstream`: a Claude Code skill for the porting workflow.
+
+### Changed
+
+- All lookups by bank code rank the records by status, then by how generic their BIC is, then by `primary`, so `IBAN.bank`, `IBAN.bic` and `BIC.fromBankCode` always describe the same institution. An active branch now wins over a retired head office. This changes `IBAN.bank` for about 130 bank codes and the order of `BIC.candidatesFromBankCode`, whose first candidate is now the BIC that `BIC.fromBankCode` returns. Equivalent forms of a BIC are listed once. The UK bank code `REVO` now resolves to Revolut Bank UK instead of Revolut Ltd.
+- The BIC of an institution's primary office is always returned in its 8-character form. `BIC.exists` is `true` for both forms, and `getBanksByBic` finds the same banks for both.
+- BIC lookups only search the registry of the BIC's own country. Foreign-based banks listed in another country's registry, such as Commerzbank (`COBADEFF`) with its Swiss bank codes, are no longer returned for their BIC. This also fixes `new BIC("REVOFRP2XXX").domesticBankCodes` returning the Lithuanian `32501` instead of the French `28233`.
+- `BBAN.random` and `IBAN.random` never pick a retired bank code. With a pinned bank code they solve the national check digit for the checksum method of that bank, also with `useRegistry: false`, instead of the method of a randomly picked bank.
+- `getAllBanks()` returns the banks grouped by country.
+- Registries: bank codes that are no longer listed are kept in the registries of most countries, so existing IBANs still resolve, and marked as `delisted`, `merged` or `closed`. The registries of the UK, Georgia, Estonia, Italy, Romania, Sweden, Slovakia and Croatia are generated from current official sources, and many other countries are updated. The [upstream changelog](https://github.com/mdomke/schwifty/blob/main/CHANGELOG.rst) has the details per country.
+- IBAN registry: updated from the latest SWIFT release. Honduras and Yemen are part of the official registry, Iceland is in the SEPA zone, and the BBAN structure of Brazil is more liberal.
+- The bundle grows from 3.6 MB to 4.2 MB (380 KB gzipped) with the registry data.
+- `pnpm sync:upstream` only records the upstream revision with `--record`, once a port is done. Its summary leaves out registry data and includes upstream's decision records. `scripts/consolidate-registry.ts` fails on registry fields the bundle does not cover instead of dropping them.
+
+### Fixed
+
+- **The published package registered no national checksum algorithms** (`2026.9.0-rc1` and `2026.10.0`). `sideEffects` in `package.json` named only the bundle, so the bundler dropped the imports that register them. `validateBban: true` accepted every national checksum, and `IBAN.generate` wrote wrong check digits for countries that compute them, e.g. `00` for Belgium, France and Spain. The tests ran against the source and did not notice; `pnpm parity` tests the build.
+- German method `24` accepts the account code `0000000000`, like upstream.
+- `Bank.bic` is `null` for banks without a BIC, like upstream, instead of an empty string.
+- BICs of banks in Kosovo (e.g. `RBKOXKPR`) no longer throw `InvalidCountryCode`.
+- Kosovo (`XK`) national check digits are validated with ISO 7064 mod 97-10. `IBAN.accountCode` is now the 10-digit client number, and the check digits are available as `IBAN.nationalChecksumDigits`. `IBAN.generate` computes them.
+- German method `76` no longer accepts a check digit of 0 for a remainder of 10, and accepts account codes whose sub-account `00` was left out and padded with leading zeros instead.
+- German method `13` accepts account codes whose sub-account `00` was left out and padded with leading zeros instead.
+
+### Deviations from upstream
+
+- Per-country registry: upstream reads a country's registry files on first use. The registry is bundled here, so `_bankRows` groups the rows by country in place of `_bank_files`. Parsing and indexing still happen per country in `_getCountryBanks`, and the upstream memory savings do not apply.
+- `lookup_rank` returns a tuple that Python orders natively. `compareLookupRank` spells out that comparison.
+- `BankStatus` is a const object, like `Component`.
+- `registry.parseBank` does not reject an unknown status, since the rows are generated. `pnpm parity` compares every record.
+- Not applicable: `__slots__` and dict-style `Bank` access, the pydantic pattern fix (`bicSchema()` has no pattern), the seeded `random` output (the port has no `random` parameter) and the registry scripts.
+
 ## 2026.10.0 - 2026-10-19
 
 Ports upstream [`2026.10.0`](https://github.com/mdomke/schwifty/commit/810930b) (2026-10-19). The registry additions, the 11-character BIC fallback and the internal simplifications of that release were already ported in `2026.9.0-rc1`.
