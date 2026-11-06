@@ -583,9 +583,7 @@ class Algorithm24 extends WeightedMod10 {
     } else if (firstDigit === 9) {
       digits = digits.slice(3);
     }
-    // lstrip "0"
-    digits = digits.replace(ZERO_PLUS_START_REGEX, "") || "0";
-    return digits;
+    return digits.replace(ZERO_PLUS_START_REGEX, "");
   }
 
   override computeSummand(digit: number, weight: number): number {

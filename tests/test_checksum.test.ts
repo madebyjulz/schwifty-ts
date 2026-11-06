@@ -14,6 +14,8 @@ describe("German checksum algorithms", () => {
   const successCases: [string, string][] = [
     // Method 02: remainder 0 reconciles to check digit 0.
     ["0000000000", "DE:02"],
+    // Method 24 strips leading zeros, which leaves nothing to weigh.
+    ["0000000000", "DE:24"],
     ["0009290701", "DE:00"],
     ["0539290858", "DE:00"],
     ["0001501824", "DE:00"],
