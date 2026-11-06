@@ -157,6 +157,21 @@ const REGISTRIES = ["bank", "iban"];
 /** The positional layout of one bank row. Keep in sync with `BankRow` in `src/types.ts`. */
 const BANK_ROW_FIELDS = ["country_code", "bank_code", "bic", "name", "short_name", "primary", "checksum_algo"] as const;
 
+/**
+ * `asBankRow` keeps only `BANK_ROW_FIELDS`, so a field upstream adds would vanish
+ * from the bundle without any test or staleness check noticing. Fail instead.
+ */
+function assertKnownBankFields(entries: JsonObject[]): void {
+  const known = new Set<string>(BANK_ROW_FIELDS);
+  const unknown = new Set(entries.flatMap((entry) => Object.keys(entry)).filter((field) => !known.has(field)));
+  if (unknown.size > 0) {
+    throw new Error(
+      `The bank registry has fields that BANK_ROW_FIELDS does not cover: ${[...unknown].join(", ")}. ` +
+        "Add them to BANK_ROW_FIELDS and `BankRow` in src/types.ts.",
+    );
+  }
+}
+
 function asBankRow(entry: JsonObject): JsonValue[] {
   const row: JsonValue[] = [];
   for (const field of BANK_ROW_FIELDS) {
@@ -218,6 +233,7 @@ if (sourceIsAvailable()) {
       if (!isJsonObjectArray(data)) {
         throw new TypeError("The bank registry must be a list of objects");
       }
+      assertKnownBankFields(data);
       writeFileSync(outPath, renderBankModule(data.map(asBankRow)));
     } else {
       writeFileSync(outPath, JSON.stringify(data));
