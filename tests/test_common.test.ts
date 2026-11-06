@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { BIC } from "../src/bic.ts";
 import { clean, toAscii } from "../src/common.ts";
 import { InvalidStructure } from "../src/exceptions.ts";
 import { IBAN } from "../src/iban.ts";
@@ -28,5 +29,40 @@ describe("ASCII sanitisation", () => {
 
   it("rejects non-ASCII even when validation is skipped", () => {
     expect(() => new IBAN(`DE8937040044053201300${GRINNING_FACE}`, { allowInvalid: true })).toThrow(InvalidStructure);
+  });
+});
+
+describe(clean, () => {
+  it.each([
+    ["DE89 3704", "DE893704"],
+    ["a b\tc\nd", "ABCD"],
+    ["  x  ", "X"],
+    ["", ""],
+    ["already", "ALREADY"],
+    // Non-breaking spaces count as whitespace, too.
+    ["a\u00A0b", "AB"],
+  ])("cleans '%s'", (raw, expected) => {
+    expect(clean(raw)).toBe(expected);
+  });
+});
+
+describe("Base", () => {
+  it("compares equal values", () => {
+    const bic = new BIC("GENODEM1GLS");
+    expect(bic.equals("GENODEM1GLS")).toBeTruthy();
+    expect(bic.equals(new BIC("GENODEM1GLS"))).toBeTruthy();
+    expect(bic.equals(new BIC("MARKDEF1100"))).toBeFalsy();
+    expect(bic.equals("MARKDEF1100")).toBeFalsy();
+  });
+
+  it("orders values", () => {
+    expect(new BIC("AAAADE00").lessThan(new BIC("GENODEM1GLS"))).toBeTruthy();
+    expect(new BIC("GENODEM1GLS").lessThan(new BIC("AAAADE00"))).toBeFalsy();
+  });
+
+  it("exposes the compact form and length", () => {
+    const bic = new BIC("GENODEM1GLS");
+    expect(bic.compact).toBe("GENODEM1GLS");
+    expect(bic).toHaveLength(11);
   });
 });
