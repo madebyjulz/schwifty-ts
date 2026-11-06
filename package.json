@@ -29,7 +29,8 @@
   ],
   "type": "module",
   "sideEffects": [
-    "./dist/index.mjs"
+    "./dist/index.mjs",
+    "./src/checksum/*.ts"
   ],
   "main": "./dist/index.mjs",
   "types": "./dist/index.d.mts",
