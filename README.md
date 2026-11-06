@@ -179,7 +179,7 @@ git submodule update --init
 pnpm install
 pnpm test        # vitest
 pnpm check       # oxlint + oxfmt via ultracite
-pnpm typecheck   # tsc
+pnpm typecheck   # tsrs
 pnpm build       # tsdown, regenerates src/data first when the submodule is present
 ```
 

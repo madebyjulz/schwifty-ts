@@ -18,7 +18,7 @@ const _nonAsciiRegex = /[^ -~]/u;
  * spreading a value into code points (`[...value]`) a safe per-character split.
  */
 export function toAscii(value: string): string {
-  const folded = value.normalize("NFKD").replace(_combiningMarkRegex, "");
+  const folded = value.normalize("NFKD").replaceAll(_combiningMarkRegex, "");
   const offender = _nonAsciiRegex.exec(folded);
   if (offender) {
     throw new InvalidStructure(`Invalid non-ASCII character '${offender[0]}' in '${value}'`);
@@ -27,7 +27,7 @@ export function toAscii(value: string): string {
 }
 
 export function clean(s: string): string {
-  return toAscii(s.replace(_whitespaceRegex, "")).toUpperCase();
+  return toAscii(s.replaceAll(_whitespaceRegex, "")).toUpperCase();
 }
 
 export class Base {

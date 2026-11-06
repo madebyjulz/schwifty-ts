@@ -18,10 +18,13 @@ const _specToRe: Record<string, string> = {
 /** Translate a SWIFT BBAN specification such as `8!n10!n` into a regex source. */
 export function convertBbanSpecToRegex(spec: string): string {
   const specRe = new RegExp(`(\\d+)(!)?([${Object.keys(_specToRe).join("")}])`, "gu");
-  const converted = spec.replace(specRe, (_match: string, count: string, fixed: string | undefined, type: string) => {
-    const quantifier = fixed ? `{${count}}` : `{1,${count}}`;
-    return _specToRe[type] + quantifier;
-  });
+  const converted = spec.replaceAll(
+    specRe,
+    (_match: string, count: string, fixed: string | undefined, type: string) => {
+      const quantifier = fixed ? `{${count}}` : `{1,${count}}`;
+      return _specToRe[type] + quantifier;
+    },
+  );
   return `^${converted}$`;
 }
 
