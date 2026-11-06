@@ -49,6 +49,7 @@ IBAN_ATTRIBUTES = [
     "account_holder_id",
     "currency_code",
     "in_sepa_zone",
+    "is_aspirational",
     "bic",
     "bank_name",
     "bank_short_name",
@@ -63,6 +64,7 @@ BIC_ATTRIBUTES = [
     "location_code",
     "branch_code",
     "type",
+    "canonical",
     "exists",
     "domestic_bank_codes",
     "bank_names",
@@ -76,6 +78,10 @@ BANK_ATTRIBUTES = [
     "short_name",
     "primary",
     "checksum_algo",
+    "status",
+    "successor_bank_code",
+    "legacy_name",
+    "legacy_bic",
 ]
 
 
@@ -189,8 +195,28 @@ def bic_case(value: str) -> dict[str, Any]:
     }
 
 
+def candidates(country_code: str, bank_code: str) -> Any:
+    try:
+        return normalize(BIC.candidates_from_bank_code(country_code, bank_code))
+    except Exception as exception:  # noqa: BLE001 - the exception is the result
+        return error(exception)
+
+
+def banks_by_bic_case(value: str) -> dict[str, Any]:
+    return {
+        "kind": "banks_by_bic",
+        "input": value,
+        "expected": [attributes(bank, BANK_ATTRIBUTES) for bank in registry.get_banks_by_bic(value)],
+    }
+
+
 def bank_code_cases(country_code: str, bank_code: str) -> Iterator[dict[str, Any]]:
     arguments = [country_code, bank_code]
+    yield {
+        "kind": "candidates",
+        "input": arguments,
+        "expected": candidates(country_code, bank_code),
+    }
     yield {
         "kind": "from_bank_code",
         "input": arguments,
@@ -222,8 +248,9 @@ def build_cases() -> Iterator[dict[str, Any]]:
     for country_code, bank_code in sorted({(bank.country_code, bank.bank_code) for bank in banks}):
         yield from bank_code_cases(country_code, bank_code)
 
-    for value in sorted({bank.bic for bank in banks if bank.bic}):
+    for value in sorted({bic for bank in banks for bic in (bank.bic, bank.legacy_bic) if bic}):
         yield bic_case(value)
+        yield banks_by_bic_case(value)
         yield bic_case(value[:8])
         yield bic_case(f"{value[:8]}XXX")
         yield bic_case(f"{value[:4]}ZZ{value[6:]}")

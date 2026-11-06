@@ -130,11 +130,13 @@ function replay(schwifty: Schwifty, { expected, input, kind }: ParityCase): unkn
   const arguments_ = [input].flat();
   const [first = "", second = "", third = "", fourth = ""] = arguments_;
 
-  if (kind === "banks_by_code") {
+  if (kind === "banks_by_code" || kind === "banks_by_bic") {
     const records = Array.isArray(expected) ? expected : [];
-    return schwifty
-      .getBanksByCode(first, second)
-      .map((bank) => readAttributes(bank, attributeNames(records[0]), (name) => name));
+    const banks = kind === "banks_by_code" ? schwifty.getBanksByCode(first, second) : schwifty.getBanksByBic(first);
+    return banks.map((bank) => readAttributes(bank, attributeNames(records[0]), (name) => name));
+  }
+  if (kind === "candidates") {
+    return schwifty.BIC.candidatesFromBankCode(first, second).map((bic) => bic.compact);
   }
   if (kind === "from_bank_code") {
     return evaluate(() => schwifty.BIC.fromBankCode(first, second), expected);
