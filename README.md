@@ -113,9 +113,15 @@ The Python source is vendored as the `schwifty-py` git submodule and is the sour
 ```bash
 pnpm sync:upstream            # latest upstream tag
 pnpm sync:upstream main       # tip of upstream main
+pnpm parity                   # compare the build with the Python package
+pnpm sync:upstream --record   # after porting: record the new revision
 ```
 
-The script fetches upstream, checks out the requested revision, prints the commits and source diff since the last ported revision, regenerates `src/data` and records the new revision in `package.json`. Porting the printed diff to `src/` and adding a changelog entry remains a manual step. A weekly GitHub Actions workflow opens an issue when upstream publishes a release that has not been ported yet.
+`pnpm sync:upstream` fetches upstream, checks out the requested revision, prints the commits and source diff since the last recorded revision (without registry data) and regenerates `src/data`. Regenerating fails when the registry gained a field the bundle does not cover yet. The recorded revision only moves with `--record`, so a rerun prints the same diff until the port is finished.
+
+`pnpm parity` runs a generated corpus of IBANs, BICs and bank codes through both packages and reports every difference. It tests the build, not the source, and needs [uv](https://docs.astral.sh/uv/) and the submodule at the ported revision. It also runs before every publish (`prepublishOnly`), so a release with differences cannot go out.
+
+In Claude Code, `/port-upstream` runs this whole workflow. A weekly GitHub Actions workflow opens an issue when upstream publishes a release that has not been ported yet.
 
 To keep the port reviewable, files, classes and helpers mirror their Python counterparts one-to-one, including internal names (`_bank_lookup_key` becomes `_bankLookupKey`). Deviations that JavaScript demands are commented at the point of deviation and listed in the changelog.
 

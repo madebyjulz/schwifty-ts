@@ -43,10 +43,6 @@ jobs:
           gh issue create --title "$title" --body "$(cat <<EOT
           Upstream released [\`$LATEST\`](https://github.com/mdomke/schwifty/releases/tag/$LATEST); this package is at \`$PORTED\`.
 
-          \`\`\`
-          node scripts/sync-upstream.ts
-          \`\`\`
-
-          then port the printed diff and add a changelog entry.
+          Run \`/port-upstream\` in Claude Code, or follow "Porting upstream changes" in the README.
           EOT
           )"
