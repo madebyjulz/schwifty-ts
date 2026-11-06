@@ -3,7 +3,7 @@ import { defineConfig } from "tsdown";
 export default defineConfig({
   entry: ["src/index.ts"],
   hash: false,
-  dts: true,
+  dts: { generator: "tsrs" },
   tsconfig: "tsconfig.build.json",
   format: "esm",
   sourcemap: true,
