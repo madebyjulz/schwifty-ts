@@ -33,7 +33,7 @@ export class BIC extends Base {
       throw new exceptions.InvalidBankCode(`Unknown bank code '${bankCode}' for country '${countryCode}'`);
     }
     const sortedBanks = banks.toSorted((a, b) => Number(b.primary) - Number(a.primary));
-    return sortedBanks.filter((entry) => entry.bic).map((entry) => new BIC(entry.bic));
+    return sortedBanks.flatMap((entry) => (entry.bic ? [new BIC(entry.bic)] : []));
   }
 
   static fromBankCode(countryCode: string, bankCode: string): BIC {

@@ -86,7 +86,8 @@ export interface IBANSpec {
 /** A bank as listed in the registry. */
 export interface Bank {
   bank_code: string;
-  bic: string;
+  /** `null` for banks without a BIC, e.g. some Swiss institutes. */
+  bic: string | null;
   /** Selects the national checksum method, e.g. the German `"13"`. */
   checksum_algo: string;
   country_code: string;

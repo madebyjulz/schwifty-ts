@@ -164,7 +164,7 @@ function asBankRow(entry: JsonObject): JsonValue[] {
     if (field === "primary") {
       row.push(value === true ? 1 : 0);
     } else if (value === undefined || value === null) {
-      row.push(field === "short_name" ? null : "");
+      row.push(field === "short_name" || field === "bic" ? null : "");
     } else {
       row.push(value);
     }

@@ -154,7 +154,7 @@ export function getBanksByCode(countryCode: string, bankCode: string): Bank[] {
 }
 
 export function getBanksByBic(bic: string): Bank[] {
-  _byBic ??= buildIndex((bank) => bank.bic);
+  _byBic ??= buildIndex((bank) => bank.bic ?? "");
   return _byBic.get(bic) ?? [];
 }
 

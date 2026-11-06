@@ -8,10 +8,14 @@ describe("bank and IBAN registry", () => {
   it("holds only valid BICs", () => {
     const invalid = registry
       .getAllBanks()
-      .filter((bank) => bank.bic)
-      .filter((bank) => !new BIC(bank.bic, { allowInvalid: true }).isValid)
-      .map((bank) => bank.bic);
+      .flatMap((bank) => (bank.bic ? [bank.bic] : []))
+      .filter((bic) => !new BIC(bic, { allowInvalid: true }).isValid);
     expect(invalid).toStrictEqual([]);
+  });
+
+  it("reports a missing BIC as null", () => {
+    const [bank] = registry.getBanksByCode("CH", "08351");
+    expect(bank?.bic).toBeNull();
   });
 
   it("preserves non-ASCII bank names", () => {

@@ -16,7 +16,7 @@
 export type BankRow = [
   countryCode: string,
   bankCode: string,
-  bic: string,
+  bic: string | null,
   name: string,
   shortName: string | null,
   primary: 0 | 1,

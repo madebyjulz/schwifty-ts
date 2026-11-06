@@ -10,7 +10,7 @@ describe("bank registry encoding", () => {
     for (const bank of banks) {
       expect(bank.country_code).toBeTypeOf("string");
       expect(bank.bank_code).toBeTypeOf("string");
-      expect(bank.bic).toBeTypeOf("string");
+      expect(bank.bic === null || typeof bank.bic === "string").toBeTruthy();
       expect(bank.name).toBeTypeOf("string");
       expect(bank.short_name === null || typeof bank.short_name === "string").toBeTruthy();
       expect(bank.primary).toBeTypeOf("boolean");
