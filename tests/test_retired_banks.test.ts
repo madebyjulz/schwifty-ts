@@ -74,6 +74,18 @@ describe("retired banks", () => {
     expect(IBAN.generate("DE", "13061088", "1234567").bic?.compact).toBe("GENODEF1HWI");
   });
 
+  it.each([
+    ["EQBKCZPP", "6100", "RZBCCZPP"], // Equa bank, merged into Raiffeisenbank
+    ["ABANSI2X", "05100", "KBMASI2X"], // Abanka, merged into OTP banka
+    ["SKBASI2X", "03100", "KBMASI2X"], // SKB banka, merged into OTP banka
+  ])("resolves the legacy BIC %s to its merged bank code %s", (legacyBic, bankCode, bic) => {
+    expect(new BIC(legacyBic).exists).toBeTruthy();
+    expect(new BIC(legacyBic).domesticBankCodes).toContain(bankCode);
+    const { bank } = new BIC(legacyBic);
+    expect(bank?.legacy_bic).toBe(legacyBic);
+    expect(bank?.bic).toBe(bic);
+  });
+
   // Account codes issued under the retired bank code of Volksbank Wismar were computed with
   // its own method (06), not the one of its successor (32).
   it("keeps the checksum method of a merged bank code", () => {

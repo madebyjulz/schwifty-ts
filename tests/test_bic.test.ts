@@ -1,6 +1,7 @@
 import { afterEach, describe, it, expect, vi } from "vitest";
 import { BIC } from "../src/bic.ts";
 import type { Bank } from "../src/domain.ts";
+import { BankStatus } from "../src/domain.ts";
 import { InvalidLength, InvalidStructure, InvalidCountryCode, InvalidBankCode } from "../src/exceptions.ts";
 import * as registry from "../src/registry.ts";
 
@@ -51,7 +52,8 @@ describe(BIC, () => {
     expect(bic.branchCode).toBe("GLS");
     expect(bic.domesticBankCodes).toStrictEqual(["43060967", "43060988"]);
     expect(bic.bankNames).toStrictEqual(["GLS Gemeinschaftsbank", "GLS Gemeinschaftsbank (GAA)"]);
-    expect(bic.bankShortNames).toStrictEqual(["GLS Bank in Bochum (GAA)", "GLS Gemeinschaftsbk Bochum"]);
+    // The short names follow the records, which rank equally and are ordered by name.
+    expect(bic.bankShortNames).toStrictEqual(["GLS Gemeinschaftsbk Bochum", "GLS Bank in Bochum (GAA)"]);
     expect(bic.country).toBeDefined();
     expect(bic.exists).toBeTruthy();
     expect(bic.type).toBe("passive");
@@ -122,6 +124,52 @@ describe(BIC, () => {
     // ISO 9362 treats both forms as identical, so both exist.
     expect(bic.exists).toBeTruthy();
     expect(xxxEntry.exists).toBeTruthy();
+  });
+
+  it("ranks the banks of a BIC", () => {
+    const banks = [
+      makeBank({
+        bic: "TESTDEFF",
+        bank_code: "10000001",
+        name: "Absorbed bank",
+        status: BankStatus.MERGED,
+        primary: true,
+      }),
+      makeBank({
+        bic: "TESTDEFF",
+        bank_code: "10000002",
+        name: "Closed bank",
+        status: BankStatus.CLOSED,
+        primary: true,
+      }),
+      makeBank({ bic: "TESTDEFF", bank_code: "10000003", name: "Bank branch" }),
+      makeBank({ bic: "TESTDEFF", bank_code: "10000004", name: "Bank", primary: true }),
+      makeBank({ bic: "TESTDEFF", bank_code: "10000000", name: "Another bank", primary: true }),
+    ];
+    vi.spyOn(registry, "getBanksByBic").mockImplementation((code) => (code === "TESTDEFF" ? banks : []));
+    const bic = new BIC("TESTDEFF");
+    // Active before merged before closed, primary before non-primary, then by name.
+    expect(bic.domesticBankCodes).toStrictEqual(["10000000", "10000004", "10000003", "10000001", "10000002"]);
+    expect(bic.bankNames[0]).toBe("Another bank");
+    expect(bic.bank).toStrictEqual(bic.banks[0]);
+    expect(bic.bank?.bank_code).toBe("10000000");
+  });
+
+  it("returns the bank of a BIC with banks that merged into it", () => {
+    // Banco de Sabadell absorbed the banks whose codes share its BIC (#113).
+    const bic = new BIC("BSABESBB");
+    expect(bic.bank?.name).toBe("BANCO DE SABADELL, S.A.");
+    expect(bic.bankNames[0]).toBe("BANCO DE SABADELL, S.A.");
+    expect(bic.domesticBankCodes[0]).toBe("0081");
+    expect(bic.banks.slice(2).every((bank) => bank.status === BankStatus.MERGED)).toBeTruthy();
+  });
+
+  it("returns the bank of a BIC", () => {
+    expect(new BIC("MARKDEF1100").bank).toStrictEqual(registry.getBanksByCode("DE", "10000000")[0]);
+    // A branch BIC that the registry doesn't list falls back to the institution.
+    expect(new BIC("DEUTDEDBXYZ").bank).toStrictEqual(new BIC("DEUTDEDB").bank);
+    expect(new BIC("DEUTDEDBXYZ").banks).toStrictEqual([]);
+    expect(new BIC("ZZZZDEFFXXX", { allowInvalid: true }).bank).toBeNull();
   });
 
   it("resolves the bank codes of Irish credit unions", () => {

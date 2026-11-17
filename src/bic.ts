@@ -13,6 +13,14 @@ const _INSTITUTION_LENGTH = 8;
 // assigned the user-assigned code XK, which the IBAN registry uses as well.
 const _nonIsoCountryCodes = new Set(["XK"]);
 
+/** Order strings like Python, by character code rather than by locale (the same order outside astral characters). */
+function _compareStrings(left: string, right: string): number {
+  if (left === right) {
+    return 0;
+  }
+  return left < right ? -1 : 1;
+}
+
 export class BIC extends Base {
   constructor(bic: string, options?: { allowInvalid?: boolean; enforceSwiftCompliance?: boolean }) {
     super(bic);
@@ -88,33 +96,64 @@ export class BIC extends Base {
   }
 
   /**
-   * The bank records of this BIC in the registry.
+   * The bank records of this BIC in the registry, the best ranked first.
    *
    * A BIC without branch code and the same BIC with the branch code `XXX` are
    * treated as identical (see `canonical`). A branch BIC only has records if the
    * registry lists the branch itself.
+   *
+   * The records are ranked like the lookups by bank code: active ones first, then
+   * merged ones, whose codes lead to a successor, then closed and delisted ones,
+   * and the primary records among each of them. Records of the same rank are
+   * ordered by name and bank code.
    */
   get banks(): Bank[] {
-    return registry.getBanksByBic(this._value);
+    const banks = registry
+      .getBanksByBic(this._value)
+      .toSorted((a, b) => _compareStrings(a.name, b.name) || _compareStrings(a.bank_code, b.bank_code));
+    // The sort is stable, so records of the same rank keep their order by name.
+    return banks.toSorted((a, b) => compareLookupRank(b, a));
   }
 
-  private _lookupValues(key: "bank_code" | "name" | "short_name"): string[] {
-    let entries = this.banks;
-    if (entries.length === 0 && this.branchCode) {
+  private _rankedBanks(): Bank[] {
+    let { banks } = this;
+    if (banks.length === 0 && this.branchCode) {
       // An 11-character BIC denotes a branch of the institution that the
       // first 8 characters identify. Not every national registry lists
       // entries per branch, so fall back to the institution's BIC when
       // the branch-specific lookup comes up empty.
-      entries = new BIC(this._value.slice(0, _INSTITUTION_LENGTH), { allowInvalid: true }).banks;
+      ({ banks } = new BIC(this._value.slice(0, _INSTITUTION_LENGTH), { allowInvalid: true }));
     }
+    return banks;
+  }
+
+  private _lookupValues(key: "bank_code" | "name" | "short_name"): string[] {
+    // A `Set` keeps the insertion order, like upstream's `dict.fromkeys`.
     const values = new Set<string>();
-    for (const entry of entries) {
-      const value = entry[key];
+    for (const bank of this._rankedBanks()) {
+      const value = bank[key];
       if (value) {
         values.add(value);
       }
     }
-    return [...values].toSorted();
+    return [...values];
+  }
+
+  /**
+   * The best ranked bank record of this BIC, see `banks`.
+   *
+   * A BIC can belong to several bank codes, e.g. the ones of banks that merged
+   * into the institution. This is the record of the institution that services
+   * the BIC today, as far as the registry knows. For a branch BIC that the
+   * registry doesn't list, it is the record of the institution that the first
+   * 8 characters identify.
+   *
+   * @example
+   * new BIC("BSABESBB").bank?.name; // "BANCO DE SABADELL, S.A."
+   */
+  get bank(): Bank | null {
+    const [bank] = this._rankedBanks();
+    return bank ?? null;
   }
 
   get domesticBankCodes(): string[] {
