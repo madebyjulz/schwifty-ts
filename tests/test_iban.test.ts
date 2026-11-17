@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { getCountry } from "../src/countries.ts";
+import { SEPAScheme } from "../src/domain.ts";
 import { SchwiftyException } from "../src/exceptions.ts";
 import { IBAN } from "../src/iban.ts";
 import { convertBbanSpecToRegex } from "../src/registry.ts";
@@ -444,5 +445,22 @@ describe("IBAN magic methods", () => {
     expect(iban.lessThan(new IBAN("ES9121000418450200051332"))).toBeTruthy();
     expect(String(iban)).toBe("DE42430609677000534100");
     expect(iban.repr()).toBe("<IBAN=DE42430609677000534100>");
+  });
+});
+
+describe("IBAN sepaSchemes", () => {
+  it("returns the schemes of the IBAN's BIC", () => {
+    const iban = new IBAN("DE89370400440532013000");
+    expect(iban.bic).not.toBeNull();
+    expect(iban.sepaSchemes).toStrictEqual(iban.bic?.sepaSchemes);
+    expect(iban.sepaSchemes.has(SEPAScheme.CORE_DIRECT_DEBIT)).toBeTruthy();
+  });
+
+  it("is empty without a BIC", () => {
+    // The country takes part in SEPA, but the bank code is unknown, so the schemes are unknown.
+    const iban = IBAN.generate("DE", "12345678", "1");
+    expect(iban.bic).toBeNull();
+    expect(iban.inSepaZone).toBeTruthy();
+    expect(iban.sepaSchemes).toStrictEqual(new Set());
   });
 });

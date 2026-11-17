@@ -66,7 +66,13 @@ export function componentEntries<T>(record: Record<Component, T>): [Component, T
   return Object.values(Component).map((component) => [component, record[component]]);
 }
 
-/** The country specific IBAN/BBAN specification, as parsed from the registry. */
+/**
+ * The format of the IBAN and national account number (BBAN) of a country.
+ *
+ * `bban_spec` and `iban_spec` use the notation of the SWIFT IBAN registry, e.g. `8!n` for
+ * exactly eight digits. `positions` gives the range of each component within the BBAN. An
+ * `aspirational` country uses IBANs without being part of the SWIFT IBAN registry.
+ */
 export interface IBANSpec {
   /** The format is only reserved and not yet part of the official IBAN registry. */
   aspirational: boolean;
@@ -103,6 +109,27 @@ export const BankStatus = {
 } as const;
 
 export type BankStatus = (typeof BankStatus)[keyof typeof BankStatus];
+
+/**
+ * A SEPA scheme that a payment service provider takes part in.
+ *
+ * The values are the abbreviations of the SCL directory of the Deutsche Bundesbank.
+ *
+ * - `CREDIT_TRANSFER`: SEPA Credit Transfer.
+ * - `CORE_DIRECT_DEBIT`: SEPA Core Direct Debit.
+ * - `B2B_DIRECT_DEBIT`: SEPA Business-to-Business Direct Debit.
+ * - `CARD_CLEARING`: SEPA Card Clearing.
+ *
+ * Deviation: a const object instead of Python's `StrEnum`, like `Component` and `BankStatus`.
+ */
+export const SEPAScheme = {
+  CREDIT_TRANSFER: "SCT",
+  CORE_DIRECT_DEBIT: "COR",
+  B2B_DIRECT_DEBIT: "B2B",
+  CARD_CLEARING: "SCC",
+} as const;
+
+export type SEPAScheme = (typeof SEPAScheme)[keyof typeof SEPAScheme];
 
 /**
  * A bank record of the registry.

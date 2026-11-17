@@ -4,7 +4,7 @@ import type { BIC } from "./bic.ts";
 import { ISO7064Mod97_10, numerify } from "./checksum/index.ts";
 import { Base, clean } from "./common.ts";
 import { getCountry } from "./countries.ts";
-import type { Bank, IBANSpec } from "./domain.ts";
+import type { Bank, IBANSpec, SEPAScheme } from "./domain.ts";
 import * as exceptions from "./exceptions.ts";
 import * as registry from "./registry.ts";
 
@@ -151,8 +151,30 @@ export class IBAN extends Base {
     return getCountry(this.countryCode);
   }
 
+  /**
+   * Whether the country is in the Single Euro Payments Area (SEPA) zone.
+   *
+   * This tells whether the country takes part in SEPA, not the bank. Use
+   * `sepaSchemes` for the schemes that the bank takes part in.
+   */
   get inSepaZone(): boolean {
     return this.spec.in_sepa_zone;
+  }
+
+  /**
+   * The SEPA schemes that the bank of this IBAN takes part in.
+   *
+   * These are the schemes of the BIC that `bic` returns, see `BIC.sepaSchemes`.
+   * The set is empty if the bank code or its BIC is unknown, which means that the
+   * participation is unknown, not that the bank takes part in none. Unlike
+   * `inSepaZone`, which tells whether the country takes part in SEPA, this tells
+   * whether e.g. a direct debit can be collected from the account's bank.
+   *
+   * @example
+   * new IBAN("DE89370400440532013000").sepaSchemes.has(SEPAScheme.CORE_DIRECT_DEBIT); // true
+   */
+  get sepaSchemes(): ReadonlySet<SEPAScheme> {
+    return this.bban.sepaSchemes;
   }
 
   /**

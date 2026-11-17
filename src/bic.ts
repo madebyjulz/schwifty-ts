@@ -1,6 +1,6 @@
 import { Base } from "./common.ts";
 import { getCountry } from "./countries.ts";
-import type { Bank } from "./domain.ts";
+import type { Bank, SEPAScheme } from "./domain.ts";
 import { canonicalBic, compareLookupRank } from "./domain.ts";
 import * as exceptions from "./exceptions.ts";
 import * as registry from "./registry.ts";
@@ -154,6 +154,31 @@ export class BIC extends Base {
   get bank(): Bank | null {
     const [bank] = this._rankedBanks();
     return bank ?? null;
+  }
+
+  /**
+   * The SEPA schemes that the institution of this BIC takes part in.
+   *
+   * The schemes are taken from the SCL directory of the Deutsche Bundesbank,
+   * which lists the payment service providers that can be reached through its
+   * SEPA clearer, and with it practically all of SEPA. For a branch BIC that the
+   * directory doesn't list, the schemes of the institution that the first 8
+   * characters identify are returned. The set is empty if the directory doesn't
+   * list the BIC at all, which means that the participation is unknown, not that
+   * the institution takes part in none. SEPA Instant Credit Transfers are not
+   * covered by the directory.
+   *
+   * Deviation: a `ReadonlySet` in place of upstream's `frozenset`.
+   *
+   * @example
+   * new BIC("AACSDE33").sepaSchemes.has(SEPAScheme.CREDIT_TRANSFER); // true
+   */
+  get sepaSchemes(): ReadonlySet<SEPAScheme> {
+    let schemes = registry.getSepaSchemes(this._value);
+    if (schemes === null && this.branchCode) {
+      schemes = registry.getSepaSchemes(this._value.slice(0, _INSTITUTION_LENGTH));
+    }
+    return schemes ?? new Set();
   }
 
   get domesticBankCodes(): string[] {

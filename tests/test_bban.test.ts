@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { BBAN } from "../src/bban.ts";
 import { BIC } from "../src/bic.ts";
 import type { Bank } from "../src/domain.ts";
-import { compareLookupRank } from "../src/domain.ts";
+import { compareLookupRank, SEPAScheme } from "../src/domain.ts";
 import {
   GenerateRandomOverflowError,
   InvalidAccountCode,
@@ -375,5 +375,16 @@ describe("BBAN random", () => {
       }
       expect(new Set(lookup.mock.calls.map(([, bankCode]) => bankCode))).toStrictEqual(new Set([lookupKey]));
     });
+  });
+});
+
+describe("BBAN sepaSchemes", () => {
+  it("returns the SEPA schemes of the bank", () => {
+    const bban = new BBAN("NO", "86011117947");
+    expect(bban.bic?.compact).toBe("DABANO22");
+    expect(bban.sepaSchemes).toStrictEqual(
+      new Set([SEPAScheme.CREDIT_TRANSFER, SEPAScheme.CORE_DIRECT_DEBIT, SEPAScheme.B2B_DIRECT_DEBIT]),
+    );
+    expect(new BBAN("DE", "123456780000000001").sepaSchemes).toStrictEqual(new Set());
   });
 });

@@ -1,7 +1,8 @@
 import bankRows from "./data/bank.ts";
 import ibanData from "./data/iban.json";
+import sclData from "./data/scl.json";
 import type { Bank, IBANSpec } from "./domain.ts";
-import { BankStatus, canonicalBic, Component, componentRecord, Range } from "./domain.ts";
+import { BankStatus, canonicalBic, Component, componentRecord, Range, SEPAScheme } from "./domain.ts";
 import * as exceptions from "./exceptions.ts";
 import type { BankRow, RawIbanSpec } from "./types.ts";
 
@@ -33,6 +34,9 @@ export function convertBbanSpecToRegex(spec: string): string {
 // Everything downstream works off the parsed domain objects instead.
 // oxlint-disable-next-line typescript/no-unsafe-type-assertion
 const _rawIbanSpecs = ibanData as Record<string, RawIbanSpec>;
+
+// The bundled SCL directory maps a canonical BIC to the abbreviations of its SEPA schemes.
+const _sclDirectory: Record<string, string[] | undefined> = sclData;
 
 const _componentValues = new Set<string>(Object.values(Component));
 
@@ -193,14 +197,22 @@ export function getIbanSpec(countryCode: string): IBANSpec {
   return spec;
 }
 
+/** Return all banks of `countryCode`, including the retired ones. */
 export function getBanksByCountry(countryCode: string): Bank[] {
   return _getCountryBanks(countryCode).banks;
 }
 
+/** Return the banks of `bankCode` in `countryCode`, or an empty list. */
 export function getBanksByCode(countryCode: string, bankCode: string): Bank[] {
   return _getCountryBanks(countryCode).byBankCode.get(bankCode) ?? [];
 }
 
+/**
+ * Return the banks of `bic`, or an empty list.
+ *
+ * A BIC without branch code and the same BIC with the branch code `XXX` find the same banks,
+ * and the BIC of a merged bank finds the bank codes it was listed with.
+ */
 export function getBanksByBic(bic: string): Bank[] {
   // Only the registry of the BIC's own country is searched. Banks are indexed by the canonical
   // form of their BIC, so that e.g. REVOGB21 and REVOGB21XXX find the same banks.
@@ -209,10 +221,37 @@ export function getBanksByBic(bic: string): Bank[] {
   );
 }
 
+const _sepaSchemeValues = new Set<string>(Object.values(SEPAScheme));
+
+function isSEPAScheme(value: string): value is SEPAScheme {
+  return _sepaSchemeValues.has(value);
+}
+
+function parseSEPAScheme(value: string): SEPAScheme {
+  if (!isSEPAScheme(value)) {
+    // Python's `SEPAScheme(scheme)` raises a `ValueError` for an unknown value, too.
+    throw new TypeError(`'${value}' is not a valid SEPAScheme`);
+  }
+  return value;
+}
+
+/**
+ * Return the SEPA schemes of `bic`, or `null` if the SCL directory doesn't list it.
+ *
+ * Deviation: upstream returns a `frozenset`, this port a `ReadonlySet`. Upstream reads the
+ * directory on first use, while it is bundled here.
+ */
+export function getSepaSchemes(bic: string): ReadonlySet<SEPAScheme> | null {
+  const schemes = _sclDirectory[canonicalBic(bic.toUpperCase())];
+  return schemes === undefined ? null : new Set(schemes.map((scheme) => parseSEPAScheme(scheme)));
+}
+
+/** Return the codes of the countries that have a bank registry. */
 export function getCountries(): string[] {
   return [..._bankRows().keys()];
 }
 
+/** Return the banks of all countries. */
 export function getAllBanks(): Bank[] {
   return getCountries().flatMap((countryCode) => getBanksByCountry(countryCode));
 }

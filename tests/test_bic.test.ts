@@ -1,7 +1,7 @@
 import { afterEach, describe, it, expect, vi } from "vitest";
 import { BIC } from "../src/bic.ts";
 import type { Bank } from "../src/domain.ts";
-import { BankStatus } from "../src/domain.ts";
+import { BankStatus, SEPAScheme } from "../src/domain.ts";
 import { InvalidLength, InvalidStructure, InvalidCountryCode, InvalidBankCode } from "../src/exceptions.ts";
 import * as registry from "../src/registry.ts";
 
@@ -170,6 +170,25 @@ describe(BIC, () => {
     expect(new BIC("DEUTDEDBXYZ").bank).toStrictEqual(new BIC("DEUTDEDB").bank);
     expect(new BIC("DEUTDEDBXYZ").banks).toStrictEqual([]);
     expect(new BIC("ZZZZDEFFXXX", { allowInvalid: true }).bank).toBeNull();
+  });
+
+  it("returns the SEPA schemes", () => {
+    expect(new BIC("AACSDE33").sepaSchemes).toStrictEqual(
+      new Set([
+        SEPAScheme.CREDIT_TRANSFER,
+        SEPAScheme.CORE_DIRECT_DEBIT,
+        SEPAScheme.B2B_DIRECT_DEBIT,
+        SEPAScheme.CARD_CLEARING,
+      ]),
+    );
+    // Both forms of the BIC of a primary office are the same BIC.
+    expect(new BIC("AACSDE33XXX").sepaSchemes).toStrictEqual(new BIC("AACSDE33").sepaSchemes);
+    // A branch that the SCL directory lists has its own schemes, other branches the ones of the
+    // institution.
+    expect(new BIC("DEUTDEDBPAL").sepaSchemes).toStrictEqual(new Set([SEPAScheme.CREDIT_TRANSFER]));
+    expect(new BIC("DEUTDEDBXYZ").sepaSchemes).toStrictEqual(new BIC("DEUTDEDB").sepaSchemes);
+    // The directory doesn't list the BIC, so its participation is unknown.
+    expect(new BIC("ZZZZDEFFXXX", { allowInvalid: true }).sepaSchemes).toStrictEqual(new Set());
   });
 
   it("resolves the bank codes of Irish credit unions", () => {

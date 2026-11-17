@@ -2,7 +2,7 @@ import { BIC } from "./bic.ts";
 import type { Algorithm } from "./checksum/index.ts";
 import { getAlgorithm } from "./checksum/index.ts";
 import { Base, clean } from "./common.ts";
-import type { Bank, IBANSpec } from "./domain.ts";
+import type { Bank, IBANSpec, SEPAScheme } from "./domain.ts";
 import {
   BankStatus,
   compareLookupRank,
@@ -444,6 +444,21 @@ export class BBAN extends Base {
     const lookupBy =
       this.spec.bic_lookup_components.length > 0 ? this.spec.bic_lookup_components : [Component.BANK_CODE];
     return lookupBy.map((component) => this._getComponent(component)).join("");
+  }
+
+  /**
+   * The SEPA schemes that the bank of this BBAN takes part in.
+   *
+   * These are the schemes of the BIC that `bic` returns, see `BIC.sepaSchemes`.
+   * The set is empty if the bank code or its BIC is unknown, which means that the
+   * participation is unknown, not that the bank takes part in none.
+   *
+   * @example
+   * new BBAN("DE", "370400440532013000").sepaSchemes.has(SEPAScheme.CORE_DIRECT_DEBIT); // true
+   */
+  get sepaSchemes(): ReadonlySet<SEPAScheme> {
+    const { bic } = this;
+    return bic === null ? new Set() : bic.sepaSchemes;
   }
 
   get nationalChecksumDigits(): string {

@@ -68,6 +68,21 @@ function loadCases(): ParityCase[] {
   }
 }
 
+/** Keep in sync with `BANK_ATTRIBUTES` in parity_upstream.py. */
+const BANK_ATTRIBUTES = [
+  "country_code",
+  "bank_code",
+  "bic",
+  "name",
+  "short_name",
+  "primary",
+  "checksum_algo",
+  "status",
+  "successor_bank_code",
+  "legacy_name",
+  "legacy_bic",
+];
+
 function toCamelCase(name: string): string {
   return name.replaceAll(/_(?<letter>[a-z])/gu, (_, letter: string) => letter.toUpperCase());
 }
@@ -83,8 +98,16 @@ function normalize(value: unknown): unknown {
   if (Array.isArray(value)) {
     return value.map((item) => normalize(item));
   }
+  if (value instanceof Set) {
+    // Python sorts the normalized items, which are the string values of `SEPAScheme`.
+    return [...value].map((item: unknown) => String(normalize(item))).toSorted((a, b) => (a < b ? -1 : Number(a > b)));
+  }
   if (typeof value === "object" && value !== null && "compact" in value) {
     return value.compact;
+  }
+  if (typeof value === "object" && value !== null && "bank_code" in value) {
+    // A `Bank`, reduced to the fields that parity_upstream.py lists in `BANK_ATTRIBUTES`.
+    return BANK_ATTRIBUTES.map((name) => normalize(Reflect.get(value, name)));
   }
   return value;
 }

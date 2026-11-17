@@ -23,6 +23,7 @@ from collections.abc import Callable, Iterator
 from typing import Any
 
 from schwifty import BIC, IBAN, registry
+from schwifty.domain import Bank
 
 SEED = 97
 SAMPLES_PER_COUNTRY = 25
@@ -50,6 +51,7 @@ IBAN_ATTRIBUTES = [
     "currency_code",
     "in_sepa_zone",
     "is_aspirational",
+    "sepa_schemes",
     "bic",
     "bank_name",
     "bank_short_name",
@@ -69,6 +71,8 @@ BIC_ATTRIBUTES = [
     "domestic_bank_codes",
     "bank_names",
     "bank_short_names",
+    "bank",
+    "sepa_schemes",
 ]
 BANK_ATTRIBUTES = [
     "country_code",
@@ -97,6 +101,10 @@ def normalize(value: Any) -> Any:
         return str(value)
     if isinstance(value, list | tuple):
         return [normalize(item) for item in value]
+    if isinstance(value, set | frozenset):
+        return sorted(normalize(item) for item in value)
+    if isinstance(value, Bank):
+        return normalize([getattr(value, name) for name in BANK_ATTRIBUTES])
     return str(value)
 
 
