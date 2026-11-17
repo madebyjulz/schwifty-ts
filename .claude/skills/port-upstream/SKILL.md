@@ -72,7 +72,7 @@ Below the table, call out separately:
 - **Registry shape changes**: new fields, and what that does to `BankRow`.
 - **Resolved deviations**: entries that upstream's change makes obsolete.
 - **Test mapping**: for each new upstream test file, the planned TS file.
-- **Version**: the next CalVer, see phase 6.
+- **Version**: the target upstream tag, see phase 6.
 
 Ask about anything genuinely open, then wait.
 
@@ -150,8 +150,10 @@ git -C schwifty-py diff <baseline> <target> -- tests | grep -E '^\+\s*def test_'
    deviation that is now resolved.
 
 2. **README.** Update examples and API notes, and "Deviations from upstream" where affected.
-3. **Version** in `package.json`. Release-month CalVer of this package, never the upstream number:
-   a new month gives `YYYY.M.0`, otherwise bump the patch of the current version. Use today's date.
+3. **Version** in `package.json`: the version of the ported upstream tag, without leading zeros
+   (upstream `2026.07.3` becomes `2026.7.3`). If the port has to ship ahead of an upstream tag, ask
+   the user, because semver has no suffix that sorts after a release. Use today's date in the
+   changelog.
 4. Run `pnpm sync:upstream --record`, then rerun `pnpm check` and `pnpm build`.
 
 ## 7. Report and ask

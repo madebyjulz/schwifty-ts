@@ -15,6 +15,8 @@ This is a **1:1 port** of the Python package. All IBAN/BIC validation logic, che
 - generate IBANs from country code, bank code and account number
 - generate random valid IBANs
 - get the BIC associated to an IBAN's bank code
+- look up the bank behind a bank code or BIC, including retired bank codes
+- check which SEPA schemes the bank of an IBAN or BIC takes part in
 - access all relevant components as properties
 - plug `IBAN`/`BIC` validation into any [Standard Schema](https://standardschema.dev) consumer
 
@@ -60,6 +62,9 @@ bic.domesticBankCodes; // ["10000000"]
 
 // Look up a BIC from a domestic bank code.
 BIC.fromBankCode("DE", "37040044").compact; // "COBADEFF"
+
+// The bank that services a BIC today, ahead of the banks that merged into it.
+new BIC("BSABESBB").bank?.name; // "BANCO DE SABADELL, S.A."
 ```
 
 ### Errors
@@ -98,6 +103,19 @@ new BIC("GENODEF1HWR").domesticBankCodes; // ["13061088"]
 
 Closed and delisted banks are still returned, so that an IBAN can be identified. No payments can be made to them, so check `status` before you initiate one.
 
+### SEPA schemes
+
+`sepaSchemes` tells which SEPA schemes the bank of an IBAN, BBAN or BIC takes part in: credit transfer (`SCT`), core direct debit (`COR`), business-to-business direct debit (`B2B`) and card clearing (`SCC`). The schemes are taken from the SCL directory of the Deutsche Bundesbank. `inSepaZone` only tells whether the country takes part in SEPA.
+
+```ts
+import { IBAN, SEPAScheme } from "@madebyjulz/schwifty-ts";
+
+const iban = new IBAN("DE89370400440532013000");
+iban.sepaSchemes.has(SEPAScheme.CORE_DIRECT_DEBIT); // true, so a direct debit can be collected
+```
+
+An empty set means that the directory doesn't list the bank's BIC, so its participation is unknown, not that it takes part in none. SEPA Instant Credit Transfers are not covered by the directory.
+
 ### Standard Schema
 
 `ibanSchema()` and `bicSchema()` return [Standard Schema](https://standardschema.dev) objects that parse a string into an `IBAN`/`BIC` instance. They work with every library that accepts the spec (Zod, Valibot, ArkType, tRPC, TanStack Form, ...). This is the TypeScript counterpart of the pydantic integration upstream ships.
@@ -115,13 +133,13 @@ if (result.issues) {
 
 ### Registry access
 
-The bank and IBAN registries are exposed through typed queries: `getIbanSpec`, `getBanksByCountry`, `getBanksByCode`, `getBanksByBic`, `getCountries` and `getAllBanks`.
+The bank and IBAN registries and the SCL directory are exposed through typed queries: `getIbanSpec`, `getBanksByCountry`, `getBanksByCode`, `getBanksByBic`, `getSepaSchemes`, `getCountries` and `getAllBanks`.
 
 ## Versioning
 
-Releases use [CalVer](https://calver.org/) in semver-compatible form, `YYYY.M.Patch`, keyed to the month the **TypeScript package** is released: `2026.9.0` is the first release of September 2026, `2026.9.1` the second, and so on. Ports of upstream changes and TypeScript-only fixes both bump the patch number.
+From `2026.11.3` on, a release carries the version of the upstream [schwifty](https://github.com/mdomke/schwifty) tag it ports, in semver form without leading zeros: upstream `2026.11.3` is `2026.11.3` here, and upstream `2026.07.3` would be `2026.7.3`. TypeScript-only changes ship with the next port, since semver has no suffix that sorts after a release and npm doesn't treat build metadata as a separate version.
 
-The version therefore does not encode the upstream version. The exact upstream revision (and tag, if any) a release was ported from is recorded in `package.json` under `schwifty.upstream` and named at the top of every changelog entry.
+The exact upstream revision a release was ported from is recorded in `package.json` under `schwifty.upstream` and named at the top of every changelog entry. Releases up to `2026.11.0` used the package's own release-month CalVer and don't match upstream's numbers.
 
 ## Porting upstream changes
 

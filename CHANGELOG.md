@@ -1,6 +1,46 @@
 # Changelog
 
-Releases use [CalVer](https://calver.org/) in semver form, `YYYY.M.Patch`, keyed to the month the TypeScript package is released. Each entry names the upstream [schwifty](https://github.com/mdomke/schwifty) revision it was ported from; for the full upstream changelog see the [schwifty changelog](https://github.com/mdomke/schwifty/blob/main/CHANGELOG.rst).
+From `2026.11.3` on, releases carry the version of the upstream tag they port; earlier ones used the release-month [CalVer](https://calver.org/) of this package. Each entry names the upstream [schwifty](https://github.com/mdomke/schwifty) revision it was ported from; for the full upstream changelog see the [schwifty changelog](https://github.com/mdomke/schwifty/blob/main/CHANGELOG.rst).
+
+## 2026.11.3 - 2026-11-17
+
+Ports upstream [`2026.11.1`](https://github.com/mdomke/schwifty/commit/68f07ac) (2026-11-12), [`2026.11.2`](https://github.com/mdomke/schwifty/commit/a9be090) (2026-11-13) and [`2026.11.3`](https://github.com/mdomke/schwifty/commit/379011f) (2026-11-17). From this release on, the version is the one of the ported upstream tag, so `2026.11.1` and `2026.11.2` are skipped. TypeScript-only changes ship with the next port.
+
+**Upgrade notes.** This release changes results that callers may depend on:
+
+- `BIC.banks`, `BIC.domesticBankCodes`, `BIC.bankNames` and `BIC.bankShortNames` are ordered by rank instead of alphabetically. See the first entry under Changed.
+- `BBAN.fromComponents` and `IBAN.generate` reject every component that is longer than its field. Oversized extended components used to corrupt the assembled BBAN without an error.
+- Registry updates change some lookups, e.g. `BIC.fromBankCode("FR", "10096")` is `CMCIFRP1LYB` instead of `CMCIFRPP`, and Moroccan IBANs are split differently.
+
+### Added
+
+- `SEPAScheme` and `BIC.sepaSchemes`: the SEPA schemes that the institution of a BIC takes part in, i.e. credit transfer (`SCT`), core direct debit (`COR`), business-to-business direct debit (`B2B`) and card clearing (`SCC`). They come from the SCL directory of the Deutsche Bundesbank, which is now bundled. A branch BIC that the directory doesn't list gets the schemes of its institution. An empty set means that the directory doesn't list the BIC, so its participation is unknown.
+- `IBAN.sepaSchemes` and `BBAN.sepaSchemes`: the schemes of the account's BIC, e.g. to check whether a direct debit can be collected from it. Unlike `inSepaZone`, which describes the country, they describe the bank.
+- `getSepaSchemes(bic)`: the schemes of a BIC in the SCL directory, or `null` if it isn't listed.
+- `BIC.bank`: the best ranked bank record of a BIC, i.e. the institution that services it today. For example, `new BIC("BSABESBB").bank` is Banco de Sabadell, while its BIC also carries the bank codes of 19 banks that merged into it.
+- German checksum method `D8` (Volkswagen Bank, bank code `27020000`, and its branches Audi Bank, Skoda Bank, AutoEuropa Bank and Seat Bank). Account codes for these banks were not checked before.
+- The IBANs of Angola, Mozambique, Comoros and Madagascar are split into bank code, branch code, account code and national check digits.
+
+### Changed
+
+- `BIC.banks` is ranked like the lookups by bank code: active records first, then merged, closed and delisted ones, and the primary records first within each group. Records of the same rank are ordered by name and bank code. `domesticBankCodes`, `bankNames` and `bankShortNames` follow that order instead of the alphabet, e.g. `new BIC("GENODEM1GLS").bankShortNames` starts with `"GLS Gemeinschaftsbk Bochum"`.
+- Registries: the French and Monegasque registries are generated from REGAFI (796 French bank codes instead of 217, 17 Monegasque ones instead of one), and subsidiaries get their own reachable BIC instead of their group's. The Irish and Maltese registries are generated from the SCL directory, which adds 234 Irish and 40 Maltese bank codes. Austria, Norway, Italy and Switzerland are updated as well. See the [upstream changelog](https://github.com/mdomke/schwifty/blob/main/CHANGELOG.rst) for details.
+- The bundle grows from 4.2 MB to 4.5 MB (420 KB gzipped) with the SCL directory and the new registry data.
+- Development: typechecking and declaration output use `tsrs` instead of `typescript`, and the dev dependencies are updated. `pnpm parity` also compares `sepaSchemes` and `BIC.bank`.
+
+### Fixed
+
+- `BBAN.fromComponents` checks the length of every component, not only bank, branch and account code. Too long values of `account_id`, `account_type`, `account_holder_id`, `currency_code` or `national_checksum_digits` throw `InvalidAccountCode` or `InvalidStructure` instead of overflowing into the neighbouring fields.
+- German method `23` (Augsburger Aktienbank, `72020700`) compares positions 6 and 7 for a remainder of 1, as the specification requires, instead of positions 9 and 10 like method `16`.
+- The Norwegian check digit of the interbank account series `00` weights all ten digits like any other account. Before, `1204.00.12344` was rejected and `IBAN.generate` returned `1204.00.12343`.
+- The Moroccan IBAN is split into a 3-digit bank code, a 3-digit city code as branch code, a 16-digit account code and two check digits, matching the Moroccan RIB.
+- The BICs of merged banks resolve to their former bank codes again: `EQBKCZPP` (Equa bank) to the Czech `6100`, and `ABANSI2X` and `SKBASI2X` to their Slovenian codes. Added the Portuguese bank code `5200` (`CDOTPTP1`) and the Monegasque `30004` (`BNPAMCM1`).
+
+### Deviations from upstream
+
+- `sepaSchemes` and `getSepaSchemes` return a `ReadonlySet<SEPAScheme>` where upstream returns a `frozenset`, and `SEPAScheme` is a const object, like `BankStatus`.
+- The SCL directory is bundled as `src/data/scl.json` (about 143 KB) instead of being read on first use.
+- Not applicable: the registry scripts (`get_scl_directory.py`, the REGAFI generator) and their tests in `test_registry_downloads.py`.
 
 ## 2026.11.0 - 2026-11-06
 

@@ -23,9 +23,10 @@ Read `README.md` for the API and the porting workflow.
 
 ## Versioning
 
-Release-month CalVer of this package (`2026.9.0`, `2026.9.1`, ...), independent of the upstream
-version. Record the ported upstream revision in `package.json` (`schwifty.upstream`) and name it
-in the changelog entry. See `README.md`.
+From `2026.11.3` on, a release carries the version of the upstream tag it ports, without leading
+zeros (upstream `2026.07.3` becomes `2026.7.3`). TypeScript-only changes ship with the next port:
+semver has no suffix that sorts after a release. Record the ported upstream revision in
+`package.json` (`schwifty.upstream`) and name it in the changelog entry. See `README.md`.
 
 ## Git hygiene
 
