@@ -7,8 +7,7 @@ class DefaultAlgorithm extends Algorithm {
   override readonly accepts = [Component.BANK_CODE, Component.ACCOUNT_CODE];
 
   compute(components: string[]): string {
-    const [bankCode, accountCode] = components;
-    const value = accountCode.startsWith("00") ? accountCode.slice(2) : bankCode + accountCode;
+    const value = components.join("");
 
     const weights = [5, 4, 3, 2, 7, 6, 5, 4, 3, 2];
     const checkDigit = 11 - weighted(value, 11, weights);

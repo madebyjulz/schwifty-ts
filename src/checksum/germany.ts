@@ -436,10 +436,11 @@ class Algorithm16 extends WeightedMod11 {
   override validate(components: string[], _expected: string): boolean {
     const [accountCode] = components;
     const checkDigit = this.compute(components);
-    if (this._remainder === 1 && accountCode[8] === accountCode[9]) {
+    const index = this.positions.checkDigit - 1;
+    if (this._remainder === 1 && accountCode[index - 1] === accountCode[index]) {
       return true;
     }
-    return checkDigit === accountCode[this.positions.checkDigit - 1];
+    return checkDigit === accountCode[index];
   }
 }
 register("DE")(new Algorithm16());
@@ -1337,3 +1338,48 @@ class AlgorithmC0 extends Algorithm {
   }
 }
 register("DE")(new AlgorithmC0());
+
+const _D8_METHOD_00_FROM = 1_000_000_000;
+const _D8_METHOD_09_FROM = 10_000_000;
+const _D8_METHOD_09_TO = 99_999_999;
+
+/**
+ * Method 00 from account code 1000000000, method 09 from 0010000000 to 0099999999.
+ *
+ * Like with `AlgorithmC1`, the account code selects the variant. Account codes in
+ * neither range are invalid.
+ */
+class AlgorithmD8 extends Algorithm {
+  override readonly name = "D8";
+  override readonly accepts = [Component.ACCOUNT_CODE];
+
+  getVariant(accountCode: string): Algorithm | null {
+    const number = Number(validateAccountCode(accountCode));
+    if (number >= _D8_METHOD_00_FROM) {
+      return new Algorithm00();
+    }
+    if (number >= _D8_METHOD_09_FROM && number <= _D8_METHOD_09_TO) {
+      return new Algorithm09();
+    }
+    return null;
+  }
+
+  compute(components: string[]): string {
+    const variant = this.getVariant(components[0]);
+    if (variant === null) {
+      throw new InvalidBBANChecksum("Account code is in neither range of method D8");
+    }
+    return variant.compute(components);
+  }
+
+  override validate(components: string[], expected: string): boolean {
+    const variant = this.getVariant(components[0]);
+    return variant !== null && variant.validate(components, expected);
+  }
+
+  override solve(components: string[]): string[] | null {
+    const variant = this.getVariant(components[0]);
+    return variant === null ? null : variant.solve(components);
+  }
+}
+register("DE")(new AlgorithmD8());

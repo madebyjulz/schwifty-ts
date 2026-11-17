@@ -28,6 +28,8 @@ describe("German checksum algorithms", () => {
     ["0094012341", "DE:16"],
     // Remainder 1 is accepted when the last two digits match.
     ["0000000066", "DE:16"],
+    // Method 23 compares positions 6 and 7 instead.
+    ["0000066012", "DE:23"],
     ["0012345008", "DE:10"],
     ["0087654008", "DE:10"],
     // Method 11 maps a computed check digit of 11 to 0.
@@ -242,6 +244,13 @@ describe("German checksum algorithms", () => {
     ["5654334563", "DE:C1"],
     ["5765445670", "DE:C1"],
     ["5876556788", "DE:C1"],
+    // Method D8 test account numbers. From 1000000000 on, variant 1 (method 00) applies.
+    ["1403414848", "DE:D8"],
+    ["6800000439", "DE:D8"],
+    ["6899999954", "DE:D8"],
+    // Variant 2 (method 09) accepts the whole range 0010000000 to 0099999999 without a check.
+    ["0010000000", "DE:D8"],
+    ["0099999999", "DE:D8"],
   ];
 
   it.each(successCases)("validates %s with algorithm %s", (accountCode, algoName) => {
@@ -266,6 +275,7 @@ describe("German checksum algorithms", () => {
     ["0000000010", "DE:02"],
     // Remainder 1 and a second digit outside {8, 9} is rejected.
     ["0000000060", "DE:25"],
+    ["0000061011", "DE:23"],
     // Method 63 only accepts a leading zero.
     ["1123456600", "DE:63"],
     // Without the sub-account the check digit at position 10 still has to match.
@@ -334,6 +344,13 @@ describe("German checksum algorithms", () => {
     ["0000005000", "DE:76"],
     // Method A7 test account number that neither method 00 nor method 03 accepts.
     ["0209010893", "DE:A7"],
+    // Method D8 test account numbers. 0000260986 is in neither range.
+    ["3012084101", "DE:D8"],
+    ["1062813622", "DE:D8"],
+    ["0000260986", "DE:D8"],
+    // Account codes in neither range are invalid, even if they pass method 00.
+    ["0009290701", "DE:D8"],
+    ["0539290858", "DE:D8"],
   ];
 
   it.each(failureCases)("rejects %s with algorithm %s", (accountCode, algoName) => {
@@ -358,6 +375,16 @@ describe("Belgium checksum", () => {
 describe("Norway checksum", () => {
   it("handles edge case mod 11 = 0", () => {
     expect(algorithms["NO:default"].validate(["6042", "143964"], "0")).toBeTruthy();
+  });
+});
+
+describe("Norway checksum interbank account series", () => {
+  // Accounts with the account series 00 weight all ten digits, including the bank register
+  // number, like any other account (#356).
+  it("weights all ten digits", () => {
+    expect(algorithms["NO:default"].compute(["1204", "001234"])).toBe("4");
+    expect(algorithms["NO:default"].validate(["1204", "001234"], "4")).toBeTruthy();
+    expect(algorithms["NO:default"].validate(["1204", "001234"], "3")).toBeFalsy();
   });
 });
 
@@ -480,6 +507,19 @@ describe("German checksum helpers", () => {
     expect(algo.compute(["13051172", "1234567890"])).toBe("6");
     // The check digit is solved with method 20, which accepts every account code.
     expect(algo.solve(["13051172", "1234567890"])).toStrictEqual(["13051172", "1234567896"]);
+  });
+
+  it("computes and solves with method D8", () => {
+    const algo = algorithms["DE:D8"];
+    // Variant 1 (method 00) places the check digit at position 10.
+    expect(algo.compute(["6899999950"])).toBe("4");
+    expect(algo.solve(["6899999950"])).toStrictEqual(["6899999954"]);
+    // Variant 2 (method 09) has no check digit, so the account code is left as it is.
+    expect(algo.compute(["0012345678"])).toBe("");
+    expect(algo.solve(["0012345678"])).toStrictEqual(["0012345678"]);
+    // An account code in neither range has no valid check digit.
+    expect(() => algo.compute(["0123456789"])).toThrow(InvalidBBANChecksum);
+    expect(algo.solve(["0123456789"])).toBeNull();
   });
 
   // Each variant can always place a check digit, so the "none of them worked"

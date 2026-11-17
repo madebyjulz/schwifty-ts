@@ -76,6 +76,7 @@ describe("BBAN national checksum", () => {
     "40351060", // Kreissparkasse Steinfurt, method 49
     "20090700", // Edekabank, method 50
     "21352240", // Sparkasse Holstein, method A7
+    "27020000", // Volkswagen Bank, method D8
   ])("rejects a truncated BBAN for bank code %s", (bankCode) => {
     expect(() => new BBAN("DE", `${bankCode}05320`).validateNationalChecksum()).toThrow(InvalidAccountCode);
   });
@@ -346,6 +347,7 @@ describe("BBAN random", () => {
       ["40351060", "49"], // Kreissparkasse Steinfurt
       ["20090700", "50"], // Edekabank
       ["21352240", "A7"], // Sparkasse Holstein
+      ["27020000", "D8"], // Volkswagen Bank
     ])("uses the checksum method of bank %s", (bankCode, checksumAlgo) => {
       const methods = new Set(registry.getBanksByCode("DE", bankCode).map((bank) => bank.checksum_algo));
       expect([...methods]).toStrictEqual([checksumAlgo]);
