@@ -152,7 +152,7 @@ function loadRegistry(name: string): JsonObject[] | JsonObject {
   return data;
 }
 
-const REGISTRIES = ["bank", "iban"];
+const REGISTRIES = ["bank", "iban", "scl"];
 
 /** The positional layout of one bank row. Keep in sync with `BankRow` in `src/types.ts`. */
 const BANK_ROW_FIELDS = [

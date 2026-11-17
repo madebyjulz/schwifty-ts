@@ -13,6 +13,20 @@ import {
 import { IBAN } from "../src/iban.ts";
 import * as registry from "../src/registry.ts";
 
+/** Return a valid BBAN with `bankCode`, whose account code doesn't matter. */
+function bbanOf(countryCode: string, bankCode: string): BBAN {
+  try {
+    return BBAN.fromComponents(countryCode, { bank_code: bankCode });
+  } catch (error) {
+    if (!(error instanceof InvalidAccountCode)) {
+      throw error;
+    }
+    // With some bank codes, e.g. the Norwegian 0538, an account code of zeros has no valid
+    // check digit.
+    return BBAN.random(countryCode, { values: { bank_code: bankCode } });
+  }
+}
+
 describe("BBAN national checksum", () => {
   // A valid national checksum returns true (consistent with the "no checksum
   // algorithm" case), while an invalid one throws InvalidBBANChecksum.
@@ -208,7 +222,7 @@ describe("BBAN bank", () => {
         if (!bankCode) {
           continue;
         }
-        const bban = BBAN.fromComponents(countryCode, { bank_code: bankCode });
+        const bban = bbanOf(countryCode, bankCode);
         const { bank, bic } = bban;
         if (bank?.bic && bic?.canonical.compact !== new BIC(bank.bic).canonical.compact) {
           disagree.push([countryCode, bankCode, bank.bic, bic?.compact]);
@@ -229,7 +243,7 @@ describe("BBAN bank", () => {
           continue;
         }
         const entries = registry.getBanksByCode(countryCode, bankCode);
-        const { bank } = BBAN.fromComponents(countryCode, { bank_code: bankCode });
+        const { bank } = bbanOf(countryCode, bankCode);
         if (bank !== null && entries.some((entry) => compareLookupRank(entry, bank) > 0)) {
           notBest.push([countryCode, bankCode, bank.bic]);
         }
@@ -295,8 +309,8 @@ describe("BBAN random", () => {
   // raises the explicit "not supported" error rather than the misleading "Bank code
   // exceeds maximum size 0".
   it("rejects fromComponents for a country without positions", () => {
-    expect(() => BBAN.fromComponents("AO", { bank_code: "1234", account_code: "12345678901234567" })).toThrow(
-      "BBAN generation for AO not supported",
+    expect(() => BBAN.fromComponents("GW", { bank_code: "GW123", account_code: "1234567890123456" })).toThrow(
+      "BBAN generation for GW not supported",
     );
   });
 

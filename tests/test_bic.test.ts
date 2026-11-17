@@ -124,6 +124,13 @@ describe(BIC, () => {
     expect(xxxEntry.exists).toBeTruthy();
   });
 
+  it("resolves the bank codes of Irish credit unions", () => {
+    // Irish and Maltese IBANs use the bank code of the BIC, which the SCL directory provides.
+    expect(BIC.fromBankCode("IE", "ABRN").compact).toBe("ABRNIE21");
+    expect(new BIC("ABRNIE21").bankNames).toStrictEqual(["PEOPLE FIRST CREDIT UNION LIMITED"]);
+    expect(BIC.fromBankCode("MT", "CFTE").compact).toBe("CFTEMTM1");
+  });
+
   // Both are also listed in the Lithuanian registry under a Lithuanian bank code.
   it.each([
     ["REVOFRP2XXX", ["28233"]],
@@ -236,7 +243,7 @@ describe(BIC, () => {
     ["FR", "30004", "BNPAFRPP"],
     ["FR", "30066", "CMCIFRPP"],
     ["FR", "17469", "SOCBPFTX"],
-    ["FR", "10096", "CMCIFRPP"],
+    ["FR", "10096", "CMCIFRP1LYB"], // its own BIC, not the one of its group
     ["FR", "18719", "BFCORERX"], // head office, not the Mayotte branch
     ["FR", "30077", "SMCTFR2A"],
     ["FR", "13489", "NORDFRPP"],
@@ -247,12 +254,14 @@ describe(BIC, () => {
     ["IT", "01030", "PASCITMM"],
     ["LV", "RIKO", "RIKOLV2X"],
     ["MC", "30003", "SOGEMCM1"],
+    ["MC", "30004", "BNPAMCM1"], // French bank code of a Monegasque branch
     ["ME", "907", "CBCGMEPG"],
     ["MT", "CFTE", "CFTEMTM1"],
     ["NL", "ADYB", "ADYBNL2A"],
     ["PK", "UNIL", "UNILPKKA"],
     ["PL", "10100055", "NBPLPLPW"],
     ["PL", "10900004", "WBKPPLPP"],
+    ["PT", "5200", "CDOTPTP1"],
     ["RO", "BTRL", "BTRLRO22"],
     ["SE", "500", "ESSESESS"],
     ["SI", "01050", "BSLJSI2XFNB"],

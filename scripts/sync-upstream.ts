@@ -28,7 +28,11 @@ const packageJsonPath = path.join(projectRoot, "package.json");
 const PORTED_PATHS = ["schwifty", "tests", "CHANGELOG.rst", "docs/adr", "docs/source", "AGENTS.md", "CONTEXT.md"];
 
 /** Registry data reaches the port through `src/data`, and its diff would drown out the source diff. */
-const REGISTRY_EXCLUDES = [":(exclude)schwifty/bank_registry", ":(exclude)schwifty/iban_registry"];
+const REGISTRY_EXCLUDES = [
+  ":(exclude)schwifty/bank_registry",
+  ":(exclude)schwifty/iban_registry",
+  ":(exclude)schwifty/scl_registry",
+];
 
 interface PackageJson {
   schwifty: { upstream: string; upstreamTag: string };

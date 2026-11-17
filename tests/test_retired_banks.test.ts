@@ -49,6 +49,7 @@ describe("retired banks", () => {
     ["DE", "13061088", "13061078", "Volks- und Raiffeisenbank"],
     ["CH", "31000", "30005", "UBS Switzerland AG - Zürich"],
     ["SI", "03100", "04000", "OTP BANKA D.D."],
+    ["CZ", "6100", "5500", "Raiffeisenbank a.s."],
   ])("resolves the merged bank code %s %s to its successor", (countryCode, bankCode, successorBankCode, name) => {
     const bban = BBAN.fromComponents(countryCode, { bank_code: bankCode });
     expect(bban.bank?.status).toBe(BankStatus.MERGED);

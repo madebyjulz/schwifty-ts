@@ -88,7 +88,7 @@ describe("registry helpers", () => {
 
   it("tells whether a spec has positions", () => {
     expect(hasPositions(registry.getIbanSpec("DE"))).toBeTruthy();
-    // Angola defines a BBAN regex but no component positions.
-    expect(hasPositions(registry.getIbanSpec("AO"))).toBeFalsy();
+    // Guinea-Bissau defines a BBAN regex but no component positions.
+    expect(hasPositions(registry.getIbanSpec("GW"))).toBeFalsy();
   });
 });

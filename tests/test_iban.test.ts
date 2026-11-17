@@ -221,6 +221,20 @@ describe("IBAN properties", () => {
     expect(iban.bankCode).toBe("01");
   });
 
+  it.each([
+    ["AO06 0044 0000 6729 5030 1010 2", "0044", "0000", "67295030101", "02"],
+    ["KM46 0000 5000 0100 1090 4400 137", "00005", "00001", "00109044001", "37"],
+    ["MA64 0115 1900 0001 2050 0053 4921", "011", "519", "0000012050005349", "21"],
+    ["MG46 0000 5030 0712 8942 1016 045", "00005", "03007", "12894210160", "45"],
+    ["MZ59 0003 0108 0016 3671 0237 1", "0003", "0108", "00163671023", "71"],
+  ])("components of the aspirational IBAN %s", (value, bankCode, branchCode, accountCode, nationalChecksumDigits) => {
+    const iban = new IBAN(value);
+    expect(iban.bankCode).toBe(bankCode);
+    expect(iban.branchCode).toBe(branchCode);
+    expect(iban.accountCode).toBe(accountCode);
+    expect(iban.nationalChecksumDigits).toBe(nationalChecksumDigits);
+  });
+
   it("PL properties", () => {
     const iban = new IBAN("PL66114010100000123400005678");
     expect(iban.isValid).toBeTruthy();
