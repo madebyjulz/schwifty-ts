@@ -26,6 +26,17 @@ import * as registry from "./registry.ts";
  */
 const _MAX_RANDOM_ATTEMPTS = 200;
 
+type LengthError = new (message: string) => exceptions.SchwiftyException;
+
+const _LENGTH_ERRORS: Partial<Record<Component, LengthError>> = {
+  [Component.BANK_CODE]: exceptions.InvalidBankCode,
+  [Component.BRANCH_CODE]: exceptions.InvalidBranchCode,
+  [Component.ACCOUNT_CODE]: exceptions.InvalidAccountCode,
+  [Component.ACCOUNT_ID]: exceptions.InvalidAccountCode,
+  [Component.ACCOUNT_TYPE]: exceptions.InvalidAccountCode,
+  [Component.ACCOUNT_HOLDER_ID]: exceptions.InvalidAccountCode,
+};
+
 function getBbanSpec(countryCode: string): IBANSpec {
   return registry.getIbanSpec(countryCode);
 }
@@ -194,6 +205,15 @@ export class BBAN extends Base {
     this.countryCode = countryCode;
   }
 
+  /**
+   * Generate a BBAN from its national components.
+   *
+   * @throws {SchwiftyException} If BBAN generation for the country code is not supported.
+   * @throws {InvalidAccountCode} If the account code or related account component exceeds its maximum size.
+   * @throws {InvalidBankCode} If the bank code exceeds the maximum size.
+   * @throws {InvalidBranchCode} If the branch code exceeds the maximum size.
+   * @throws {InvalidStructure} If any other component exceeds the maximum size.
+   */
   static fromComponents(countryCode: string, values: Record<string, string>): BBAN {
     const spec = getBbanSpec(countryCode);
     if (!hasPositions(spec)) {
@@ -207,7 +227,6 @@ export class BBAN extends Base {
 
     const bankCodeLength = ranges[Component.BANK_CODE].length;
     const branchCodeLength = ranges[Component.BRANCH_CODE].length;
-    const accountCodeLength = ranges[Component.ACCOUNT_CODE].length;
 
     if (components[Component.BANK_CODE].length === bankCodeLength + branchCodeLength) {
       components[Component.BRANCH_CODE] = components[Component.BANK_CODE].slice(
@@ -217,16 +236,16 @@ export class BBAN extends Base {
       components[Component.BANK_CODE] = components[Component.BANK_CODE].slice(0, bankCodeLength);
     }
 
-    if (components[Component.BANK_CODE].length > bankCodeLength) {
-      throw new exceptions.InvalidBankCode(`Bank code exceeds maximum size ${bankCodeLength}`);
-    }
-
-    if (components[Component.BRANCH_CODE].length > branchCodeLength) {
-      throw new exceptions.InvalidBranchCode(`Branch code exceeds maximum size ${branchCodeLength}`);
-    }
-
-    if (components[Component.ACCOUNT_CODE].length > accountCodeLength) {
-      throw new exceptions.InvalidAccountCode(`Account code exceeds maximum size ${accountCodeLength}`);
+    for (const [component, range] of componentEntries(ranges)) {
+      if (range.isEmpty) {
+        continue;
+      }
+      if (components[component].length > range.length) {
+        const words = component.replaceAll("_", " ");
+        const name = `${words.charAt(0).toUpperCase()}${words.slice(1)}`;
+        const error = _LENGTH_ERRORS[component] ?? exceptions.InvalidStructure;
+        throw new error(`${name} exceeds maximum size ${range.length}`);
+      }
     }
 
     const checksum = computeNationalChecksum(countryCode, components);

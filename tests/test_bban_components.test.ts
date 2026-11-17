@@ -1,7 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { BBAN, computeNationalChecksum } from "../src/bban.ts";
 import { Component, componentRecord } from "../src/domain.ts";
-import { InvalidAccountCode, InvalidBankCode, InvalidBranchCode, InvalidCountryCode } from "../src/exceptions.ts";
+import {
+  InvalidAccountCode,
+  InvalidBankCode,
+  InvalidBranchCode,
+  InvalidCountryCode,
+  InvalidStructure,
+} from "../src/exceptions.ts";
 import { IBAN } from "../src/iban.ts";
 
 function components(values: Partial<Record<Component, string>>): Record<Component, string> {
@@ -52,6 +58,37 @@ describe("BBAN assembly from components", () => {
     expect(() => BBAN.fromComponents("DE", { bank_code: "12345678", account_code: "12345678901" })).toThrow(
       InvalidAccountCode,
     );
+  });
+
+  it.each([
+    ["SC", { account_code: "12345", currency_code: "USDD" }, InvalidStructure, "Currency code exceeds maximum size 3"],
+    [
+      "BR",
+      { account_code: "12345", account_type: "PP", account_id: "1" },
+      InvalidAccountCode,
+      "Account type exceeds maximum size 1",
+    ],
+    [
+      "BR",
+      { account_code: "12345", account_type: "P", account_id: "12" },
+      InvalidAccountCode,
+      "Account id exceeds maximum size 1",
+    ],
+    [
+      "IS",
+      { bank_code: "0159", branch_code: "26", account_code: "007654", account_holder_id: "55107303399" },
+      InvalidAccountCode,
+      "Account holder id exceeds maximum size 10",
+    ],
+    [
+      "BE",
+      { bank_code: "539", account_code: "0075470", national_checksum_digits: "345" },
+      InvalidStructure,
+      "National checksum digits exceeds maximum size 2",
+    ],
+  ])("rejects too long extended components for %s (%#)", (countryCode, values, expectedException, match) => {
+    expect(() => BBAN.fromComponents(countryCode, values)).toThrow(expectedException);
+    expect(() => BBAN.fromComponents(countryCode, values)).toThrow(match);
   });
 
   it("rejects an unknown country", () => {
